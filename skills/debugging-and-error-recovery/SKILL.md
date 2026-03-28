@@ -50,6 +50,28 @@ Can you reproduce the failure?
     └── If truly non-reproducible, document conditions and monitor
 ```
 
+**When a bug is non-reproducible:**
+
+```
+Cannot reproduce on demand:
+├── Timing-dependent?
+│   ├── Add timestamps to logs around the suspected area
+│   ├── Try with artificial delays (setTimeout, sleep) to widen race windows
+│   └── Run under load or concurrency to increase collision probability
+├── Environment-dependent?
+│   ├── Compare Node/browser versions, OS, environment variables
+│   ├── Check for differences in data (empty vs populated database)
+│   └── Try reproducing in CI where the environment is clean
+├── State-dependent?
+│   ├── Check for leaked state between tests or requests
+│   ├── Look for global variables, singletons, or shared caches
+│   └── Run the failing scenario in isolation vs after other operations
+└── Truly random?
+    ├── Add defensive logging at the suspected location
+    ├── Set up an alert for the specific error signature
+    └── Document the conditions observed and revisit when it recurs
+```
+
 For test failures:
 ```bash
 # Run the specific failing test
