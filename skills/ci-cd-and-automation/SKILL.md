@@ -9,6 +9,10 @@ description: Use when setting up or modifying build and deployment pipelines. Us
 
 Automate quality gates so that no change reaches production without passing tests, lint, type checking, and build. CI/CD is the enforcement mechanism for every other skill — it catches what humans and agents miss, and it does so consistently on every single change.
 
+**Shift Left:** Catch problems as early in the pipeline as possible. A bug caught in linting costs minutes; the same bug caught in production costs hours. Move checks upstream — static analysis before tests, tests before staging, staging before production.
+
+**Faster is Safer:** Smaller batches and more frequent releases reduce risk, not increase it. A deployment with 3 changes is easier to debug than one with 30. Frequent releases build confidence in the release process itself.
+
 ## When to Use
 
 - Setting up a new project's CI pipeline
@@ -203,6 +207,25 @@ deploy-preview:
       run: npx vercel --token=${{ secrets.VERCEL_TOKEN }}
 ```
 
+### Feature Flags
+
+Feature flags decouple deployment from release. Deploy incomplete or risky features behind flags so you can:
+
+- **Ship code without enabling it.** Merge to main early, enable when ready.
+- **Roll back without redeploying.** Disable the flag instead of reverting code.
+- **Canary new features.** Enable for 1% of users, then 10%, then 100%.
+- **Run A/B tests.** Compare behavior with and without the feature.
+
+```typescript
+// Simple feature flag pattern
+if (featureFlags.isEnabled('new-checkout-flow', { userId })) {
+  return renderNewCheckout();
+}
+return renderLegacyCheckout();
+```
+
+**Flag lifecycle:** Create → Enable for testing → Canary → Full rollout → Remove the flag and dead code. Flags that live forever become technical debt — set a cleanup date when you create them.
+
 ### Staged Rollouts
 
 ```
@@ -271,6 +294,10 @@ updates:
       interval: weekly
     open-pull-requests-limit: 5
 ```
+
+### Build Cop Role
+
+Designate someone responsible for keeping CI green. When the build breaks, the Build Cop's job is to fix or revert — not the person whose change caused the break. This prevents broken builds from accumulating while everyone assumes someone else will fix it.
 
 ### PR Checks
 

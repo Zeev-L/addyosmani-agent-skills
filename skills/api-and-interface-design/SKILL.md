@@ -19,6 +19,21 @@ Design stable, well-documented interfaces that are hard to misuse. Good interfac
 
 ## Core Principles
 
+### Hyrum's Law
+
+> With a sufficient number of users of an API, all observable behaviors of your system will be depended on by somebody, regardless of what you promise in the contract.
+
+This means: every public behavior — including undocumented quirks, error message text, timing, and ordering — becomes a de facto contract once users depend on it. Design implications:
+
+- **Be intentional about what you expose.** Every observable behavior is a potential commitment.
+- **Don't leak implementation details.** If users can observe it, they will depend on it.
+- **Plan for deprecation at design time.** See `deprecation-and-migration` for how to safely remove things users depend on.
+- **Tests are not enough.** Even with perfect contract tests, Hyrum's Law means "safe" changes can break real users who depend on undocumented behavior.
+
+### The One-Version Rule
+
+Never force consumers to choose between multiple versions of the same dependency or API. Diamond dependency problems arise when different consumers need different versions of the same thing. Design for a world where only one version exists at a time — extend rather than fork.
+
 ### 1. Contract First
 
 Define the interface before implementing it. The contract is the spec — implementation follows.
@@ -252,6 +267,8 @@ function getTask(id: TaskId): Promise<Task> { ... }
 | "We don't need pagination for now" | You will the moment someone has 100+ items. Add it from the start. |
 | "PATCH is complicated, let's just use PUT" | PUT requires the full object every time. PATCH is what clients actually want. |
 | "We'll version the API when we need to" | Breaking changes without versioning break consumers. Design for extension from the start. |
+| "Nobody uses that undocumented behavior" | Hyrum's Law: if it's observable, somebody depends on it. Treat every public behavior as a commitment. |
+| "We can just maintain two versions" | Multiple versions multiply maintenance cost and create diamond dependency problems. Prefer the One-Version Rule. |
 | "Internal APIs don't need contracts" | Internal consumers are still consumers. Contracts prevent coupling and enable parallel work. |
 
 ## Red Flags

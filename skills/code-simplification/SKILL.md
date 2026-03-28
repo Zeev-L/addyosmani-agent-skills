@@ -104,9 +104,9 @@ Default to simplifying recently modified code. Avoid drive-by refactors of unrel
 
 ## The Simplification Process
 
-### Step 1: Understand Before Touching
+### Step 1: Understand Before Touching (Chesterton's Fence)
 
-Read the code. Understand what it does, why it exists, and how it fits into the larger system.
+Before changing or removing anything, understand why it exists. This is Chesterton's Fence: if you see a fence across a road and don't understand why it's there, don't tear it down. First understand the reason, then decide if the reason still applies.
 
 ```
 BEFORE SIMPLIFYING, ANSWER:
@@ -115,6 +115,7 @@ BEFORE SIMPLIFYING, ANSWER:
 - What are the edge cases and error paths?
 - Are there tests that define the expected behavior?
 - Why might it have been written this way? (Performance? Platform constraint? Historical reason?)
+- Check git blame: what was the original context for this code?
 ```
 
 If you can't answer these, you're not ready to simplify. Read more context first.
@@ -155,7 +156,7 @@ Scan for these patterns — each one is a concrete signal, not a vague smell:
 
 ### Step 3: Apply Changes Incrementally
 
-Make one simplification at a time. Run tests after each change.
+Make one simplification at a time. Run tests after each change. **Always submit refactoring changes separately from feature or bug fix changes.** A PR that refactors and adds a feature is two PRs — split them.
 
 ```
 FOR EACH SIMPLIFICATION:
@@ -166,6 +167,8 @@ FOR EACH SIMPLIFICATION:
 ```
 
 Never batch multiple simplifications into a single untested change. If something breaks, you need to know which simplification caused it.
+
+**The Rule of 500:** If a refactoring would touch more than 500 lines, invest in automation (codemods, sed scripts, AST transforms) rather than making the changes by hand. Manual edits at that scale are error-prone and exhausting to review.
 
 ### Step 4: Verify the Result
 
@@ -300,7 +303,8 @@ function UserBadge({ user }: Props) {
 | "I'll just quickly simplify this unrelated code too" | Unscoped simplification creates noisy diffs and risks regressions in code you didn't intend to change. Stay focused. |
 | "The types make it self-documenting" | Types document structure, not intent. A well-named function explains *why* better than a type signature explains *what*. |
 | "This abstraction might be useful later" | Don't preserve speculative abstractions. If it's not used now, it's complexity without value. Remove it and re-add when needed. |
-| "The original author must have had a reason" | Maybe. Check git blame. But accumulated complexity often has no reason — it's just the residue of iteration under pressure. |
+| "The original author must have had a reason" | Maybe. Check git blame — apply Chesterton's Fence. But accumulated complexity often has no reason; it's just the residue of iteration under pressure. |
+| "I'll refactor while adding this feature" | Separate refactoring from feature work. Mixed changes are harder to review, revert, and understand in history. |
 
 ## Red Flags
 
