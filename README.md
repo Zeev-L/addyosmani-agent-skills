@@ -57,7 +57,7 @@ claude --plugin-dir /path/to/agent-skills
 <details>
 <summary><b>Cursor</b></summary>
 
-Copy any `SKILL.md` into `.cursor/rules/`, or reference the full `skills/` directory. See [docs/cursor-setup.md](docs/cursor-setup.md).
+Copy any `SKILL.md` into `.cursor/rules/`, or reference the full `skills/` directory. Use the `.mdc` extension and update the YAML frontmatter (`description`, `globs`, `alwaysApply`). See [docs/cursor-setup.md](docs/cursor-setup.md).
 
 </details>
 
