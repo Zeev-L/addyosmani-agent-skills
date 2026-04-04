@@ -1,6 +1,6 @@
 # simplify-ignore hook
 
-Block-level protection for `/code-simplify`. Mark code that should never be simplified — the model won't see it.
+Block-level protection for `/agent-skills:code-simplify`. Mark code that should never be simplified — the model won't see it.
 
 ## Setup
 
@@ -42,7 +42,7 @@ result[3] = buf[3] ^ key[3];
 }
 ```
 
-3. Run `/code-simplify` — protected blocks become `/* BLOCK_de115a1d: perf-critical */` placeholders. The model reasons about surrounding code without seeing the protected implementation.
+3. Run `/agent-skills:code-simplify` — protected blocks become `/* BLOCK_de115a1d: perf-critical */` placeholders. The model reasons about surrounding code without seeing the protected implementation.
 
 > **Note:** The hook stores temporary backups in `.claude/.simplify-ignore-cache/`. Make sure this path is in your `.gitignore`.
 

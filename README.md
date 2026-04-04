@@ -10,24 +10,25 @@ Skills encode the workflows, quality gates, and best practices that senior engin
  │ Idea │ ───▶ │ Spec │ ───▶ │ Code │ ───▶ │ Test │ ───▶ │  QA  │ ───▶ │  Go  │
  │Refine│      │  PRD │      │ Impl │      │Debug │      │ Gate │      │ Live │
  └──────┘      └──────┘      └──────┘      └──────┘      └──────┘      └──────┘
-  /spec          /plan          /build        /test         /review       /ship
+  /agent-skills  /agent-skills  /agent-skills /agent-skills /agent-skills /agent-skills
+  :spec          :plan          :build        :test         :review       :ship
 ```
 
 ---
 
 ## Commands
 
-7 slash commands that map to the development lifecycle. Each one activates the right skills automatically.
+7 slash commands that map to the development lifecycle. Each one activates the right skills automatically. Commands are namespaced under `agent-skills:` to avoid conflicts with other skill ecosystems (e.g., gsd, gstack).
 
 | What you're doing | Command | Key principle |
 |-------------------|---------|---------------|
-| Define what to build | `/spec` | Spec before code |
-| Plan how to build it | `/plan` | Small, atomic tasks |
-| Build incrementally | `/build` | One slice at a time |
-| Prove it works | `/test` | Tests are proof |
-| Review before merge | `/review` | Improve code health |
-| Simplify the code | `/code-simplify` | Clarity over cleverness |
-| Ship to production | `/ship` | Faster is safer |
+| Define what to build | `/agent-skills:spec` | Spec before code |
+| Plan how to build it | `/agent-skills:plan` | Small, atomic tasks |
+| Build incrementally | `/agent-skills:build` | One slice at a time |
+| Prove it works | `/agent-skills:test` | Tests are proof |
+| Review before merge | `/agent-skills:review` | Improve code health |
+| Simplify the code | `/agent-skills:code-simplify` | Clarity over cleverness |
+| Ship to production | `/agent-skills:ship` | Faster is safer |
 
 Skills also activate automatically based on what you're doing — designing an API triggers `api-and-interface-design`, building UI triggers `frontend-ui-engineering`, and so on.
 
@@ -223,7 +224,7 @@ agent-skills/
 ├── agents/                            # 3 specialist personas
 ├── references/                        # 4 supplementary checklists
 ├── hooks/                             # Session lifecycle hooks
-├── .claude/commands/                  # 7 slash commands
+├── .claude/commands/agent-skills/     # 7 namespaced slash commands
 └── docs/                              # Setup guides per tool
 ```
 

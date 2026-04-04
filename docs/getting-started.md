@@ -101,16 +101,16 @@ Load an agent definition when you need specialized review. For example, ask your
 
 ## Using Commands
 
-The `.claude/commands/` directory contains slash commands for Claude Code:
+The `.claude/commands/agent-skills/` directory contains namespaced slash commands for Claude Code. The `agent-skills:` prefix prevents conflicts with other skill ecosystems (e.g., gsd, gstack) that may define their own `/review`, `/ship`, etc.
 
 | Command | Skill Invoked |
 |---------|---------------|
-| `/spec` | spec-driven-development |
-| `/plan` | planning-and-task-breakdown |
-| `/build` | incremental-implementation + test-driven-development |
-| `/test` | test-driven-development |
-| `/review` | code-review-and-quality |
-| `/ship` | shipping-and-launch |
+| `/agent-skills:spec` | spec-driven-development |
+| `/agent-skills:plan` | planning-and-task-breakdown |
+| `/agent-skills:build` | incremental-implementation + test-driven-development |
+| `/agent-skills:test` | test-driven-development |
+| `/agent-skills:review` | code-review-and-quality |
+| `/agent-skills:ship` | shipping-and-launch |
 
 ## Using References
 
