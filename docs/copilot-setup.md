@@ -4,7 +4,7 @@
 
 ### Copilot Instructions
 
-GitHub Copilot supports project-level instructions via `.github/copilot-instructions.md`:
+GitHub Copilot supports project-level instructions by using `.github/copilot-instructions.md`:
 
 ```bash
 mkdir -p .github
