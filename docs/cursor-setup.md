@@ -2,7 +2,7 @@
 
 ## Setup
 
-### Option 1: Skills Directory (Recommended)
+### Option 1: Skills Directory
 
 Since [Cursor 2.4](https://cursor.com/changelog/2-4), the editor natively supports **Agent Skills** — defined as `SKILL.md` files inside `.cursor/skills/`. This is a perfect match for agent-skills, since each skill already ships as a `SKILL.md` with the same YAML frontmatter format Cursor expects (`name` and `description`).
 
@@ -32,19 +32,19 @@ Cursor 2.5+ supports [plugins](https://cursor.com/docs/plugins) that bundle skil
 
 For teams, you can also set up a **private marketplace** to distribute curated skill sets.
 
-### Option 3: Rules Directory (Legacy)
+### Option 3: Rules Directory
 
-Cursor still supports `.cursor/rules/` for always-on, declarative rules. Use this if you want certain skills loaded into every conversation regardless of context:
+Cursor supports `.cursor/rules/` for **always-on, declarative rules**. Rules are loaded into every conversation automatically — use them for coding standards, style guides, and project conventions that must always apply:
 
 ```bash
 mkdir -p .cursor/rules
 
-# Copy skills as rules (they'll always be in context)
+# Copy skills as always-on rules
 cp /path/to/agent-skills/skills/test-driven-development/SKILL.md .cursor/rules/test-driven-development.md
 cp /path/to/agent-skills/skills/code-review-and-quality/SKILL.md .cursor/rules/code-review-and-quality.md
 ```
 
-> **Note:** Rules consume context in every request. Prefer skills (Option 1) for anything you don't need in every conversation.
+> **Note:** Rules and skills serve different purposes. Rules are best for standards that should **always** be enforced. Skills are best for procedural workflows the agent loads **when relevant**. See the comparison table below.
 
 ### Option 4: Notepads
 
@@ -95,8 +95,8 @@ Keep these as notepads for occasional reference:
 
 ## Usage Tips
 
-1. **Prefer skills over rules** — Skills keep your context clean. The agent loads them when needed based on the `description` field.
-2. **Don't load everything** — Cursor has context limits. Let the agent discover skills dynamically rather than forcing all of them as always-on rules.
+1. **Use both skills and rules** — They're complementary. Rules enforce standards in every conversation; skills provide workflows on demand.
+2. **Don't load everything as rules** — Cursor has context limits. Only use rules for standards that must always apply. Let the agent discover skills dynamically for everything else.
 3. **Reference skills explicitly when needed** — Tell Cursor "Use the test-driven-development skill for this change" to ensure it loads a specific skill.
 4. **Use agents for review** — Copy `agents/code-reviewer.md` content and tell Cursor to "review this diff using this code review framework."
 5. **Combine approaches** — Use rules for team standards, skills for workflows, and notepads for reference material.
