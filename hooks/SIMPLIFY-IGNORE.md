@@ -73,8 +73,10 @@ Any comment style works (`//`, `/*`, `#`, `<!--`). Multiple blocks per file and 
 If Claude Code crashes without triggering the Stop hook, files on disk may still have `BLOCK_<hash>` placeholders. To restore manually:
 
 ```bash
-echo '{}' | bash hooks/simplify-ignore.sh
+bash hooks/simplify-ignore.sh
 ```
+
+Run from your project root, or set `CLAUDE_PROJECT_DIR` to the project path.
 
 Backups are stored in `.claude/.simplify-ignore-cache/` within your project directory.
 

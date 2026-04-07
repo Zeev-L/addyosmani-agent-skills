@@ -18,7 +18,9 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 CACHE="${CLAUDE_PROJECT_DIR:-.}/.claude/.simplify-ignore-cache"
-if [ -t 0 ]; then INPUT="{}"; else INPUT=$(cat); fi
+IS_TTY=0
+if [ -t 0 ]; then INPUT="{}"; IS_TTY=1; else INPUT=$(cat); fi
+HOOK_EVENT=$(printf '%s' "$INPUT" | jq -r '.hook_event_name // empty' 2>/dev/null) || HOOK_EVENT=""
 
 # Parse hook input — trap errors explicitly so set -e doesn't cause
 # a silent exit on malformed JSON, and surface a useful diagnostic.
@@ -61,9 +63,10 @@ filter_file() {
   : > "$dest"
   rm -f "$CACHE/${fid}".block.* "$CACHE/${fid}".reason.* "$CACHE/${fid}".prefix.* "$CACHE/${fid}".suffix.*
 
-  local count=0 in_block=0 buf="" reason="" prefix="" suffix=""
+  local count=0 in_block=0 handled=0 buf="" reason="" prefix="" suffix=""
 
   while IFS= read -r line || [ -n "$line" ]; do
+    handled=0
     # Check for start marker (no fork — uses bash case)
     if [ $in_block -eq 0 ]; then
       case "$line" in *simplify-ignore-start*)
@@ -92,6 +95,7 @@ filter_file() {
             printf '%s\n' "${prefix}BLOCK_${h}${suffix}" >> "$dest"
           fi
           buf=""; reason=""; prefix=""; suffix=""
+          handled=1
           continue
           ;; *)
           continue
@@ -104,26 +108,28 @@ filter_file() {
       buf="${buf}
 ${line}"
     fi
-    # Check for end marker
-    case "$line" in *simplify-ignore-end*)
-      if [ $in_block -eq 1 ]; then
-        local h; h=$(block_hash "$buf")
-        count=$((count + 1))
-        printf '%s' "$buf" > "$CACHE/${fid}.block.${h}"
-        [ -n "$reason" ] && printf '%s' "$reason" > "$CACHE/${fid}.reason.${h}"
-        printf '%s' "$prefix" > "$CACHE/${fid}.prefix.${h}"
-        printf '%s' "$suffix" > "$CACHE/${fid}.suffix.${h}"
-        if [ -n "$reason" ]; then
-          printf '%s\n' "${prefix}BLOCK_${h}: ${reason}${suffix}" >> "$dest"
-        else
-          printf '%s\n' "${prefix}BLOCK_${h}${suffix}" >> "$dest"
+    # Check for end marker (skipped if single-line block already handled above)
+    if [ $handled -eq 0 ]; then
+      case "$line" in *simplify-ignore-end*)
+        if [ $in_block -eq 1 ]; then
+          local h; h=$(block_hash "$buf")
+          count=$((count + 1))
+          printf '%s' "$buf" > "$CACHE/${fid}.block.${h}"
+          [ -n "$reason" ] && printf '%s' "$reason" > "$CACHE/${fid}.reason.${h}"
+          printf '%s' "$prefix" > "$CACHE/${fid}.prefix.${h}"
+          printf '%s' "$suffix" > "$CACHE/${fid}.suffix.${h}"
+          if [ -n "$reason" ]; then
+            printf '%s\n' "${prefix}BLOCK_${h}: ${reason}${suffix}" >> "$dest"
+          else
+            printf '%s\n' "${prefix}BLOCK_${h}${suffix}" >> "$dest"
+          fi
+          in_block=0; buf=""; reason=""; prefix=""; suffix=""
+          continue
         fi
-        in_block=0; buf=""; reason=""; prefix=""; suffix=""
-        continue
-      fi
-      ;;
-    esac
-    [ $in_block -eq 0 ] && printf '%s\n' "$line" >> "$dest"
+        ;;
+      esac
+    fi
+    [ $in_block -eq 0 ] && [ $handled -eq 0 ] && printf '%s\n' "$line" >> "$dest"
   done < "$src"
 
   # Unclosed block → flush as-is
@@ -142,7 +148,9 @@ ${line}"
 }
 
 # ── Stop: restore all files from backup ───────────────────────────────────────
-if [ -z "$TOOL_NAME" ]; then
+# Detect Stop event explicitly via hook_event_name (sent by Claude Code),
+# or via interactive TTY invocation (manual crash recovery).
+if [ "$HOOK_EVENT" = "Stop" ] || { [ "$IS_TTY" -eq 1 ] && [ -z "$TOOL_NAME" ]; }; then
   [ -d "$CACHE" ] || exit 0
   for bak in "$CACHE"/*.bak; do
     [ -f "$bak" ] || continue
@@ -168,6 +176,15 @@ if [ -z "$TOOL_NAME" ]; then
     [ -d "$lockdir" ] || continue
     rmdir "$lockdir" 2>/dev/null
   done
+  exit 0
+fi
+
+# Guard: empty TOOL_NAME from piped input without Stop event = malformed input.
+# Don't silently proceed — warn and exit to prevent accidental data loss.
+if [ -z "$TOOL_NAME" ] && [ "$IS_TTY" -eq 0 ]; then
+  if [ -d "$CACHE" ] && ls "$CACHE"/*.bak >/dev/null 2>&1; then
+    printf 'Warning: empty tool_name with no Stop event; skipping to prevent data loss (input: %.120s)\n' "$INPUT" >&2
+  fi
   exit 0
 fi
 

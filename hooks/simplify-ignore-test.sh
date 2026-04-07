@@ -241,6 +241,83 @@ printf '\nTest 10: Malformed JSON input produces warning\n'
 warning_out=$(echo 'NOT_JSON{{{' | bash hooks/simplify-ignore.sh 2>&1) || true
 assert_eq "warning on bad JSON" "1" "$(printf '%s' "$warning_out" | grep -c 'Warning.*failed to parse')"
 
+# ── Test 11: Empty JSON {} from pipe does NOT trigger restore (Bug 3) ───
+printf '\nTest 11: Empty JSON from pipe does not silently restore\n'
+
+BUG3_DIR="$TMPDIR/bug3-test"
+mkdir -p "$BUG3_DIR/.claude/.simplify-ignore-cache"
+BUG3_CACHE="$BUG3_DIR/.claude/.simplify-ignore-cache"
+BUG3_ID="testfile12345678"
+printf 'original content\n' > "$BUG3_DIR/target.js"
+cp "$BUG3_DIR/target.js" "$BUG3_CACHE/${BUG3_ID}.bak"
+printf '%s' "$BUG3_DIR/target.js" > "$BUG3_CACHE/${BUG3_ID}.path"
+printf 'model changed this\n' > "$BUG3_DIR/target.js"
+
+bug3_stderr=$(echo '{}' | CLAUDE_PROJECT_DIR="$BUG3_DIR" bash hooks/simplify-ignore.sh 2>&1) || true
+bug3_content=$(cat "$BUG3_DIR/target.js")
+assert_eq "empty JSON from pipe does not revert file" "model changed this" "$bug3_content"
+assert_eq "warning emitted for empty tool_name from pipe" "1" \
+  "$(printf '%s' "$bug3_stderr" | grep -c 'Warning.*empty tool_name')"
+
+# ── Test 12: Piped Stop event restores correctly ────────────────────────
+printf '\nTest 12: Piped Stop event restores correctly\n'
+
+STOP_DIR="$TMPDIR/stop-test"
+mkdir -p "$STOP_DIR/.claude/.simplify-ignore-cache"
+STOP_CACHE="$STOP_DIR/.claude/.simplify-ignore-cache"
+STOP_ID="testfile78901234"
+printf 'original content\n' > "$STOP_DIR/target.js"
+cp "$STOP_DIR/target.js" "$STOP_CACHE/${STOP_ID}.bak"
+printf '%s' "$STOP_DIR/target.js" > "$STOP_CACHE/${STOP_ID}.path"
+printf 'BLOCK_deadbeef placeholder\n' > "$STOP_DIR/target.js"
+mkdir -p "$STOP_CACHE/${STOP_ID}.lock"
+
+echo '{"hook_event_name":"Stop","stop_reason":"end_turn"}' \
+  | CLAUDE_PROJECT_DIR="$STOP_DIR" bash hooks/simplify-ignore.sh 2>/dev/null
+stop_content=$(cat "$STOP_DIR/target.js")
+assert_eq "stop_reason input restores file" "original content" "$stop_content"
+
+# ── Test 13: tool_name present but file_path missing exits cleanly ──────
+printf '\nTest 13: tool_name present but file_path missing\n'
+
+PART_DIR="$TMPDIR/partial-test"
+mkdir -p "$PART_DIR/.claude/.simplify-ignore-cache"
+PART_CACHE="$PART_DIR/.claude/.simplify-ignore-cache"
+PART_ID="testfiledef01234"
+printf 'original\n' > "$PART_DIR/target.js"
+cp "$PART_DIR/target.js" "$PART_CACHE/${PART_ID}.bak"
+printf '%s' "$PART_DIR/target.js" > "$PART_CACHE/${PART_ID}.path"
+printf 'model work\n' > "$PART_DIR/target.js"
+
+rc=0
+echo '{"hook_event_name":"PreToolUse","tool_name":"Read"}' \
+  | CLAUDE_PROJECT_DIR="$PART_DIR" bash hooks/simplify-ignore.sh 2>/dev/null || rc=$?
+part_content=$(cat "$PART_DIR/target.js")
+assert_eq "missing file_path exits without restore" "model work" "$part_content"
+assert_eq "exit code 0" "0" "$rc"
+
+# ── Test 14: Single-line block hash computed exactly once (Bug 1) ───────
+printf '\nTest 14: Single-line block hash unique count\n'
+rm -f "$CACHE"/*
+
+SRC="$TMPDIR/hash-once.js"
+DEST="$TMPDIR/hash-once-filtered.js"
+cat > "$SRC" <<'EOF'
+/* simplify-ignore-start */ secret(); /* simplify-ignore-end */
+EOF
+
+FID="test_hash_once"
+filter_file "$SRC" "$DEST" "$FID"
+
+block_files=$(ls "$CACHE/${FID}".block.* 2>/dev/null | wc -l | tr -d ' ')
+assert_eq "single-line: exactly one block file (hash computed once)" "1" "$block_files"
+
+placeholder_lines=$(grep -c 'BLOCK_' "$DEST")
+assert_eq "single-line: exactly one placeholder line (no double-write)" "1" "$placeholder_lines"
+
+output_lines=$(wc -l < "$DEST" | tr -d ' ')
+assert_eq "single-line: output line count matches" "1" "$output_lines"
+
 # ── Summary ──────────────────────────────────────────────────────────────
 printf '\n══════════════════════════════════════════\n'
 printf 'Results: %d passed, %d failed\n' "$PASS" "$FAIL"
