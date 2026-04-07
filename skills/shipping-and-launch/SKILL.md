@@ -263,6 +263,11 @@ Every deployment needs a rollback plan before it happens:
 - Redeploy previous version: < 5 minutes
 - Database rollback: < 15 minutes
 ```
+## See Also
+
+- For security pre-launch checks, see `references/security-checklist.md`
+- For performance pre-launch checklist, see `references/performance-checklist.md`
+- For accessibility verification before launch, see `references/accessibility-checklist.md`
 
 ## Common Rationalizations
 
