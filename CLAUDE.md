@@ -168,9 +168,9 @@ The key insight: **Claude's Read+Edit does one file at a time with ~0.5-1s tool 
 ### Rule 1: Never Read+Edit in a loop for multi-file changes
 ```
 WRONG: Grep → Read file1 → Edit file1 → Read file2 → Edit file2 → ... (N×2 tool calls)
-RIGHT: ambr 'old' 'new'                                    (1 command)
-RIGHT: fd -e ts | xargs sd 'old' 'new'                     (1 command)
-RIGHT: rg -n 'old' --type ts | sad -e 'old' 'new' -k      (1 pipeline)
+RIGHT: ambr 'old' 'new'                                    (one pipeline/one-liner)
+RIGHT: fd -e ts | xargs sd 'old' 'new'                     (one pipeline/one-liner)
+RIGHT: rg -n 'old' --type ts | sad -e 'old' 'new' -k      (one pipeline/one-liner)
 ```
 
 ### Rule 2: Use structural diffs for all code review
