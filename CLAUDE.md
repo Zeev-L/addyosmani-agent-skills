@@ -161,6 +161,7 @@ Modern CLI replacements that are 10-1400x faster than traditional tools. Use the
 | JSON extraction | — | `python3 -c` 56ms | `jq` 31ms | **1.8x** |
 | Count occurrences | 346 | Grep+Read+count ~5s | `rg -c \| awk` 54ms | **~90x** |
 
+Benchmark methodology: these timings are example measurements from one local environment using the exact commands shown in the table, intended to compare workflows rather than claim universal performance. Shell-command timings should be measured over multiple runs with the same repository state, and results will vary with hardware, filesystem/cache warmth, repo size, and tool versions. Claude Read+Edit numbers are approximate end-to-end workflow timings that include per-tool-call overhead, so they are not directly comparable to shell microbenchmarks.
 The key insight: **Claude's Read+Edit does one file at a time with ~0.5-1s tool call overhead.** For multi-file work, use a single pipeline — **~1400x faster.**
 
 ## Workflow Optimization Rules
