@@ -1,6 +1,5 @@
 ---
 name: api-and-interface-design
-context: fork
 description: Guides stable API and interface design. Use when designing APIs, module boundaries, or any public interface. Use when creating REST or GraphQL endpoints, defining type contracts between modules, or establishing boundaries between frontend and backend.
 ---
 
