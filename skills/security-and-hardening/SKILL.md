@@ -1,5 +1,6 @@
 ---
 name: security-and-hardening
+context: fork
 description: Hardens code against vulnerabilities. Use when handling user input, authentication, data storage, or external integrations. Use when building any feature that accepts untrusted data, manages user sessions, or interacts with third-party services.
 ---
 

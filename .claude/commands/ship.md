@@ -1,5 +1,6 @@
 ---
 description: Run the pre-launch checklist and prepare for production deployment
+context: fork
 ---
 
 Invoke the agent-skills:shipping-and-launch skill.

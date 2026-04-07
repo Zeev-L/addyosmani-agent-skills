@@ -1,5 +1,6 @@
 ---
 description: Implement the next task incrementally — build, test, verify, commit
+context: fork
 ---
 
 Invoke the agent-skills:incremental-implementation skill alongside agent-skills:test-driven-development.
