@@ -60,7 +60,7 @@ Modern CLI replacements that are 10-1400x faster than traditional tools. Use the
 | Parsing file listings manually | `tree -J -P "pattern" --prune \| jq` |
 | `python3 -c` for JSON parsing | `jq` (native C, ~6x faster than Python startup) |
 | `sed` for find/replace | `sd` (Rust, literal by default, regex with `-s`, no BSD `-i ''` tax) |
-| `find \| xargs sed` across codebase | `amber` (parallel Rust, interactive per-match, ignores .git) |
+| `find \| xargs sed` across codebase | `amber` (`ambr`) (parallel Rust, interactive per-match, ignores .git) |
 | Need diff preview before replace | `sad` (Rust, shows colored diff before applying) |
 | `\| while read` loops | Single command + pipe to `jq`/`xargs` |
 | `du` for disk usage | `dust` (visual treemap, instant) |
