@@ -81,6 +81,22 @@ Categorize every finding:
 - Security checked: [yes/no, observations]
 ```
 
+## Common Rationalizations
+
+| Rationalization | Required response |
+|---|---|
+| "The change is small, a quick scan is sufficient" | Small changes can introduce subtle bugs. Apply the full five-dimension review every time. |
+| "Tests pass, so the logic must be correct" | Tests prove what they test, not what they don't. Check missing scenarios before trusting green tests. |
+
+## Verification
+
+After completing the review, confirm:
+- [ ] Reviewed tests first to infer intent and coverage
+- [ ] Checked all five dimensions (correctness, readability, architecture, security, performance)
+- [ ] Every Critical/Important item includes a concrete fix
+- [ ] Included at least one positive observation
+- [ ] Called out uncertainties and suggested follow-up investigation
+
 ## Rules
 
 1. Review the tests first — they reveal intent and coverage
