@@ -1,0 +1,22 @@
+{
+  "id": "tdd-new-feature-01",
+  "skill": "test-driven-development",
+  "description": "Implement a new function following strict TDD (Red-Green-Refactor)",
+  "prompt": "Add a validateEmail function to index.js. It should return true for valid emails like user@example.com, and false for: missing @ symbol, empty string, strings without a TLD (user@domain), and strings with spaces.",
+  "fixtures": ["fixtures/feature-app/"],
+  "expected_behaviors": [
+    "Test file created or modified BEFORE implementation file modified",
+    "Tests initially fail when run (RED phase)",
+    "Implementation makes all new tests pass (GREEN phase)",
+    "All pre-existing tests still pass (no regressions)",
+    "Function handles all 4 specified invalid cases",
+    "Function accepts valid emails"
+  ],
+  "process_checks": [
+    {"type": "file_order", "test_glob": "*.test.*", "impl_file": "index.js", "expect": "test_first"},
+    {"type": "test_result", "command": "node --test", "expect": "pass"},
+    {"type": "file_contains", "file": "index.js", "pattern": "validateEmail", "expect": true},
+    {"type": "file_contains", "file": "index.test.js", "pattern": "validateEmail", "expect": true}
+  ],
+  "baseline_comparison": true
+}

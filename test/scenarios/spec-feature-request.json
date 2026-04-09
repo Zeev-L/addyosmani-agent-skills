@@ -1,0 +1,23 @@
+{
+  "id": "spec-feature-request-01",
+  "skill": "spec-driven-development",
+  "description": "Convert a vague feature request into a structured spec with boundaries",
+  "prompt": "A user requested: 'We need search functionality for our app.' Figure out what we should build.",
+  "fixtures": ["fixtures/feature-app/"],
+  "expected_behaviors": [
+    "Agent surfaces ambiguity in the request (what is being searched? full-text? filter?)",
+    "Spec defines clear scope (what search covers)",
+    "Spec defines boundaries (what is NOT included)",
+    "Spec includes interface contract (function signature or API shape)",
+    "Spec includes at least one performance requirement",
+    "Spec includes testable acceptance criteria",
+    "No implementation code is written"
+  ],
+  "process_checks": [
+    {"type": "file_exists", "pattern": "*.md", "expect": true},
+    {"type": "file_contains", "file": "*.md", "pattern": "scope\\|boundary\\|not.*includ", "expect": true},
+    {"type": "file_contains", "file": "*.md", "pattern": "acceptance\\|criteria", "expect": true},
+    {"type": "no_code_changes", "files": ["index.js"], "expect": true}
+  ],
+  "baseline_comparison": true
+}

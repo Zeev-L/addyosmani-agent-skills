@@ -1,0 +1,1 @@
+The trackRequest function in index.js has a potential issue with how it increments requestCount. Fix it and add a test.

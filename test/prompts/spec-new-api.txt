@@ -1,0 +1,1 @@
+We need to add a POST /api/tasks endpoint to create new tasks. Each task has a title (required, string, max 100 chars), description (optional, string), and priority (required, enum: low/medium/high). Define what this endpoint should look like before building it.

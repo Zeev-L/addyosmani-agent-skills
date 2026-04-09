@@ -1,0 +1,1 @@
+Add a validateEmail function to index.js. It should return true for valid emails like user@example.com, and false for: missing @ symbol, empty string, strings without a TLD (user@domain), and strings with spaces.

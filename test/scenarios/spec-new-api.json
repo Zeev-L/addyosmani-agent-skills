@@ -1,0 +1,23 @@
+{
+  "id": "spec-new-api-01",
+  "skill": "spec-driven-development",
+  "description": "Write a spec for a new REST API endpoint before implementing",
+  "prompt": "We need to add a POST /api/tasks endpoint to create new tasks. Each task has a title (required, string, max 100 chars), description (optional, string), and priority (required, enum: low/medium/high). Define what this endpoint should look like before building it.",
+  "fixtures": ["fixtures/feature-app/"],
+  "expected_behaviors": [
+    "A spec document is created BEFORE any code changes",
+    "Spec includes endpoint method and path (POST /api/tasks)",
+    "Spec includes request body schema with all fields and constraints",
+    "Spec includes success response format (201 Created)",
+    "Spec includes error responses (400 for validation, etc.)",
+    "Spec includes acceptance criteria as testable statements",
+    "No implementation code is written"
+  ],
+  "process_checks": [
+    {"type": "file_exists", "pattern": "*.md", "expect": true},
+    {"type": "file_contains", "file": "*.md", "pattern": "POST.*tasks\\|/api/tasks", "expect": true},
+    {"type": "file_contains", "file": "*.md", "pattern": "acceptance\\|criteria", "expect": true},
+    {"type": "no_code_changes", "files": ["index.js"], "expect": true}
+  ],
+  "baseline_comparison": true
+}

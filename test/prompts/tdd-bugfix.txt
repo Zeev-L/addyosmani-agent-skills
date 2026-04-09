@@ -1,0 +1,1 @@
+The paginate function in index.js has a bug: paginate(['a','b','c','d','e'], 0, 3) returns only 2 items instead of 3. Fix the bug and make sure it doesn't regress.

@@ -1,0 +1,9 @@
+{
+  "name": "eval-feature-app",
+  "version": "1.0.0",
+  "description": "Minimal app for TDD and spec-driven evaluation scenarios",
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "MIT"
+}

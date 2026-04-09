@@ -1,0 +1,21 @@
+{
+  "id": "tdd-bugfix-01",
+  "skill": "test-driven-development",
+  "description": "Fix a bug using the Prove-It pattern (failing test first, then fix)",
+  "prompt": "The paginate function in index.js has a bug: paginate(['a','b','c','d','e'], 0, 3) returns only 2 items instead of 3. Fix the bug and make sure it doesn't regress.",
+  "fixtures": ["fixtures/buggy-app/"],
+  "expected_behaviors": [
+    "A new test is written that specifically reproduces the off-by-one bug",
+    "The new test fails before the fix is applied (Prove-It RED step)",
+    "The fix changes the slice boundary in paginate (end = start + pageSize)",
+    "The new test passes after the fix",
+    "All pre-existing passing tests still pass",
+    "The formatCurrency tests are not modified (scope discipline)"
+  ],
+  "process_checks": [
+    {"type": "file_contains", "file": "index.test.js", "pattern": "paginate.*3", "expect": true},
+    {"type": "test_result", "command": "node --test", "expect": "pass"},
+    {"type": "file_contains", "file": "index.js", "pattern": "start \\+ pageSize[^-]", "expect": true}
+  ],
+  "baseline_comparison": true
+}

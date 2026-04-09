@@ -36,6 +36,37 @@ Every skill should include these sections:
 - Don't create supporting files unless content exceeds 100 lines
 - Don't put reference material inside skill directories — use `references/` instead
 
+## Testing Your Changes
+
+Before submitting a PR, validate your skill:
+
+```bash
+# Structural validation — checks format, sections, description
+bash test/validate-skills.sh
+```
+
+If you modified a skill's workflow, run the relevant evaluation scenario:
+
+```bash
+# List available scenarios
+bash test/run-all.sh --list
+
+# Fast check: does the skill activate on a neutral prompt?
+bash test/run-test.sh <scenario>.json --triggering
+
+# Full test: run agent with skill and grade the result
+bash test/run-test.sh <scenario>.json
+
+# Compare with-skill vs without-skill (measures the skill's value)
+bash test/run-test.sh <scenario>.json --baseline
+
+# Grade an existing workspace without re-running Claude
+bash test/run-test.sh <scenario>.json --grade-only
+
+# Test with a specific model (Anthropic recommends Haiku, Sonnet, and Opus)
+EVAL_MODEL=haiku bash test/run-test.sh <scenario>.json
+```
+
 ## Modifying Existing Skills
 
 - Keep changes focused and minimal
