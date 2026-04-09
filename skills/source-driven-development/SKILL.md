@@ -20,9 +20,8 @@ Every framework-specific code decision must be backed by official documentation.
 
 **When NOT to use:**
 
-- Renaming variables, fixing typos, moving files
-- Language-level patterns that don't depend on any library (loops, conditionals, data structures)
-- Code that doesn't touch any external framework or library
+- Correctness does not depend on a specific version (renaming variables, fixing typos, moving files)
+- Pure logic that works the same across all versions (loops, conditionals, data structures)
 - The user explicitly wants speed over verification ("just do it quickly")
 
 ## The Process
@@ -93,6 +92,8 @@ GOOD: Fetch docs.djangoproject.com/en/6.0/topics/auth/
 
 After fetching, extract the key patterns and note any deprecation warnings or migration guidance.
 
+When official sources conflict with each other (e.g. a migration guide contradicts the API reference), surface the discrepancy to the user and verify which pattern actually works against the detected version.
+
 ### Step 3: Implement Following Documented Patterns
 
 Write code that matches what the documentation shows:
@@ -126,7 +127,7 @@ Every framework-specific pattern gets a citation. The user must be able to verif
 
 ```typescript
 // React 19 form handling with useActionState
-// Source: https://react.dev/reference/react/useActionState
+// Source: https://react.dev/reference/react/useActionState#usage
 const [state, formAction, isPending] = useActionState(submitOrder, initialState);
 ```
 
@@ -137,7 +138,7 @@ I'm using useActionState instead of manual useState for the
 form submission state. React 19 replaced the manual
 isPending/setIsPending pattern with this hook.
 
-Source: https://react.dev/blog/2024/12/05/react-19
+Source: https://react.dev/blog/2024/12/05/react-19#actions
 "useTransition now supports async functions [...] to handle
 pending states automatically"
 ```
@@ -145,6 +146,7 @@ pending states automatically"
 **Citation rules:**
 
 - Full URLs, not shortened
+- Prefer deep links with anchors where possible (e.g. `/useActionState#usage` over `/useActionState`) — anchors survive doc restructuring better than top-level pages
 - Quote the relevant passage when it supports a non-obvious decision
 - Include browser/runtime support data when recommending platform features
 - If you cannot find documentation for a pattern, say so explicitly:
