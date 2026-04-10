@@ -68,38 +68,38 @@ Every boundary-crossing action must have a durable authorization artifact that s
 Minimum checks:
 
 - **Who authorized this?** Principal or controlling user
+- **Who issued the artifact, and can you verify it?** Trusted issuer, signature or MAC, and trust anchor or key resolution
 - **What is allowed?** Actions, tools, resources, data domains
 - **What is forbidden?** Explicit exclusions matter as much as inclusions
 - **How long is it valid?** Expiry or session bound
 - **How far can it delegate?** Delegation depth, allowed sub-agents, tool allowlist
 - **Which identity executes it?** User auth, agent auth, service account, API key
 
-Example receipt shape:
+Do not invent an unsigned JSON receipt just because it is convenient to sketch. A plain object that says `allowed_actions: ["*"]` is not an authorization artifact; it is just data.
 
-```json
-{
-  "authorization_id": "auth_7f3c",
-  "principal": "user_123",
-  "session_id": "sess_abc",
-  "allowed_actions": ["read:orders", "draft:refund", "refund:issue<=50"],
-  "disallowed_actions": ["send:email", "refund:issue>50"],
-  "allowed_delegatees": ["triage-agent", "policy-agent", "refund-tool"],
-  "max_delegation_depth": 2,
-  "expires_at": "2026-04-10T18:00:00Z"
-}
-```
+Prefer an existing verifiable format or protocol layer:
 
-Fail closed when the receipt is missing, expired, or ambiguous:
+- **OAuth 2.0 Token Exchange** ([RFC 8693](https://datatracker.ietf.org/doc/rfc8693/)) when delegation needs to flow through an authorization server
+- **Signed JWTs** ([RFC 7519](https://datatracker.ietf.org/doc/rfc7519/), [RFC 8725](https://datatracker.ietf.org/doc/rfc8725/)) when claims, issuer identity, audience, and expiry must be verifiable
+- **UCAN**, **Macaroons**, or a protocol like **HDP** when your system already uses capability-style or provenance-aware delegation
+
+The critical property is not the syntax. It is that the consumer can verify issuer, integrity, audience, expiry, and delegation-related claims before trusting the artifact.
+
+Structural example:
 
 ```typescript
-function authorize(receipt, action, delegatee, depth) {
-  if (!receipt) throw new Error('AUTHORIZATION_REQUIRED');
-  if (Date.now() > Date.parse(receipt.expires_at)) throw new Error('AUTHORIZATION_EXPIRED');
-  if (!receipt.allowed_actions.includes(action)) throw new Error('OUT_OF_SCOPE');
-  if (!receipt.allowed_delegatees.includes(delegatee)) throw new Error('DELEGATEE_NOT_ALLOWED');
-  if (depth > receipt.max_delegation_depth) throw new Error('DELEGATION_LIMIT_EXCEEDED');
+function authorize(artifact, action, delegatee, serviceId, trustAnchors, depth) {
+  const claims = verifyAuthorizationArtifact(artifact, trustAnchors);
+  if (!claims) throw new Error('AUTHORIZATION_INVALID');
+  if (Date.now() > claims.expiresAt) throw new Error('AUTHORIZATION_EXPIRED');
+  if (!claims.audience.includes(serviceId)) throw new Error('WRONG_AUDIENCE');
+  if (!claims.allowedActions.includes(action)) throw new Error('OUT_OF_SCOPE');
+  if (!claims.allowedDelegatees.includes(delegatee)) throw new Error('DELEGATEE_NOT_ALLOWED');
+  if (depth > claims.maxDelegationDepth) throw new Error('DELEGATION_LIMIT_EXCEEDED');
 }
 ```
+
+If your system cannot answer "who signed or issued this, and why do I trust them?" then it is not ready to rely on delegation artifacts for enforcement.
 
 If the receiving agent or tool cannot inspect the receipt before acting, do not delegate directly. Add a policy wrapper or stop the workflow there.
 
