@@ -72,7 +72,7 @@ run_claude() {
   local model_flag=""
   [ -n "$EVAL_MODEL" ] && model_flag="--model $EVAL_MODEL"
   claude --plugin-dir "$REPO_ROOT" --dangerously-skip-permissions \
-    -p --output-format stream-json --verbose $model_flag "$prompt" > "$log" 2>&1 || true
+    -p --output-format stream-json --verbose $model_flag "$prompt" > "$log" 2>/dev/null || true
 }
 
 # Run Claude without any skills (baseline)
@@ -82,7 +82,7 @@ run_claude_baseline() {
   [ -n "$EVAL_MODEL" ] && model_flag="--model $EVAL_MODEL"
   claude --disable-slash-commands --disallowedTools "Skill" \
     --dangerously-skip-permissions -p --output-format stream-json \
-    --verbose $model_flag "$prompt" > "$log" 2>&1 || true
+    --verbose $model_flag "$prompt" > "$log" 2>/dev/null || true
 }
 
 # ── Skill Verification ─────────────────────────────────────────────────────

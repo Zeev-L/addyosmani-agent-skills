@@ -6,6 +6,7 @@
 #   bash test/run-all.sh --baseline        # Run all with delta
 #   bash test/run-all.sh --triggering      # Fast: just check skill activation
 #   bash test/run-all.sh --validate        # Validate all scenario JSON + prompts
+#   bash test/run-all.sh --null-test       # Verify assertions fail on untouched fixtures
 #   bash test/run-all.sh --list            # List all scenarios
 
 set -uo pipefail
@@ -62,6 +63,39 @@ if [ "$MODE" = "--validate" ]; then
     pass=$((pass + 1))
   done
   printf '\nResults: %d passed, %d failed\n' "$pass" "$fail"
+  [ "$fail" -eq 0 ] && exit 0 || exit 1
+fi
+
+# ── Null-test: verify assertions fail on untouched fixtures ────────────────
+# Catches false-positive assertions by running the grader on clean fixtures.
+# Every scenario MUST return overall FAIL — if it passes, assertions are too loose.
+# Inspired by SkillsBench "oracle execution" validation (arXiv:2602.12670).
+if [ "$MODE" = "--null-test" ]; then
+  pass=0 fail=0
+
+  for f in "$EVAL_DIR"/scenarios/*.json; do
+    [ -f "$f" ] || continue
+    name=$(basename "$f" .json)
+    scenario_id=$(jq -r '.id' "$f")
+
+    # Copy fixture to temp workspace
+    fixture_dir=$(jq -r '.fixtures[0]' "$f")
+    tmpdir=$(mktemp -d)
+    cp -r "$EVAL_DIR/$fixture_dir"* "$tmpdir/" 2>/dev/null
+
+    # Run grader — expect FAIL (exit 1)
+    if bash "$EVAL_DIR/graders/process-checks.sh" "$tmpdir" "$f" >/dev/null 2>&1; then
+      printf '  FAIL: %s — grader PASSED on untouched fixture (false positive!)\n' "$scenario_id" >&2
+      fail=$((fail + 1))
+    else
+      printf '  PASS: %s — grader correctly rejects untouched fixture\n' "$scenario_id"
+      pass=$((pass + 1))
+    fi
+
+    rm -rf "$tmpdir"
+  done
+
+  printf '\nNull-test: %d/%d scenarios correctly rejected\n' "$pass" "$((pass + fail))"
   [ "$fail" -eq 0 ] && exit 0 || exit 1
 fi
 

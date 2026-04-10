@@ -12,9 +12,10 @@
     "All existing tests still pass"
   ],
   "process_checks": [
-    {"type": "test_result", "command": "node --test 2>&1 | grep -q trackRequest", "expect": "pass"},
-    {"type": "file_contains", "file": "index.js", "pattern": "requestCount(\\+\\+| \\+= 1)", "expect": true},
-    {"type": "file_contains", "file": "index.test.js", "pattern": "trackRequest", "expect": true}
+    {"type": "test_result", "command": "node --test", "expect": "pass"},
+    {"type": "file_contains", "file": "index.js", "pattern": "requestCount\\+\\+|requestCount \\+= 1|\\+\\+requestCount", "expect": true},
+    {"type": "file_contains", "file": "index.test.js", "pattern": "trackRequest", "expect": true},
+    {"type": "test_result", "command": "node -e \"const {trackRequest} = require('./index'); const a = trackRequest(); const b = trackRequest(); require('assert').strictEqual(b, a + 1)\"", "expect": "pass"}
   ],
   "baseline_comparison": true
 }

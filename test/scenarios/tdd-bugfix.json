@@ -13,9 +13,10 @@
     "The formatCurrency tests are not modified (scope discipline)"
   ],
   "process_checks": [
-    {"type": "file_contains", "file": "index.test.js", "pattern": "paginate.*3", "expect": true},
     {"type": "test_result", "command": "node --test", "expect": "pass"},
-    {"type": "file_contains", "file": "index.js", "pattern": "start \\+ pageSize[^-]", "expect": true}
+    {"type": "file_contains", "file": "index.js", "pattern": "pageSize - 1", "expect": false},
+    {"type": "file_contains", "file": "index.test.js", "pattern": "paginate.*3.*3|length.*3|strictEqual.*3", "expect": true},
+    {"type": "test_result", "command": "node -e \"const {paginate} = require('./index'); const r = paginate([1,2,3,4,5], 0, 3); require('assert').strictEqual(r.length, 3)\"", "expect": "pass"}
   ],
   "baseline_comparison": true
 }
