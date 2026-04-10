@@ -164,10 +164,11 @@ while [ "$i" -lt "$CHECK_COUNT" ]; do
 
     no_code_changes)
       files=$(jq -r ".process_checks[$i].files[]" "$SCENARIO")
+      initial=$(git -C "$WORKSPACE" rev-list --max-parents=0 HEAD 2>/dev/null)
       all_unchanged=1
       for f in $files; do
-        if [ -d "$WORKSPACE/.git" ]; then
-          if git -C "$WORKSPACE" diff --name-only HEAD 2>/dev/null | grep -q "$f"; then
+        if [ -d "$WORKSPACE/.git" ] && [ -n "$initial" ]; then
+          if git -C "$WORKSPACE" diff --name-only "$initial" 2>/dev/null | grep -q "^${f}$"; then
             all_unchanged=0
             fail "no_code_changes: '$f' was modified"
           fi
@@ -175,6 +176,25 @@ while [ "$i" -lt "$CHECK_COUNT" ]; do
       done
       if [ "$all_unchanged" -eq 1 ]; then
         pass "no_code_changes: implementation files unchanged (spec-only)"
+      fi
+      ;;
+
+    files_modified)
+      files=$(jq -r ".process_checks[$i].files[]" "$SCENARIO")
+      initial=$(git -C "$WORKSPACE" rev-list --max-parents=0 HEAD 2>/dev/null)
+      if [ -z "$initial" ]; then
+        fail "files_modified: no git history in workspace"
+      else
+        for f in $files; do
+          if git -C "$WORKSPACE" diff --name-only "$initial" 2>/dev/null | grep -q "^${f}$"; then
+            pass "files_modified: '$f' was changed by the agent"
+            printf '    ── diff %s ──\n' "$f"
+            git -C "$WORKSPACE" diff "$initial" -- "$f" 2>/dev/null
+            printf '    ── end diff ──\n'
+          else
+            fail "files_modified: '$f' was NOT modified (no-op agent?)"
+          fi
+        done
       fi
       ;;
 

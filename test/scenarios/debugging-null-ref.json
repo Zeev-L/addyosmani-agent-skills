@@ -16,7 +16,8 @@
     {"type": "test_result", "command": "node --test", "expect": "pass"},
     {"type": "file_contains", "file": "index.js", "pattern": "profile\\?\\.|profile\\s*&&|profile\\s*!==|profile\\s*!=|typeof.*profile", "expect": true},
     {"type": "file_contains", "file": "index.test.js", "pattern": "null|undefined|no profile|without profile|missing.*profile.*Bob|profile.*missing.*Bob", "expect": true},
-    {"type": "test_result", "command": "node -e \"const {getUserDisplayName} = require('./index'); assert = require('assert'); assert.strictEqual(getUserDisplayName({name: 'Bob'}), 'Bob')\"", "expect": "pass"}
+    {"type": "test_result", "command": "node -e \"const {getUserDisplayName} = require('./index'); assert = require('assert'); assert.strictEqual(getUserDisplayName({name: 'Bob'}), 'Bob')\"", "expect": "pass"},
+    {"type": "files_modified", "files": ["index.js"], "expect": true}
   ],
   "baseline_comparison": true
 }
