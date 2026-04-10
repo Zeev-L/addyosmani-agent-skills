@@ -1,6 +1,6 @@
 ---
 name: delegation-provenance
-description: Enforces auditable authorization and scoped delegation across agent handoffs, tool calls, and trust-boundary crossings. Use when building agents that delegate to other agents, call external tools, access sensitive data, or perform actions that require human approval to survive multiple hops.
+description: Use when building agents that delegate to other agents, call external tools, access sensitive data, or perform actions that require human approval to survive multiple hops. Enforces auditable authorization and scoped delegation across agent handoffs, tool calls, and trust-boundary crossings.
 ---
 
 # Delegation Provenance
