@@ -124,9 +124,9 @@ Skills are plain Markdown - they work with any agent that accepts system prompts
 
 ---
 
-## All 20 Skills
+## All 21 Skills
 
-The commands above are the entry points. Under the hood, they activate these 20 skills — each one a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
+The commands above are the entry points. Under the hood, they activate these 21 skills — each one a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
 
 ### Define - Clarify what to build
 
@@ -176,6 +176,7 @@ The commands above are the entry points. Under the hood, they activate these 20 
 | [ci-cd-and-automation](skills/ci-cd-and-automation/SKILL.md) | Shift Left, Faster is Safer, feature flags, quality gate pipelines, failure feedback loops | Setting up or modifying build and deploy pipelines |
 | [deprecation-and-migration](skills/deprecation-and-migration/SKILL.md) | Code-as-liability mindset, compulsory vs advisory deprecation, migration patterns, zombie code removal | Removing old systems, migrating users, or sunsetting features |
 | [documentation-and-adrs](skills/documentation-and-adrs/SKILL.md) | Architecture Decision Records, API docs, inline documentation standards - document the *why* | Making architectural decisions, changing APIs, or shipping features |
+| [observability-and-monitoring](skills/observability-and-monitoring/SKILL.md) | Structured logging, four golden signals metrics, OpenTelemetry tracing, SLO-based alerting, dashboard design | Before shipping a service or when debugging production without sufficient data |
 | [shipping-and-launch](skills/shipping-and-launch/SKILL.md) | Pre-launch checklists, feature flag lifecycle, staged rollouts, rollback procedures, monitoring setup | Preparing to deploy to production |
 
 ---
@@ -260,6 +261,7 @@ agent-skills/
 │   ├── ci-cd-and-automation/          #   Ship
 │   ├── deprecation-and-migration/     #   Ship
 │   ├── documentation-and-adrs/        #   Ship
+│   ├── observability-and-monitoring/   #   Ship
 │   ├── shipping-and-launch/           #   Ship
 │   └── using-agent-skills/            #   Meta: how to use this pack
 ├── agents/                            # 3 specialist personas
