@@ -24,10 +24,32 @@ The agent should automatically map user intent to skills:
 - Feature / new functionality → `spec-driven-development`, then `incremental-implementation`, `test-driven-development`
 - Planning / breakdown → `planning-and-task-breakdown`
 - Bug / failure / unexpected behavior → `debugging-and-error-recovery`
-- Code review → `code-review-and-quality`
+- Code review → `code-review-and-quality` + load `agents/code-reviewer.md` persona for the review subagent
+- Security review / hardening → `security-and-hardening` + load `agents/security-auditor.md` persona
+- Test strategy / writing tests → `test-driven-development` + load `agents/test-engineer.md` persona for bug reproduction subagents
 - Refactoring / simplification → `code-simplification`
 - API or interface design → `api-and-interface-design`
 - UI work → `frontend-ui-engineering`
+- Production visibility / logging / alerting → `observability-and-monitoring`
+
+### Agent Personas
+
+Three reusable agent personas live in `agents/`. Load them when a skill calls for a specialized review or testing subagent — they provide structured output formats, severity classifications, and rules the base agent lacks.
+
+| Persona | File | Load when |
+|---------|------|-----------|
+| Senior Code Reviewer | `agents/code-reviewer.md` | Running code review via `code-review-and-quality` |
+| Security Auditor | `agents/security-auditor.md` | Running security review via `security-and-hardening` |
+| Test Engineer | `agents/test-engineer.md` | Writing tests or reproducing bugs via `test-driven-development` |
+
+**How to invoke a persona:**
+
+```
+You are the [persona name] (read agents/[persona-file].md for your full role and rules).
+[Task description]
+```
+
+Personas are not skills — they define *who the agent is* for a task, not *what process to follow*. Skills and personas are used together.
 
 ### Lifecycle Mapping (Implicit Commands)
 
@@ -39,8 +61,8 @@ Instead, the agent must internally follow this lifecycle:
 - PLAN → `planning-and-task-breakdown`
 - BUILD → `incremental-implementation` + `test-driven-development`
 - VERIFY → `debugging-and-error-recovery`
-- REVIEW → `code-review-and-quality`
-- SHIP → `shipping-and-launch`
+- REVIEW → `code-review-and-quality` (+ `code-reviewer` persona)
+- SHIP → `observability-and-monitoring`, then `shipping-and-launch`
 
 ### Execution Model
 
