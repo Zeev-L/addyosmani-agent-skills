@@ -29,6 +29,20 @@ Traces ────→ Why it happened (request path across services)
 
 Each pillar answers different questions. Logs alone don't scale; metrics alone lose context; traces alone miss the big picture. Use all three.
 
+## Step 0: Audit Existing Instrumentation (Brownfield Services)
+
+If you're instrumenting an existing service rather than starting from scratch, don't add more before understanding what's already there. Duplicate or conflicting instrumentation is harder to fix than no instrumentation.
+
+```
+1. List what's already logging — structured or unstructured? correlation IDs present?
+2. List existing metrics — what's being emitted? what's missing from the four golden signals?
+3. List existing alerts — are they firing? are they being acted on?
+4. Identify the gaps against references/observability-checklist.md
+5. Fix gaps incrementally — don't rip out working instrumentation to replace it
+```
+
+If taking ownership of a service with no instrumentation at all, treat it as greenfield and start at Step 1.
+
 ## Step 1: Structured Logging
 
 Logs are only useful if they're searchable and correlatable. Raw string logs are text you can grep at 3am — structured logs are data you can query.
@@ -212,5 +226,7 @@ After instrumenting a service:
 - [ ] Trace context propagated across all outbound calls
 - [ ] Error budget is tracked and visible to the team
 - [ ] On-call rotation tested — alert fires, right person gets paged, runbook resolves it
+
+For a comprehensive pre-launch gate and full instrumentation checklist, see `references/observability-checklist.md`.
 
 Use `shipping-and-launch` for the pre-launch checklist that confirms observability is in place before going live.

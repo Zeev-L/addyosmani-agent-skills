@@ -33,7 +33,7 @@ Task arrives
     ├── Committing/branching? ─────────→ git-workflow-and-versioning
     ├── CI/CD pipeline work? ──────────→ ci-cd-and-automation
     ├── Writing docs/ADRs? ───────────→ documentation-and-adrs
-    ├── Need production visibility? ──→ observability-and-monitoring
+    ├── Instrumenting a service / setting up monitoring? → observability-and-monitoring
     └── Deploying/launching? ─────────→ shipping-and-launch
 ```
 
