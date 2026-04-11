@@ -93,12 +93,12 @@ Don't deprecate without a working alternative. The replacement must:
 
 ### Step 3: Migrate Incrementally
 
-Migrate consumers one at a time, not all at once. For each consumer:
+Migrate consumers one at a time, not all at once. Follow the `incremental-implementation` skill — each migration step should leave the system in a working, testable state before moving to the next. For each consumer:
 
 ```
 1. Identify all touchpoints with the deprecated system
 2. Update to use the replacement
-3. Verify behavior matches (tests, integration checks)
+3. Verify behavior matches — use `test-driven-development` to write tests against the replacement before removing the old system
 4. Remove references to the old system
 5. Confirm no regressions
 ```
@@ -107,7 +107,7 @@ Migrate consumers one at a time, not all at once. For each consumer:
 
 ### Step 4: Remove the Old System
 
-Only after all consumers have migrated:
+Only after all consumers have migrated. Use `git-workflow-and-versioning` for atomic commits — one commit per removal step makes rollback clean if something was missed.
 
 ```
 1. Verify zero active usage (metrics, logs, dependency analysis)
