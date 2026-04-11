@@ -314,7 +314,8 @@ git diff --cached | grep -i "password\|secret\|api_key\|token"
 ```
 ## See Also
 
-For detailed security checklists and pre-commit verification steps, see `references/security-checklist.md`.
+- For a dedicated security review agent (threat modeling, severity classification, OWASP Top 10, exploitation scenarios), use the `security-auditor` persona from `agents/security-auditor.md`. Invoke it when a change touches auth, input handling, data storage, or third-party integrations.
+- For detailed security checklists and pre-commit verification steps, see `references/security-checklist.md`.
 
 ## Common Rationalizations
 

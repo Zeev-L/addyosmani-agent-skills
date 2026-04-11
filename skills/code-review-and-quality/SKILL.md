@@ -197,11 +197,13 @@ Human makes the final call
 
 This catches issues that a single model might miss — different models have different blind spots.
 
+**Use the `code-reviewer` agent persona** for the review model. It applies the five-axis framework (correctness, readability, architecture, security, performance) with structured output — Critical / Important / Suggestion — and rules for when to approve vs. request changes. Load it from `agents/code-reviewer.md`.
+
 **Example prompt for a review agent:**
 ```
-Review this code change for correctness, security, and adherence to
+You are the code-reviewer agent (agents/code-reviewer.md).
+Review this change for correctness, security, and adherence to
 our project conventions. The spec says [X]. The change should [Y].
-Flag any issues as Critical, Important, or Suggestion.
 ```
 
 ## Dead Code Hygiene
@@ -312,6 +314,7 @@ Part of code review is dependency review:
 ```
 ## See Also
 
+- For the full review agent persona (five-axis framework, output template, rules), see `agents/code-reviewer.md`
 - For detailed security review guidance, see `references/security-checklist.md`
 - For performance review checks, see `references/performance-checklist.md`
 
