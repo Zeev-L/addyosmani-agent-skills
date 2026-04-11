@@ -139,6 +139,8 @@ Produce a concrete artifact — a markdown one-pager that moves work forward:
 
 Ask the user if they'd like to save this to `docs/ideas/[idea-name].md` (or a location of their choosing). Only save if they confirm.
 
+**Next step:** If the user wants to build the refined idea, continue with `spec-driven-development` to define requirements and acceptance criteria before any implementation work begins.
+
 ### Anti-patterns to Avoid
 
 - **Don't generate 20+ ideas.** Quality over quantity. 5-8 well-considered variations beat 20 shallow ones.
