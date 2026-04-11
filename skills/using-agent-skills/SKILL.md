@@ -33,8 +33,8 @@ Task arrives
     ├── Committing/branching? ─────────→ git-workflow-and-versioning
     ├── CI/CD pipeline work? ──────────→ ci-cd-and-automation
     ├── Writing docs/ADRs? ───────────→ documentation-and-adrs
-    ├── Deploying/launching? ─────────→ shipping-and-launch
-    └── System live, need visibility? ─→ observability-and-monitoring
+    ├── Need production visibility? ──→ observability-and-monitoring
+    └── Deploying/launching? ─────────→ shipping-and-launch
 ```
 
 ## Core Operating Behaviors
@@ -145,9 +145,9 @@ For a complete feature, the typical skill sequence is:
 7. test-driven-development     → Prove each slice works
 8. code-review-and-quality     → Review before merge
 9. git-workflow-and-versioning → Clean commit history
-10. documentation-and-adrs     → Document decisions
-11. shipping-and-launch        → Deploy safely
-12. observability-and-monitoring → Instrument for production visibility
+10. documentation-and-adrs       → Document decisions
+11. observability-and-monitoring → Instrument for production visibility
+12. shipping-and-launch          → Deploy safely
 ```
 
 Not every task needs every skill. A bug fix might only need: `debugging-and-error-recovery` → `test-driven-development` → `code-review-and-quality`.
@@ -173,5 +173,5 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Ship | git-workflow-and-versioning | Atomic commits, clean history |
 | Ship | ci-cd-and-automation | Automated quality gates on every change |
 | Ship | documentation-and-adrs | Document the why, not just the what |
-| Ship | shipping-and-launch | Pre-launch checklist, monitoring, rollback plan |
 | Ship | observability-and-monitoring | Logs, metrics, traces, and SLO-based alerting |
+| Ship | shipping-and-launch | Pre-launch checklist, monitoring, rollback plan |
