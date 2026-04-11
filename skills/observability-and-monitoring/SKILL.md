@@ -78,8 +78,8 @@ Saturation → How full is the system (CPU, memory, queue depth, connection pool
 
 ```
 Every HTTP endpoint:
-  - request_count (counter, by status code, method, path)
-  - request_duration_seconds (histogram, by status code, method, path)
+  - request_count (counter, by status code, method, route_template)
+  - request_duration_seconds (histogram, by status code, method, route_template)
 
 Every queue/worker:
   - queue_depth (gauge)
@@ -93,6 +93,8 @@ Every external dependency:
 
 **Use histograms for latency, not averages.** An average of 200ms can hide a p99 of 10s. A p99 of 10s means 1 in 100 users is waiting 10 seconds.
 
+**Cardinality rule:** Metric labels must be low-cardinality. Use route templates (`/users/:id`), not raw paths (`/users/123`). Never include user IDs, tenant IDs, request bodies, or query strings in labels — each unique value creates a new time series, which can make dashboards unusable and drive up telemetry cost.
+
 ## Step 3: Distributed Tracing
 
 Tracing shows the full path of a request across services. Add it when:
@@ -101,16 +103,23 @@ Tracing shows the full path of a request across services. Add it when:
 
 **Minimum viable tracing:**
 
+Use OpenTelemetry — it is the industry standard and interoperates across services via the W3C `traceparent`/`tracestate` headers. Do not hand-roll custom `X-Trace-Id` or `X-Span-Id` headers; they will not be understood by downstream services or telemetry backends.
+
 ```python
-# Propagate trace context on every outbound call
-headers = {
-    "X-Trace-Id": current_trace_id(),
-    "X-Span-Id": new_span_id(),
-}
-response = http_client.post(url, headers=headers)
+# OpenTelemetry handles context propagation automatically
+from opentelemetry import trace
+from opentelemetry.propagate import inject
+
+tracer = trace.get_tracer(__name__)
+
+with tracer.start_as_current_span("checkout.process_payment") as span:
+    span.set_attribute("order.id", order_id)
+    headers = {}
+    inject(headers)  # Injects W3C traceparent/tracestate — not custom headers
+    response = http_client.post(payment_url, headers=headers)
 ```
 
-Use an existing tracing library (OpenTelemetry is the standard) rather than rolling your own.
+Services that extract context via the configured OpenTelemetry propagator will automatically continue the trace across the boundary.
 
 ## Step 4: SLOs and Alerting
 

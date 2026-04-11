@@ -11,7 +11,8 @@ Run through the complete pre-launch checklist:
 3. **Performance** — Core Web Vitals good, no N+1 queries, images optimized, bundle sized
 4. **Accessibility** — Keyboard nav works, screen reader compatible, contrast adequate
 5. **Infrastructure** — Env vars set, migrations ready, monitoring configured
-6. **Documentation** — README current, ADRs written, changelog updated
+6. **Observability** — Invoke the agent-skills:observability-and-monitoring skill to verify structured logging, metrics (four golden signals), SLOs, and alerting are in place before going live
+7. **Documentation** — README current, ADRs written, changelog updated
 
 Report any failing checks and help resolve them before deployment.
 Define the rollback plan before proceeding.
