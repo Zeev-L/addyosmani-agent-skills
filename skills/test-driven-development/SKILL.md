@@ -342,6 +342,14 @@ then verifies the test passes.
 
 This separation ensures the test is written without knowledge of the fix, making it more robust.
 
+**Use the `test-engineer` agent persona** for the subagent. It covers test strategy, the Prove-It pattern for bugs, the right level of test (unit/integration/E2E), scenario coverage (happy path, boundaries, error paths), and output format for coverage analysis. Load it from `agents/test-engineer.md`.
+
+```
+Main agent: "You are the test-engineer agent (agents/test-engineer.md).
+Write a test that demonstrates this bug: [bug description].
+The test must FAIL with the current code. Do not look at the fix."
+```
+
 ## See Also
 
 For detailed testing patterns, examples, and anti-patterns across frameworks, see `references/testing-patterns.md`.
