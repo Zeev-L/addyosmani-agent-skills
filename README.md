@@ -1,5 +1,7 @@
 # Agent Skills
 
+> **Fork note:** This is [@googlarz](https://github.com/googlarz)'s fork of [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) with work-in-progress enhancements: [observability-and-monitoring skill](https://github.com/addyosmani/agent-skills/pull/61), [CI skill validator](https://github.com/addyosmani/agent-skills/pull/60), and [agent persona integration](https://github.com/addyosmani/agent-skills/pull/62).
+
 **Production-grade engineering skills for AI coding agents.**
 
 Skills encode the workflows, quality gates, and best practices that senior engineers use when building software. These ones are packaged so AI agents follow them consistently across every phase of development.
