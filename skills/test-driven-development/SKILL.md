@@ -356,6 +356,7 @@ For detailed testing patterns, examples, and anti-patterns across frameworks, se
 | "I tested it manually" | Manual testing doesn't persist. Tomorrow's change might break it with no way to know. |
 | "The code is self-explanatory" | Tests ARE the specification. They document what the code should do, not what it does. |
 | "It's just a prototype" | Prototypes become production code. Tests from day one prevent the "test debt" crisis. |
+| "Let me run the tests again just to be extra sure" | If tests passed cleanly, running them again provides no additional confidence. Trust the first successful run. |
 
 ## Red Flags
 
@@ -366,6 +367,7 @@ For detailed testing patterns, examples, and anti-patterns across frameworks, se
 - Tests that test framework behavior instead of application behavior
 - Test names that don't describe the expected behavior
 - Skipping tests to make the suite pass
+- Running the same test command multiple times after a successful run
 
 ## Verification
 
@@ -377,3 +379,5 @@ After completing any implementation:
 - [ ] Test names describe the behavior being verified
 - [ ] No tests were skipped or disabled
 - [ ] Coverage hasn't decreased (if tracked)
+
+**Note:** Run test commands once per implementation cycle. If tests pass cleanly, do not repeat the same test command. Redundant test runs waste time and provide no additional confidence.
