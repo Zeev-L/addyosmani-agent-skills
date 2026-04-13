@@ -6,7 +6,7 @@ agent: Plan
 
 Invoke the agent-skills:planning-and-task-breakdown skill.
 
-Read the existing spec (SPEC.md or equivalent) and the relevant codebase sections. Then:
+Read the existing spec from the feature directory (docs/features/[feature-name]/spec.md) and the relevant codebase sections. Then:
 
 1. Enter plan mode — read only, no code changes
 2. Identify the dependency graph between components
@@ -15,4 +15,8 @@ Read the existing spec (SPEC.md or equivalent) and the relevant codebase section
 5. Add checkpoints between phases
 6. Present the plan for human review
 
-Save the plan to tasks/plan.md and task list to tasks/todo.md.
+Save the plan and task list to the same feature directory:
+- docs/features/[feature-name]/plan.md
+- docs/features/[feature-name]/todo.md
+
+This keeps all feature artifacts together and enables multiple simultaneous features.
