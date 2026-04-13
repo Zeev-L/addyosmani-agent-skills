@@ -1,6 +1,7 @@
 ---
 name: performance-optimization
-description: Optimizes application performance. Use when performance requirements exist, when you suspect performance regressions, or when Core Web Vitals or load times need improvement. Use when profiling reveals bottlenecks that need fixing.
+description: Optimizes code for performance and efficiency. Use when experiencing slow performance, high resource usage, or when you need to improve response times and scalability. Use when profiling reveals bottlenecks.
+context: fork
 ---
 
 # Performance Optimization

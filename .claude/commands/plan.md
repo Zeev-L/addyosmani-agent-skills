@@ -1,5 +1,7 @@
 ---
 description: Break work into small verifiable tasks with acceptance criteria and dependency ordering
+context: fork
+agent: Plan
 ---
 
 Invoke the agent-skills:planning-and-task-breakdown skill.

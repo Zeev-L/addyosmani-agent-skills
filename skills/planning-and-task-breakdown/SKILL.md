@@ -1,6 +1,8 @@
 ---
 name: planning-and-task-breakdown
-description: Breaks work into ordered tasks. Use when you have a spec or clear requirements and need to break work into implementable tasks. Use when a task feels too large to start, when you need to estimate scope, or when parallel work is possible.
+description: Breaks work into small verifiable tasks. Use when starting any complex project, when a task feels too big to tackle directly, or when you need to create a structured plan before implementation.
+context: fork
+agent: Plan
 ---
 
 # Planning and Task Breakdown

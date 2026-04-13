@@ -1,6 +1,7 @@
 ---
 name: shipping-and-launch
-description: Prepares production launches. Use when preparing to deploy to production. Use when you need a pre-launch checklist, when setting up monitoring, when planning a staged rollout, or when you need a rollback strategy.
+description: Manages production deployment and launch processes. Use when deploying to production, launching new features, or when you need to ensure safe, reliable releases. Use when you need to coordinate launch activities and monitor production health.
+context: fork
 ---
 
 # Shipping and Launch

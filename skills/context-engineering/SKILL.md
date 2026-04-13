@@ -1,6 +1,7 @@
 ---
 name: context-engineering
-description: Optimizes agent context setup. Use when starting a new session, when agent output quality degrades, when switching between tasks, or when you need to configure rules files and context for a project.
+description: Manages and optimizes context for AI agents. Use when dealing with large codebases, when context limits are reached, or when you need to provide focused, relevant context to agents. Use when you need to structure information for effective AI processing.
+context: fork
 ---
 
 # Context Engineering
