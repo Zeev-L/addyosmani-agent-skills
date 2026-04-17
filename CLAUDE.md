@@ -41,3 +41,35 @@ docs/         → Setup guides for different tools
 - Always: Follow the skill-anatomy.md format for new skills
 - Never: Add skills that are vague advice instead of actionable processes
 - Never: Duplicate content between skills — reference other skills instead
+
+---
+
+## Mandatory Skills for Batuta Projects
+
+This fork (`jota-batuta/batuta-agent-skills`) adds four skills on top of the upstream. The `using-agent-skills` meta-skill must route to these skills at the triggers below.
+
+### batuta-skill-authoring
+**MUST trigger** before adding any new SKILL.md to this plugin.
+Rationale: prevents skill sprawl. Forces `npx skills find` against skills.sh's 91k+ skills before authoring.
+
+### batuta-agent-authoring
+**MUST trigger** before adding any new agent definition to `agents/`.
+Rationale: prevents agent overlap. Forces distinctness check against existing agents.
+
+### research-first-dev
+**MUST trigger** before writing code that imports or calls any external library/API not yet cited in this session.
+Rationale: most bugs come from assuming outdated APIs. Context7 lookup is cheap, rework is expensive. Evidence lives in a `// Source:` citation comment.
+
+### notion-kb-workflow
+**MUST trigger** at three session boundaries:
+- `--read` at the start of a session on an existing project
+- `--init` at the start of a new project not yet represented in Notion
+- `--append` at the end of a productive session (commits made or decisions taken)
+
+Rationale: the context window is not memory. Notion is.
+
+---
+
+## Vendored Skills
+
+The `skills/_vendored/` directory contains upstream skills this fork depends on. They are copied with their original LICENSE files and must not be modified in this fork. See `ATTRIBUTION.md` for authors and licenses.
