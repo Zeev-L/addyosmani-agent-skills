@@ -1,6 +1,6 @@
 ---
 name: delegation-provenance
-description: Use when building agents that delegate to other agents, call external tools, access sensitive data, or perform actions that require human approval to survive multiple hops. Enforces auditable authorization and scoped delegation across agent handoffs, tool calls, and trust-boundary crossings.
+description: Preserves scoped authorization across delegated execution. Use only when building software that delegates actions across agent, tool, or service hops where authorization must survive trust-boundary crossings and remain auditable.
 ---
 
 # Delegation Provenance
@@ -9,21 +9,22 @@ description: Use when building agents that delegate to other agents, call extern
 
 Treat human approval as something that travels with the work, not a sentence that got said once and then disappeared into chat history. When an agent delegates, calls a tool, or crosses a trust boundary, it must carry proof of who authorized the action, what scope was granted, and whether the current step still fits. This skill prevents invisible scope expansion, unaudited handoffs, and "the model decided" from quietly becoming a substitute for authorization.
 
+This skill is intentionally narrow: it is not part of ordinary app development unless the software itself delegates authority across agent or tool hops.
+
 ## When to Use
 
-- Building multi-agent workflows with explicit handoffs
-- Calling external tools, MCP servers, A2A agents, OpenAPI actions, or hosted services
-- Accessing sensitive data, internal systems, or user-scoped resources
-- Modifying persistent state (tickets, databases, cloud resources, emails, payments)
-- Performing financially consequential or real-world actions
-- Designing human-in-the-loop approvals that must remain valid across multiple hops
-- Reviewing an agent workflow for authorization gaps, silent scope expansion, or missing auditability
+- Building multi-agent workflows with explicit handoffs and scoped delegation
+- Building delegated tool-execution systems where authorization must survive multiple hops
+- Designing provenance and reauthorization flows for agentic systems that cross trust boundaries
+- Reviewing multi-agent or multi-tool workflows for authorization continuity gaps, silent scope expansion, or missing auditability
 
 **When NOT to use:**
 
-- Authority never changes across the workflow: no delegation, no external identity, no sensitive data, and no side effects
-- Pure local transformations where the agent is not reading from or writing to any external boundary
-- The user is asking for a thought experiment or architecture discussion, not an executable workflow
+- Building ordinary React/UI features or other app code with no delegated execution model
+- Building standard REST or CRUD endpoints where one service handles the action directly
+- Calling a third-party API directly from one agent or service without downstream delegation or authorization propagation
+- Using tools in a single-agent workflow where approval does not need to survive multiple hops
+- The user is asking for a thought experiment or architecture discussion, not an executable delegated workflow
 
 ## The Process
 
@@ -98,6 +99,8 @@ function authorize(artifact, action, delegatee, serviceId, trustAnchors, depth) 
   if (depth > claims.maxDelegationDepth) throw new Error('DELEGATION_LIMIT_EXCEEDED');
 }
 ```
+
+`verifyAuthorizationArtifact(...)` is intentionally out of scope for this skill. Use a vetted library or protocol implementation for your artifact format, such as `jose` for JWT/JWS verification, and treat rolling your own verifier as a red flag.
 
 If your system cannot answer "who signed or issued this, and why do I trust them?" then it is not ready to rely on delegation artifacts for enforcement.
 

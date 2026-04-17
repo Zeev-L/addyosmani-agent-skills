@@ -24,7 +24,7 @@ Task arrives
     │   ├── API work? ────────────────→ api-and-interface-design
     │   ├── Need better context? ─────→ context-engineering
     │   ├── Need doc-verified code? ───→ source-driven-development
-    │   └── Agent handoffs / tool boundaries? → delegation-provenance
+    │   └── Software delegates across agent/tool hops with scoped authorization? → delegation-provenance
     ├── Writing/running tests? ────────→ test-driven-development
     │   └── Browser-based? ───────────→ browser-testing-with-devtools
     ├── Something broke? ──────────────→ debugging-and-error-recovery
@@ -141,7 +141,7 @@ For a complete feature, the typical skill sequence is:
 3. planning-and-task-breakdown → Break into verifiable chunks
 4. context-engineering         → Load the right context
 5. source-driven-development   → Verify against official docs
-6. delegation-provenance       → Guard agent/tool trust boundaries
+6. delegation-provenance       → Guard delegated agent/tool trust boundaries
 7. incremental-implementation  → Build slice by slice
 8. test-driven-development     → Prove each slice works
 9. code-review-and-quality     → Review before merge
@@ -161,7 +161,7 @@ Not every task needs every skill. A bug fix might only need: `debugging-and-erro
 | Plan | planning-and-task-breakdown | Decompose into small, verifiable tasks |
 | Build | incremental-implementation | Thin vertical slices, test each before expanding |
 | Build | source-driven-development | Verify against official docs before implementing |
-| Build | delegation-provenance | Carry scoped authorization and reauthorization across agent hops |
+| Build | delegation-provenance | Carry scoped authorization and reauthorization across delegated agent/tool hops |
 | Build | context-engineering | Right context at the right time |
 | Build | frontend-ui-engineering | Production-quality UI with accessibility |
 | Build | api-and-interface-design | Stable interfaces with clear contracts |
