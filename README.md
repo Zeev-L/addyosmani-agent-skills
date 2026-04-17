@@ -1,4 +1,76 @@
-# Agent Skills
+# Batuta Agent Skills
+
+**A minimal fork of [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) that adds four Batuta-specific skills on top.**
+
+This fork inherits the 20 upstream engineering skills unchanged and layers four additions that enforce Batuta workflows:
+
+- **`research-first-dev`** — before using any external library, run Context7 lookup and emit a `// Source:` citation at the import site.
+- **`notion-kb-workflow`** — three manual modes (`--read` / `--init` / `--append`) for syncing project context with a Notion knowledge base.
+- **`batuta-skill-authoring`** — discover-first gate. Run `npx skills find` against the 91k+ skills.sh catalog before writing any new SKILL.md.
+- **`batuta-agent-authoring`** — distinctness gate. Compare any proposed new agent against existing agents before adding it.
+
+All four skills pass the eval suite at 100% (see [`docs/qa/benchmark-2026-04-16.md`](docs/qa/benchmark-2026-04-16.md)). Attribution for upstream and vendored sources lives in [`ATTRIBUTION.md`](ATTRIBUTION.md).
+
+---
+
+## Install
+
+```
+/plugin marketplace add jota-batuta/batuta-agent-skills
+/plugin install batuta-agent-skills@batuta-agent-skills
+```
+
+Or, for local development:
+
+```bash
+git clone https://github.com/jota-batuta/batuta-agent-skills.git
+claude --plugin-dir /path/to/batuta-agent-skills
+```
+
+After installing, enable the Batuta layer by copying the "Mandatory Skills for Batuta Projects" block from this repo's [`CLAUDE.md`](CLAUDE.md) into your own project's CLAUDE.md. The `using-agent-skills` meta-skill upstream routes to each new skill at the declared triggers.
+
+Dependency used internally by `batuta-skill-authoring` (install once globally):
+
+```bash
+npx skills add vercel-labs/skills --skill find-skills
+```
+
+---
+
+## What you get
+
+```
+ UPSTREAM (unchanged)                          BATUTA LAYER
+ ────────────────────                          ────────────
+ 20 engineering skills                         4 skills
+ 3 agents (code-reviewer,                      + vendored:
+    test-engineer,                               writing-skills (obra/superpowers, MIT)
+    security-auditor)                            context7 (intellectronica, CC0)
+ 7 commands (/spec, /plan, ...)                + CLAUDE.md append section
+ 1 hook (SessionStart)                         + ATTRIBUTION.md
+                                               + benchmark report (9/9 PASS)
+```
+
+## Merging upstream updates
+
+```bash
+git fetch upstream
+git merge upstream/main
+```
+
+Expect conflicts only in `CLAUDE.md` and `README.md`. Resolve by preserving the Batuta additions.
+
+---
+
+## Upstream README (reference)
+
+The upstream's README covers the original 20 skills, their design philosophy, and integration into other tools (Cursor, Gemini, Copilot, Kiro, OpenCode). See [`addyosmani/agent-skills`](https://github.com/addyosmani/agent-skills) for that content.
+
+The sections below are the upstream's documentation, preserved as reference for the 20 skills inherited by this fork.
+
+---
+
+# Agent Skills (upstream)
 
 **Production-grade engineering skills for AI coding agents.**
 

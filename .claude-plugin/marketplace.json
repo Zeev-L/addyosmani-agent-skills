@@ -1,19 +1,19 @@
 {
-  "name": "addy-agent-skills",
+  "name": "batuta-agent-skills",
   "owner": {
-    "name": "Addy Osmani"
+    "name": "jota-batuta"
   },
   "metadata": {
-    "description": "Production-grade engineering skills for AI coding agents — covering the full software development lifecycle from spec to ship."
+    "description": "A minimal fork of addyosmani/agent-skills that layers four Batuta skills on top: research-first-dev, notion-kb-workflow, batuta-skill-authoring, batuta-agent-authoring. Inherits 20 upstream engineering skills."
   },
   "plugins": [
     {
-      "name": "agent-skills",
+      "name": "batuta-agent-skills",
       "source": {
         "source": "github",
-        "repo": "addyosmani/agent-skills"
+        "repo": "jota-batuta/batuta-agent-skills"
       },
-      "description": "Production-grade engineering skills covering every phase of software development: spec, plan, build, verify, review, and ship."
+      "description": "Batuta fork of agent-skills. 20 upstream skills + 4 Batuta skills: research-first-dev (citation gate for external APIs), notion-kb-workflow (3-mode Notion sync), batuta-skill-authoring (discover-first meta-skill), batuta-agent-authoring (distinctness meta-skill)."
     }
   ]
 }
