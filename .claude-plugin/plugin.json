@@ -1,12 +1,13 @@
 {
-  "name": "agent-skills",
-  "description": "Production-grade engineering skills for AI coding agents — covering the full software development lifecycle from spec to ship.",
-  "version": "1.0.0",
+  "name": "batuta-agent-skills",
+  "description": "Batuta fork of addyosmani/agent-skills. Inherits 20 engineering skills and adds 5 Batuta skills: research-first-dev, notion-kb-workflow, batuta-skill-authoring, batuta-agent-authoring, batuta-project-hygiene.",
+  "version": "1.1.0",
   "author": {
-    "name": "Addy Osmani"
+    "name": "jota-batuta",
+    "url": "https://github.com/jota-batuta"
   },
-  "homepage": "https://github.com/addyosmani/agent-skills",
-  "repository": "https://github.com/addyosmani/agent-skills",
+  "homepage": "https://github.com/jota-batuta/batuta-agent-skills",
+  "repository": "https://github.com/jota-batuta/batuta-agent-skills",
   "license": "MIT",
   "commands": "./.claude/commands"
 }
