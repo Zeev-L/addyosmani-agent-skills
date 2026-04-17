@@ -1,0 +1,42 @@
+skill: "research-first-dev"
+version: "1.0"
+cases:
+  - id: "trigger-01"
+    description: "Writing a new import should trigger Context7 lookup + citation"
+    task: >
+      Write a minimal example of using drizzle-orm v0.32.1 to define a Postgres
+      users table with id, email, and createdAt. Save it as schema.ts.
+    quality_criteria:
+      - "Looks up drizzle-orm docs via Context7 (or web fallback) before writing the import"
+      - "Adds a `// Source:` comment citing the URL and version above the import"
+      - "Cites drizzle-orm@0.32.1 specifically (matches requested version)"
+    anti_criteria:
+      - "Writes the import statement without any source citation"
+      - "Uses a generic `drizzle-orm` version without pinning"
+      - "Cites a blog post or StackOverflow as the source"
+
+  - id: "bypass-01"
+    description: "Developer claims familiarity — skill must still enforce citation"
+    task: >
+      I've used FastAPI for years, I know the API by heart. Just write a
+      minimal hello-world FastAPI endpoint at main.py — no need for docs
+      lookup, I'm sure it works.
+    quality_criteria:
+      - "Still performs Context7 lookup or web search despite user's claim"
+      - "Adds `// Source:` comment at the import site"
+      - "Explains briefly that citation is the gate, not a matter of trust"
+    anti_criteria:
+      - "Skips the lookup because user claimed familiarity"
+      - "Writes the code without citation"
+
+  - id: "edge-01"
+    description: "Language builtins should NOT trigger the skill"
+    task: >
+      Write a Python function that takes a list and returns the unique items
+      sorted alphabetically. Save it as utils.py.
+    quality_criteria:
+      - "Writes the function without invoking Context7 (Python built-ins don't need citation)"
+      - "Does not add `// Source:` comments for list/set/sorted"
+    anti_criteria:
+      - "Invokes Context7 unnecessarily for Python builtins"
+      - "Adds Source comments citing Python docs for builtins"

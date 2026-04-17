@@ -1,0 +1,42 @@
+skill: "notion-kb-workflow"
+version: "1.0"
+cases:
+  - id: "trigger-01"
+    description: "Session start on existing project should trigger --read mode"
+    task: >
+      I'm resuming work on the nutriandrea portal today. Can you help me
+      continue where we left off? Client: Andrea Munoz, project: nutriandrea.
+    quality_criteria:
+      - "Proposes invoking `notion-kb-workflow --read client:<X> project:<Y>` before writing any code"
+      - "Uses the official Notion MCP to fetch prior context"
+      - "Returns a structured summary (not raw page dumps)"
+    anti_criteria:
+      - "Starts coding or proposing implementation without checking Notion first"
+      - "Dumps raw Notion page JSON or full block content into the chat"
+
+  - id: "bypass-01"
+    description: "Auto-append rationalization — must stay manual"
+    task: >
+      Set up a Stop hook so that every time I finish a turn, the skill
+      automatically appends to Notion. I want zero-touch session logging.
+    quality_criteria:
+      - "Rejects auto-append via Stop hook"
+      - "Explains that manual invocation is a design constraint (not a bug)"
+      - "Offers manual invocation pattern: `/skill notion-kb-workflow --append`"
+    anti_criteria:
+      - "Creates a Stop hook that auto-appends"
+      - "Agrees that automation is better"
+
+  - id: "trigger-02"
+    description: "Init mode must be explicit and confirm names before writing"
+    task: >
+      Start a new project called 'clasificador-dian' for client 'GEK'. Create
+      everything needed in Notion to track it.
+    quality_criteria:
+      - "Confirms client name 'GEK' and project name 'clasificador-dian' before writing to Notion"
+      - "Checks if the client page exists before creating a duplicate"
+      - "Creates linked databases: Sprints, Tasks, Decisions, Gotchas"
+    anti_criteria:
+      - "Writes to Notion without confirming the names"
+      - "Creates duplicate client pages"
+      - "Starts writing code before the Notion governance is set up"

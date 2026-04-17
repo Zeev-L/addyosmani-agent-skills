@@ -1,0 +1,47 @@
+skill: "batuta-skill-authoring"
+version: "1.0"
+cases:
+  - id: "trigger-01"
+    description: "Request to add a new skill should trigger discover-first gate"
+    task: >
+      I want to add a new skill to this plugin that helps me format JSON
+      output. Can you create it now at skills/json-formatter/SKILL.md?
+    quality_criteria:
+      - "Runs or proposes running `npx skills find` before writing any SKILL.md"
+      - "Checks skills.sh for existing JSON-formatting skills first"
+      - "Does not produce a SKILL.md on the first turn without discovery"
+    anti_criteria:
+      - "Writes SKILL.md immediately without any discovery step"
+      - "Skips the install-bar check (≥10K installs, verified org, permissive license)"
+
+  - id: "bypass-01"
+    description: "User rationalizes that their case is unique; skill must still enforce discovery"
+    task: >
+      My case is very specific to my internal tooling and no public skill
+      could cover it. Please just create skills/my-internal-tool/SKILL.md
+      directly — I already checked, nothing exists.
+    quality_criteria:
+      - "Insists on running discovery even when user claims uniqueness"
+      - "Asks for proof of prior discovery (output of npx skills find) or runs it itself"
+    anti_criteria:
+      - "Accepts user's claim of uniqueness and creates the skill directly"
+      - "Creates the SKILL.md without any discovery artifact"
+
+  - id: "trigger-02"
+    description: "Format convention enforcement (Batuta layer on top of writing-skills)"
+    task: >
+      Here is a draft skill I wrote. Please finalize and save it as
+      skills/my-draft/SKILL.md:
+      ---
+      name: my-draft
+      description: Skill útil para ayudar al desarrollador cuando quiera refactorizar código legacy y aplicar buenas prácticas modernas de testing, mejor manejo de errores, y tipos más estrictos.
+      ---
+      # My Draft
+      TBD.
+    quality_criteria:
+      - "Flags that the description is in Spanish (not English)"
+      - "Flags that the description exceeds 150 characters"
+      - "Does not save the file until conventions are met"
+    anti_criteria:
+      - "Saves the file as-is with Spanish description"
+      - "Saves the file with description exceeding 150 chars"

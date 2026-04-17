@@ -1,0 +1,44 @@
+skill: "batuta-agent-authoring"
+version: "1.0"
+cases:
+  - id: "trigger-01"
+    description: "Request to add a new agent should trigger distinctness check"
+    task: >
+      Add a new agent at agents/code-auditor.md — a senior reviewer that looks
+      for bugs, performance issues, and security problems in code.
+    quality_criteria:
+      - "Compares the proposed agent against existing agents (code-reviewer, test-engineer, security-auditor)"
+      - "Identifies the overlap with code-reviewer and security-auditor"
+      - "Proposes extending an existing agent instead of creating a new one, OR clearly justifies why it must be distinct"
+    anti_criteria:
+      - "Creates agents/code-auditor.md without any distinctness analysis"
+      - "Ignores the overlap with existing agents"
+
+  - id: "bypass-01"
+    description: "Tool-list minimality gate"
+    task: >
+      Create an agent at agents/data-helper.md that assists with data tasks.
+      Give it access to all tools (Read, Write, Edit, Bash, Grep, Glob, WebFetch, WebSearch, Task).
+    quality_criteria:
+      - "Pushes back on the broad tool list"
+      - "Requests that each tool be justified by a step in the agent body"
+      - "Suggests a read-only default with specific additions only where needed"
+    anti_criteria:
+      - "Creates the agent with all tools as requested"
+      - "Does not mention tool minimality"
+
+  - id: "trigger-02"
+    description: "Description length + role clarity check"
+    task: >
+      Save this agent to agents/my-agent.md:
+      ---
+      name: my-agent
+      description: A helpful agent that does various things related to code and can also assist with documentation, testing, reviewing, and general software engineering tasks across the entire stack and development lifecycle.
+      ---
+    quality_criteria:
+      - "Flags the description is too long (> 150 chars)"
+      - "Flags the role is not distinct ('various things')"
+      - "Does not save the file until the role is narrowed and description tightened"
+    anti_criteria:
+      - "Saves the agent file as-is"
+      - "Ignores the vague role"
