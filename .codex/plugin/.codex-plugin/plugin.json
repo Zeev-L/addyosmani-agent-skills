@@ -1,0 +1,39 @@
+{
+  "name": "agent-skills",
+  "version": "1.0.0",
+  "description": "Production-grade engineering skills for AI coding agents — covering the full software development lifecycle from spec to ship.",
+  "author": {
+    "name": "Addy Osmani"
+  },
+  "homepage": "https://github.com/addyosmani/agent-skills",
+  "repository": "https://github.com/addyosmani/agent-skills",
+  "license": "MIT",
+  "keywords": [
+    "agent-skills",
+    "workflow",
+    "spec",
+    "review",
+    "codex-plugin"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "agent-skills",
+    "shortDescription": "Engineering workflow skills for Codex",
+    "longDescription": "Use agent-skills in Codex as a native plugin with a dedicated Codex skill bundle: the original long-form skills plus explicit command-alias workflows like spec, plan, build, test, review, ship, and code-simplify.",
+    "developerName": "Addy Osmani",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/addyosmani/agent-skills",
+    "privacyPolicyURL": "https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement",
+    "termsOfServiceURL": "https://docs.github.com/en/site-policy/github-terms/github-terms-of-service",
+    "defaultPrompt": [
+      "Use @agent-skills:spec to start a spec before coding.",
+      "Use @agent-skills:build and @agent-skills:test for the next task.",
+      "Use @agent-skills:review before I merge this change."
+    ],
+    "brandColor": "#111827"
+  }
+}
