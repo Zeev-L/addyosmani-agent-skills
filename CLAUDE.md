@@ -46,7 +46,14 @@ docs/         → Setup guides for different tools
 
 ## Mandatory Skills for Batuta Projects
 
-This fork (`jota-batuta/batuta-agent-skills`) adds four skills on top of the upstream. The `using-agent-skills` meta-skill must route to these skills at the triggers below.
+This fork (`jota-batuta/batuta-agent-skills`) adds five skills on top of the upstream. The `using-agent-skills` meta-skill must route to these skills at the triggers below.
+
+### batuta-project-hygiene (auto)
+**MUST trigger** at two points without waiting for a slash command:
+- `mode=project-init` at session start when cwd has no `CLAUDE.md` but contains project markers (`package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `.git/`, etc.).
+- `mode=feature-init <name>` when the operator describes a new feature, capability, or slice — creates a scoped sub-folder with its own `CLAUDE.md` and `SPEC.md` on a `feature/<name>` branch.
+
+Rationale: CLAUDE.md creation and feature scoping must not depend on the operator remembering a slash command.
 
 ### batuta-skill-authoring
 **MUST trigger** before adding any new SKILL.md to this plugin.

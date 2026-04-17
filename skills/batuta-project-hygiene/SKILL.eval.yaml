@@ -1,0 +1,74 @@
+skill: "batuta-project-hygiene"
+version: "1.0"
+cases:
+  - id: "trigger-01"
+    description: "Session start in a Node project with no CLAUDE.md should trigger project-init"
+    task: >
+      I just opened this directory. Help me get started. The folder contains
+      package.json (Next.js 15 project) and a basic src/ layout. There is no
+      CLAUDE.md yet.
+    quality_criteria:
+      - "Detects the project is uninitialized (no CLAUDE.md but package.json present)"
+      - "Proposes running mode=project-init BEFORE any code change"
+      - "Includes stack detection (Next.js) in the proposed CLAUDE.md content"
+      - "Mentions the GitHub boilerplate step (first commit + optional repo creation)"
+    anti_criteria:
+      - "Starts writing code without creating CLAUDE.md first"
+      - "Skips the Batuta Mandatory Skills section"
+      - "Generates a generic CLAUDE.md without reading package.json for stack info"
+
+  - id: "trigger-02"
+    description: "Operator announces a new feature — should trigger feature-init, not inline SPEC.md at root"
+    task: >
+      Voy a empezar la feature de auth. Necesito agregar login email+password al
+      proyecto. Empecemos con el spec.
+    quality_criteria:
+      - "Proposes feature-init mode with feature name 'auth'"
+      - "Reads the project CLAUDE.md Feature folder convention section before choosing a path"
+      - "Creates a feature folder with its own CLAUDE.md + SPEC.md (not root-level SPEC.md)"
+      - "Creates a feature/auth git branch before committing"
+    anti_criteria:
+      - "Writes SPEC.md at project root"
+      - "Skips creating a scoped CLAUDE.md inside the feature folder"
+      - "Commits to main/master instead of a feature branch"
+      - "Asks for folder convention without checking project CLAUDE.md first"
+
+  - id: "bypass-01"
+    description: "Operator claims 'small change, no need for scaffolding' — skill must still gate when truly a new feature"
+    task: >
+      Solo quiero hacer un cambio chiquito, necesito agregar una página de
+      perfil de usuario con settings. No hace falta hacer toda la ceremonia de
+      feature, no?
+    quality_criteria:
+      - "Pushes back on the 'ceremony' framing — perfil-de-usuario is a new feature regardless of size"
+      - "Still proposes feature-init (small features also benefit from scoped CLAUDE.md)"
+      - "Offers to keep the SPEC.md very short if the feature is truly small, but does not skip the scaffolding"
+    anti_criteria:
+      - "Agrees that scaffolding is optional for 'small' features"
+      - "Writes code directly without feature folder + SPEC.md"
+
+  - id: "edge-01"
+    description: "Plain directory without project markers should NOT trigger project-init"
+    task: >
+      Abrí esta carpeta en VS Code. Todavía no sé qué voy a hacer acá, quizás
+      solo tomar notas. Dame ideas.
+    quality_criteria:
+      - "Does NOT invoke project-init (no package.json, no pyproject.toml, no .git, no manifests)"
+      - "Responds conversationally without creating CLAUDE.md"
+      - "Asks what the operator wants to do before any file creation"
+    anti_criteria:
+      - "Creates CLAUDE.md in a plain directory with no project markers"
+      - "Invokes gh repo create for a directory that isn't a project yet"
+
+  - id: "edge-02"
+    description: "Existing CLAUDE.md in cwd should NOT trigger project-init again"
+    task: >
+      Abrí este proyecto. Ya tiene un CLAUDE.md existente con las reglas.
+      Continuemos donde lo dejamos la última sesión.
+    quality_criteria:
+      - "Does NOT invoke project-init (CLAUDE.md already exists)"
+      - "Reads the existing CLAUDE.md to restore context"
+      - "Optionally proposes running notion-kb-workflow --read to fetch prior session decisions"
+    anti_criteria:
+      - "Overwrites the existing CLAUDE.md"
+      - "Invokes project-init despite the CLAUDE.md being present"
