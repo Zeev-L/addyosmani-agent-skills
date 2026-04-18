@@ -1,6 +1,6 @@
 ---
 name: batuta-project-hygiene
-description: Use at session start when cwd has no CLAUDE.md but looks like a project, and before starting any new feature. Creates project-level CLAUDE.md, scoped feature folders with SPEC.md, and GitHub boilerplate. Two modes - project-init and feature-init.
+description: Use at session start when cwd has no CLAUDE.md, and ALWAYS before creating any SPEC.md or feature-scoped CLAUDE.md. Feature SPEC.md and CLAUDE.md NEVER go at project root - they go inside src/feature/, packages/feature/, app/feature/, or features/feature/. Two modes - project-init, feature-init.
 ---
 
 # Batuta Project Hygiene
@@ -75,20 +75,28 @@ Do NOT trigger:
 
 ### Mode: `feature-init <name>`
 
+**Hard constraint before any step**: the feature's `SPEC.md` and `CLAUDE.md` MUST be created inside a subfolder, NEVER at the project root. If the upstream `/spec` command would write to root, override its target. The root is reserved for project-wide files only.
+
 1. **Read `./CLAUDE.md` `## Feature folder convention` section**:
    - If it contains a filled-in path template (e.g. `features/<name>/`, `packages/<name>/`, `src/<name>/`, `app/<name>/`) → use it.
-   - If it is a placeholder → ask the operator:
-     ```
-     Qué convención de carpetas usas para features en este proyecto?
-       1) features/<name>/
-       2) packages/<name>/   (pnpm/Yarn workspace)
-       3) src/<name>/
-       4) app/<name>/        (Next.js App Router)
-       5) otra: <ruta>
+   - If it is a placeholder or missing → **auto-detect first**, then ask only if ambiguous:
+     - `pyproject.toml` + existing `src/` directory → default to `src/<name>/`
+     - `package.json` + existing `packages/` directory → default to `packages/<name>/`
+     - `package.json` with Next.js App Router + `app/` directory → default to `app/<name>/`
+     - `package.json` without `packages/` or `app/` → default to `features/<name>/`
+     - Rust (`Cargo.toml`) with workspace → `crates/<name>/`
+     - Otherwise ask:
+       ```
+       Qué convención de carpetas usas para features en este proyecto?
+         1) src/<name>/        (detected: Python src-layout or similar)
+         2) packages/<name>/   (pnpm/Yarn workspace)
+         3) app/<name>/        (Next.js App Router)
+         4) features/<name>/
+         5) otra: <ruta>
 
-     (La respuesta queda guardada en CLAUDE.md y no se te preguntará de nuevo.)
-     ```
-     After the answer, write the chosen template into `./CLAUDE.md` at `## Feature folder convention`.
+       (La respuesta queda guardada en CLAUDE.md y no se te preguntará de nuevo.)
+       ```
+   - After resolving (auto-detect or user answer), write the chosen template into `./CLAUDE.md` at `## Feature folder convention`.
 
 2. **Create the feature folder** at the resolved path. Reject if it already exists (operator should use an existing-feature flow, not this mode).
 
@@ -107,7 +115,11 @@ Do NOT trigger:
    - Feature tests live alongside source, not in a global test directory.
    ```
 
-4. **Delegate SPEC creation** to the upstream `spec-driven-development` skill, targeting `<feature-folder>/SPEC.md` (not the project root). Pass the feature name and operator description.
+4. **Delegate SPEC creation** to the upstream `spec-driven-development` skill, **explicitly overriding its default write target** to `<feature-folder>/SPEC.md`. The upstream skill defaults to project root — that default is wrong for multi-feature projects. Pass the target path explicitly.
+
+   If the upstream skill resists or produces `SPEC.md` at root anyway:
+   - Move it: `mv SPEC.md <feature-folder>/SPEC.md`
+   - Do not proceed to commit until SPEC.md is inside the feature folder.
 
 5. **Commit**:
    ```bash
@@ -132,11 +144,13 @@ Do NOT trigger:
 
 ## Red Flags
 
+- **SPEC.md or CLAUDE.md for a feature ending up at project root.** This is the top failure mode. If you see SPEC.md at root after a feature-init, move it immediately and check why the upstream skill wasn't redirected.
 - Creating a feature folder without reading `## Feature folder convention` from the project CLAUDE.md first.
 - Generating a CLAUDE.md that is a verbatim copy of another project's CLAUDE.md (always re-run stack detection).
 - Committing across feature boundaries (feature-init must only touch its own folder).
 - Skipping the git branch creation in feature-init mode.
 - Pushing to GitHub without asking the operator first, or pushing to a public repo when the operator said `--private`.
+- Ignoring auto-detection signals (if `src/` directory exists in a Python project, default to `src/<name>/`; do not ask the operator a question that the project structure already answers).
 
 ## Verification
 

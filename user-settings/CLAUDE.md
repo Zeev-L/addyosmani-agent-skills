@@ -83,3 +83,30 @@ At the start of any session, before writing or editing files, invoke the `batuta
 - contains at least one of: `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, or a `.git/` directory.
 
 Before starting work on a new feature — when the operator describes a new feature, capability, or slice — invoke `batuta-project-hygiene` with `mode=feature-init <name>`. The skill handles folder convention, scoped CLAUDE.md, and SPEC.md placement. Do not create CLAUDE.md or feature folders manually in these two cases — delegate to the skill.
+
+### Feature files NEVER go at project root
+
+When starting a new feature in an existing project, both `SPEC.md` and `CLAUDE.md` for that feature MUST be created inside the feature's subfolder, NEVER at the project root.
+
+Required layout for a feature named `X` in a project with a `src/`, `packages/`, `app/`, or `features/` convention:
+
+```
+<project-root>/
+├── CLAUDE.md                 ← project-level rules (may exist, never touched by feature-init)
+├── SPEC.md                   ← ONLY if the project itself is a single-feature repo; NEVER for features
+└── src/X/                    ← feature subfolder (or packages/X/, app/X/, features/X/)
+    ├── CLAUDE.md             ← feature-scoped rules
+    ├── SPEC.md               ← feature-scoped spec
+    ├── tasks/                ← feature task breakdown if applicable
+    └── <feature source files>
+```
+
+Hard rules:
+
+1. **NEVER** create `SPEC.md` at the project root when the project is a monorepo or has a `src/`/`packages/`/`app/`/`features/` directory structure. That creates spaghetti — specs pile up at root with no scope association.
+2. **NEVER** overwrite an existing project-level `CLAUDE.md` during `feature-init`. Feature-scoped CLAUDE.md is a separate file inside the feature folder.
+3. If the upstream `/spec` command from `agent-skills` is invoked and it would write to root, redirect the target to the feature subfolder instead. Upstream default is wrong for our monorepo convention — override.
+4. If unsure which subfolder convention the project uses, inspect first: `pyproject.toml` with `src/` layout → `src/X/`; `package.json` with `packages/` → `packages/X/`; Next.js App Router → `app/X/`; fallback → `features/X/`. Persist the chosen convention in the project-level `CLAUDE.md` under `## Feature folder convention` so future feature-init invocations don't re-ask.
+5. Scoped `CLAUDE.md` must be short (≤ 60 lines) and only contain rules unique to the feature: scope, boundaries, patterns. Do NOT restate user-level or project-level rules.
+
+This prevents the monorepo-spaghetti failure mode where every feature dumps a `SPEC.md` at root and no one can tell which spec belongs to which piece of code.
