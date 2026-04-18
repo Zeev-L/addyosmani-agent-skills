@@ -16,6 +16,29 @@ Two modes, both invoked without user typing a slash command:
 
 This skill does not replace `spec-driven-development` — it prepares the filesystem so `spec-driven-development` has somewhere correct to write.
 
+### Target layout
+
+A project can hold one feature or many. Every feature lives in its own subfolder under the project's features root. Feature-scoped `SPEC.md` and `CLAUDE.md` NEVER live at project root.
+
+```
+<project-root>/
+├── CLAUDE.md                ← project-wide rules (one file, shared by all features)
+├── <manifest>               ← pyproject.toml / package.json / Cargo.toml / go.mod
+└── src/                     ← features root (or packages/, app/, features/, crates/)
+    ├── feature-one/
+    │   ├── CLAUDE.md        ← scoped to feature-one
+    │   ├── SPEC.md          ← scoped to feature-one
+    │   └── <source files>
+    ├── feature-two/
+    │   ├── CLAUDE.md
+    │   ├── SPEC.md
+    │   └── <source files>
+    └── feature-three/
+        ├── CLAUDE.md
+        ├── SPEC.md
+        └── <source files>
+```
+
 ## When to Use
 
 ### Mode `project-init`

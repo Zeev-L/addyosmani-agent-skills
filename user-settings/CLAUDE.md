@@ -86,27 +86,43 @@ Before starting work on a new feature — when the operator describes a new feat
 
 ### Feature files NEVER go at project root
 
-When starting a new feature in an existing project, both `SPEC.md` and `CLAUDE.md` for that feature MUST be created inside the feature's subfolder, NEVER at the project root.
+A project can have one feature or many. Every feature gets its own subfolder under the project's features root (`src/`, `packages/`, `app/`, or `features/` — whichever the project uses). Both `SPEC.md` and `CLAUDE.md` for a feature MUST be created inside that feature's subfolder, NEVER at the project root.
 
-Required layout for a feature named `X` in a project with a `src/`, `packages/`, `app/`, or `features/` convention:
+Required layout (project with N features):
 
 ```
 <project-root>/
-├── CLAUDE.md                 ← project-level rules (may exist, never touched by feature-init)
-├── SPEC.md                   ← ONLY if the project itself is a single-feature repo; NEVER for features
-└── src/X/                    ← feature subfolder (or packages/X/, app/X/, features/X/)
-    ├── CLAUDE.md             ← feature-scoped rules
-    ├── SPEC.md               ← feature-scoped spec
-    ├── tasks/                ← feature task breakdown if applicable
-    └── <feature source files>
+├── CLAUDE.md                ← project-wide rules (one file, shared by all features)
+├── <manifest>               ← pyproject.toml / package.json / Cargo.toml / go.mod
+└── src/                     ← features root (or packages/, app/, features/, crates/)
+    ├── feature-one/
+    │   ├── CLAUDE.md        ← scoped to feature-one
+    │   ├── SPEC.md          ← scoped to feature-one
+    │   ├── tasks/           ← task breakdown for feature-one
+    │   └── <source files>
+    ├── feature-two/
+    │   ├── CLAUDE.md
+    │   ├── SPEC.md
+    │   └── <source files>
+    └── feature-three/
+        ├── CLAUDE.md
+        ├── SPEC.md
+        └── <source files>
 ```
 
 Hard rules:
 
-1. **NEVER** create `SPEC.md` at the project root when the project is a monorepo or has a `src/`/`packages/`/`app/`/`features/` directory structure. That creates spaghetti — specs pile up at root with no scope association.
-2. **NEVER** overwrite an existing project-level `CLAUDE.md` during `feature-init`. Feature-scoped CLAUDE.md is a separate file inside the feature folder.
-3. If the upstream `/spec` command from `agent-skills` is invoked and it would write to root, redirect the target to the feature subfolder instead. Upstream default is wrong for our monorepo convention — override.
-4. If unsure which subfolder convention the project uses, inspect first: `pyproject.toml` with `src/` layout → `src/X/`; `package.json` with `packages/` → `packages/X/`; Next.js App Router → `app/X/`; fallback → `features/X/`. Persist the chosen convention in the project-level `CLAUDE.md` under `## Feature folder convention` so future feature-init invocations don't re-ask.
-5. Scoped `CLAUDE.md` must be short (≤ 60 lines) and only contain rules unique to the feature: scope, boundaries, patterns. Do NOT restate user-level or project-level rules.
+1. **NEVER** create `SPEC.md` at the project root when the project has a `src/`, `packages/`, `app/`, or `features/` directory. Specs are scoped to features, not to the project.
+2. **NEVER** overwrite an existing project-level `CLAUDE.md` during `feature-init`. Project-wide and feature-scoped CLAUDE.md are separate files at different levels.
+3. If the upstream `/spec` command from `agent-skills` would write to root, redirect its target to the feature subfolder. The upstream default is wrong for multi-feature projects — override.
+4. Auto-detect the features root from the project structure before asking the operator:
+   - `pyproject.toml` with `src/` directory present → `src/<feature>/`
+   - `package.json` with `packages/` → `packages/<feature>/`
+   - Next.js App Router (`app/` directory) → `app/<feature>/`
+   - `Cargo.toml` with `[workspace]` → `crates/<feature>/`
+   - Fallback → `features/<feature>/`
+
+   Persist the chosen convention in the project-level `CLAUDE.md` under `## Feature folder convention` so future features don't re-ask.
+5. Scoped `CLAUDE.md` must be short (≤ 60 lines) and only contain rules unique to the feature: scope, boundaries, patterns. Do NOT restate user-level or project-level rules — those inherit automatically through Claude Code's nested CLAUDE.md loading.
 
 This prevents the monorepo-spaghetti failure mode where every feature dumps a `SPEC.md` at root and no one can tell which spec belongs to which piece of code.
