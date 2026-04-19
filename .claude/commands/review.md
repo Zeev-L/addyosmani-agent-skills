@@ -1,5 +1,6 @@
 ---
 description: Conduct a five-axis code review — correctness, readability, architecture, security, performance
+context: fork
 ---
 
 Invoke the agent-skills:code-review-and-quality skill.

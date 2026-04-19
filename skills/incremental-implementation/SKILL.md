@@ -1,6 +1,7 @@
 ---
 name: incremental-implementation
 description: Delivers changes incrementally. Use when implementing any feature or change that touches more than one file. Use when you're about to write a large amount of code at once, or when a task feels too big to land in one step.
+context: fork
 ---
 
 # Incremental Implementation
@@ -208,6 +209,8 @@ After each increment, verify:
 - [ ] The new functionality works as expected
 - [ ] The change is committed with a descriptive message
 
+**Note:** Run verification commands once per increment. If a command succeeds with no output or errors, do not repeat it. Redundant verification wastes time and provides no additional value.
+
 ## Common Rationalizations
 
 | Rationalization | Reality |
@@ -217,6 +220,7 @@ After each increment, verify:
 | "These changes are too small to commit separately" | Small commits are free. Large commits hide bugs and make rollbacks painful. |
 | "I'll add the feature flag later" | If the feature isn't complete, it shouldn't be user-visible. Add the flag now. |
 | "This refactor is small enough to include" | Refactors mixed with features make both harder to review and debug. Separate them. |
+| "Let me run the build command again just to be sure" | If a command succeeded with no errors, running it again provides no additional value. Trust the first successful run. |
 
 ## Red Flags
 
@@ -229,6 +233,7 @@ After each increment, verify:
 - Building abstractions before the third use case demands it
 - Touching files outside the task scope "while I'm here"
 - Creating new utility files for one-time operations
+- Running the same build/test command multiple times after a successful run
 
 ## Verification
 

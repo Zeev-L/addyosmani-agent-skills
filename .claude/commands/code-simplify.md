@@ -1,5 +1,6 @@
 ---
 description: Simplify code for clarity and maintainability — reduce complexity without changing behavior
+context: fork
 ---
 
 Invoke the agent-skills:code-simplification skill.

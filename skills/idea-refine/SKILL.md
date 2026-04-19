@@ -1,6 +1,8 @@
 ---
 name: idea-refine
-description: Refines ideas iteratively. Refine ideas through structured divergent and convergent thinking. Use "idea-refine" or "ideate" to trigger.
+description: Clarifies and refines ideas before implementation. Use when starting any new work, when requirements are vague, or when you need to turn a fuzzy concept into actionable tasks.
+context: fork
+agent: Plan
 ---
 
 # Idea Refine
