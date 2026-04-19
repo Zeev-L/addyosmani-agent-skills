@@ -8,6 +8,8 @@ This repository is also a [Codex plugin](https://developers.openai.com/codex/plu
 codex marketplace add addyosmani/agent-skills
 ```
 
+Make sure you have installed the Codex CLI (https://developers.openai.com/codex/cli)
+
 Codex clones the repo into `~/.codex/plugins/agent-skills/`, registers the marketplace in `~/.codex/config.toml`, and makes the plugin available. Restart Codex if it's already running.
 
 Local clones work too:
