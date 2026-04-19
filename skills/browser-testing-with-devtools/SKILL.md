@@ -1,6 +1,7 @@
 ---
 name: browser-testing-with-devtools
-description: Tests in real browsers. Use when building or debugging anything that runs in a browser. Use when you need to inspect the DOM, capture console errors, analyze network requests, profile performance, or verify visual output with real runtime data via Chrome DevTools MCP.
+description: Tests web applications using Chrome DevTools. Use when debugging frontend issues, verifying UI behavior, or when you need to inspect browser internals. Use when manual testing or visual inspection is required.
+context: fork
 ---
 
 # Browser Testing with DevTools

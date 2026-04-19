@@ -1,6 +1,7 @@
 ---
 name: security-and-hardening
-description: Hardens code against vulnerabilities. Use when handling user input, authentication, data storage, or external integrations. Use when building any feature that accepts untrusted data, manages user sessions, or interacts with third-party services.
+description: Implements security best practices and hardens code against common vulnerabilities. Use when handling user input, authentication, data storage, or deploying to production. Use when you need to ensure code follows security standards.
+context: fork
 ---
 
 # Security and Hardening

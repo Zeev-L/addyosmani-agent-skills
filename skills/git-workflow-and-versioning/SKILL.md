@@ -1,6 +1,7 @@
 ---
 name: git-workflow-and-versioning
-description: Structures git workflow practices. Use when making any code change. Use when committing, branching, resolving conflicts, or when you need to organize work across multiple parallel streams.
+description: Manages Git workflow and versioning best practices. Use when committing changes, managing branches, or when you need to follow proper Git procedures. Use when you need to maintain clean history and proper version control.
+context: fork
 ---
 
 # Git Workflow and Versioning
