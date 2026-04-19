@@ -1,5 +1,6 @@
 ---
 description: Start spec-driven development — write a structured specification before writing code
+context: fork
 ---
 
 Invoke the agent-skills:spec-driven-development skill.
