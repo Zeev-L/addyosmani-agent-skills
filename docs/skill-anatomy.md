@@ -4,10 +4,10 @@ This document describes the structure and format of agent-skills skill files. Us
 
 ## File Location
 
-Every skill lives in its own directory under `skills/`:
+Every skill lives in its own directory under `.opencode/skills/`:
 
 ```
-skills/
+.opencode/skills/
   skill-name/
     SKILL.md          # Required: The skill definition
     supporting-file.md # Optional: Reference material loaded on demand

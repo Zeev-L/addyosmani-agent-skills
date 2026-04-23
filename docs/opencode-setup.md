@@ -1,178 +1,63 @@
 # OpenCode Setup
 
-This guide explains how to use Agent Skills with OpenCode in a way that closely mirrors the Claude Code experience (automatic skill selection, lifecycle-driven workflows, and strict process enforcement).
+This repository is structured as a native OpenCode project.
 
-## Overview
+## What OpenCode Uses
 
-OpenCode supports custom `/commands`, but does not have a native plugin system or automatic skill routing like Claude Code.
+OpenCode will use these project assets directly:
 
-Instead, we achieve parity through:
-
-- A strong system prompt (`AGENTS.md`)
-- The built-in `skill` tool
-- Consistent skill discovery from the `/skills` directory
-
-This creates an **agent-driven workflow** where skills are selected and executed automatically.
-
-While it is possible to recreate `/spec`, `/plan`, and other commands in OpenCode, this integration intentionally uses an agent-driven approach instead:
-
-- Skills are selected automatically based on intent
-- Workflows are enforced via `AGENTS.md`
-- No manual command invocation is required
-
-This more closely matches how Claude Code behaves in practice, where skills are triggered automatically rather than manually.
-
----
+- `AGENTS.md` for project instructions
+- `.opencode/commands/` for custom slash commands
+- `.opencode/skills/` for native skill discovery via the `skill` tool
+- `.opencode/agents/` for specialist subagents
+- `.opencode/plugins/` for optional runtime extensions
 
 ## Installation
 
-1. Clone the repository:
+1. Clone the repository.
+2. Open it in OpenCode.
+3. Start working.
 
-```bash
-git clone https://github.com/addyosmani/agent-skills.git
-```
+No plugin marketplace or external packaging step is required.
 
-2. Open the project in OpenCode.
+## Commands
 
-3. Ensure the following files are present in your workspace:
+The repository provides these OpenCode commands:
 
-- `AGENTS.md` (root)
-- `skills/` directory
+- `/spec`
+- `/plan`
+- `/build`
+- `/test`
+- `/review`
+- `/code-simplify`
+- `/ship`
 
-No additional installation is required.
+They are defined in `.opencode/commands/` and use OpenCode's native command system.
 
----
+## Skills
 
-## How It Works
+Skills live in `.opencode/skills/<name>/SKILL.md`.
 
-### 1. Skill Discovery
+OpenCode exposes available skills through the native `skill` tool. Agents can load them on demand instead of keeping every workflow in prompt context at once.
 
-All skills live in:
+## Agents
 
-```
-skills/<skill-name>/SKILL.md
-```
+Specialist agents live in `.opencode/agents/`.
 
-OpenCode agents are instructed (via `AGENTS.md`) to:
+- `code-reviewer` for structured code review
+- `test-engineer` for test strategy and implementation
+- `security-auditor` for security review
 
-- Detect when a skill applies
-- Invoke the `skill` tool
-- Follow the skill exactly
+Commands can target these agents directly. For example, `/review` is configured to run through the `code-reviewer` subagent.
 
-### 2. Automatic Skill Invocation
+## Plugins
 
-The agent evaluates every request and maps it to the appropriate skill.
+OpenCode plugins are JavaScript or TypeScript files in `.opencode/plugins/`.
 
-Examples:
+This repository includes a lightweight startup plugin that adds a reminder to use the skill-driven workflow.
 
-- "build a feature" → `incremental-implementation` + `test-driven-development`
-- "design a system" → `spec-driven-development`
-- "fix a bug" → `debugging-and-error-recovery`
-- "review this code" → `code-review-and-quality`
+## Notes For Migrating From Claude Code
 
-The user does **not** need to explicitly request skills.
-
-### 3. Lifecycle Mapping (Implicit Commands)
-
-The development lifecycle is encoded implicitly:
-
-- DEFINE → `spec-driven-development`
-- PLAN → `planning-and-task-breakdown`
-- BUILD → `incremental-implementation` + `test-driven-development`
-- VERIFY → `debugging-and-error-recovery`
-- REVIEW → `code-review-and-quality`
-- SHIP → `shipping-and-launch`
-
-This replaces slash commands like `/spec`, `/plan`, etc.
-
----
-
-## Usage Examples
-
-### Example 1: Feature Development
-
-User:
-```
-Add authentication to this app
-```
-
-Agent behavior:
-- Detects feature work
-- Invokes `spec-driven-development`
-- Produces a spec before writing code
-- Moves to planning and implementation skills
-
----
-
-### Example 2: Bug Fix
-
-User:
-```
-This endpoint is returning 500 errors
-```
-
-Agent behavior:
-- Invokes `debugging-and-error-recovery`
-- Reproduces → localizes → fixes → adds guards
-
----
-
-### Example 3: Code Review
-
-User:
-```
-Review this PR
-```
-
-Agent behavior:
-- Invokes `code-review-and-quality`
-- Applies structured review (correctness, design, readability, etc.)
-
----
-
-## Agent Expectations (Critical)
-
-For OpenCode to work correctly, the agent must follow these rules:
-
-- Always check if a skill applies before acting
-- If a skill applies, it MUST be used
-- Never skip required workflows (spec, plan, test, etc.)
-- Do not jump directly to implementation
-
-These rules are enforced via `AGENTS.md`.
-
----
-
-## Limitations
-
-- No native slash commands (handled via intent mapping instead)
-- No plugin system (handled via prompt + structure)
-- Skill invocation depends on model compliance
-
-Despite these, the workflow closely matches Claude Code in practice.
-
----
-
-## Recommended Workflow
-
-Just use natural language:
-
-- "Design a feature"
-- "Plan this change"
-- "Implement this"
-- "Fix this bug"
-- "Review this"
-
-The agent will automatically select and execute the correct skills.
-
----
-
-## Summary
-
-OpenCode integration works by combining:
-
-- Structured skills (this repo)
-- Strong agent rules (`AGENTS.md`)
-- Automatic skill invocation via reasoning
-
-This results in a **fully agent-driven, production-grade engineering workflow** without requiring plugins or manual commands.
+- Claude command files are not used by OpenCode. Their OpenCode equivalents live in `.opencode/commands/`.
+- Claude plugin manifests are not portable to OpenCode. Equivalent behavior must be rewritten as OpenCode plugins.
+- OpenCode discovers native skills from `.opencode/skills/`, so the repository stores skills there directly.

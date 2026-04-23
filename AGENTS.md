@@ -1,169 +1,76 @@
 # AGENTS.md
 
-This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, Antigravity, etc.) when working with code in this repository.
+This repository is an OpenCode-first collection of reusable engineering skills, commands, and specialist agents for AI-assisted software development.
 
 ## Repository Overview
 
-A collection of skills for Claude.ai and Claude Code for senior software engineers. Skills are packaged instructions and scripts that extend Claude and your coding agents capabilities.
+- `AGENTS.md` defines the default behavior for OpenCode sessions in this repository.
+- `.opencode/skills/` contains reusable `SKILL.md` definitions that OpenCode discovers through its native `skill` tool.
+- `.opencode/commands/` contains custom commands such as `/spec`, `/plan`, `/build`, `/review`, and `/ship`.
+- `.opencode/agents/` contains specialist subagents for review, testing, and security work.
+- `references/` contains supporting checklists and patterns that skills can reference when needed.
 
-## OpenCode Integration
+## Core Rules
 
-OpenCode uses a **skill-driven execution model** powered by the `skill` tool and this repository's `/skills` directory.
+- Check whether a skill applies before acting.
+- If a skill applies, load it with the `skill` tool and follow it.
+- Prefer the smallest correct change that completes the task.
+- Keep workflows explicit: define, plan, build, verify, review, ship.
+- Do not invent repository structure or tool behavior when the codebase can answer the question.
 
-### Core Rules
+## Intent To Skill Mapping
 
-- If a task matches a skill, you MUST invoke it
-- Skills are located in `skills/<skill-name>/SKILL.md`
-- Never implement directly if a skill applies
-- Always follow the skill instructions exactly (do not partially apply them)
+- Feature or new functionality -> `spec-driven-development`, then `incremental-implementation`, then `test-driven-development`
+- Planning or task breakdown -> `planning-and-task-breakdown`
+- Bug, failure, or unexpected behavior -> `debugging-and-error-recovery`
+- Code review -> `code-review-and-quality`
+- Refactoring or simplification -> `code-simplification`
+- API or interface design -> `api-and-interface-design`
+- UI work -> `frontend-ui-engineering`
+- Shipping or rollout work -> `shipping-and-launch`
 
-### Intent → Skill Mapping
+## Lifecycle Mapping
 
-The agent should automatically map user intent to skills:
+- DEFINE -> `spec-driven-development`
+- PLAN -> `planning-and-task-breakdown`
+- BUILD -> `incremental-implementation` plus `test-driven-development`
+- VERIFY -> `debugging-and-error-recovery`
+- REVIEW -> `code-review-and-quality`
+- SHIP -> `shipping-and-launch`
 
-- Feature / new functionality → `spec-driven-development`, then `incremental-implementation`, `test-driven-development`
-- Planning / breakdown → `planning-and-task-breakdown`
-- Bug / failure / unexpected behavior → `debugging-and-error-recovery`
-- Code review → `code-review-and-quality`
-- Refactoring / simplification → `code-simplification`
-- API or interface design → `api-and-interface-design`
-- UI work → `frontend-ui-engineering`
+## Commands
 
-### Lifecycle Mapping (Implicit Commands)
+OpenCode custom commands live in `.opencode/commands/`.
 
-OpenCode does not support slash commands like `/spec` or `/plan`.
+- `/spec` starts definition work with the planning agent.
+- `/plan` produces a read-only implementation plan.
+- `/build` executes the next implementation slice.
+- `/test` runs a TDD-oriented implementation flow.
+- `/review` invokes the `code-reviewer` subagent.
+- `/code-simplify` runs the simplification workflow.
+- `/ship` runs the launch-readiness checklist.
 
-Instead, the agent must internally follow this lifecycle:
+## Skills
 
-- DEFINE → `spec-driven-development`
-- PLAN → `planning-and-task-breakdown`
-- BUILD → `incremental-implementation` + `test-driven-development`
-- VERIFY → `debugging-and-error-recovery`
-- REVIEW → `code-review-and-quality`
-- SHIP → `shipping-and-launch`
+All native skills live in `.opencode/skills/<skill-name>/SKILL.md`.
 
-### Execution Model
+- Keep the directory name and frontmatter `name` identical.
+- Keep descriptions specific enough for automatic selection.
+- Use supporting reference files sparingly and only when they add clear value.
 
-For every request:
+## Agents
 
-1. Determine if any skill applies (even 1% chance)
-2. Invoke the appropriate skill using the `skill` tool
-3. Follow the skill workflow strictly
-4. Only proceed to implementation after required steps (spec, plan, etc.) are complete
+Specialist subagents live in `.opencode/agents/`.
 
-### Anti-Rationalization
+- `code-reviewer` is read-only and focuses on quality review.
+- `security-auditor` is read-only and focuses on security findings.
+- `test-engineer` can edit files when test creation or remediation is needed.
 
-The following thoughts are incorrect and must be ignored:
+## Contributing
 
-- "This is too small for a skill"
-- "I can just quickly implement this"
-- "I’ll gather context first"
+When adding or updating repository assets:
 
-Correct behavior:
-
-- Always check for and use skills first
-
-This ensures OpenCode behaves similarly to Claude Code with full workflow enforcement.
-
-## Creating a New Skill
-
-### Directory Structure
-
-```
-skills/
-  {skill-name}/           # kebab-case directory name
-    SKILL.md              # Required: skill definition
-    scripts/              # Required: executable scripts
-      {script-name}.sh    # Bash scripts (preferred)
-  {skill-name}.zip        # Required: packaged for distribution
-```
-
-### Naming Conventions
-
-- **Skill directory**: `kebab-case` (e.g. `web-quality`)
-- **SKILL.md**: Always uppercase, always this exact filename
-- **Scripts**: `kebab-case.sh` (e.g., `deploy.sh`, `fetch-logs.sh`)
-- **Zip file**: Must match directory name exactly: `{skill-name}.zip`
-
-### SKILL.md Format
-
-```markdown
----
-name: {skill-name}
-description: {One sentence describing when to use this skill. Include trigger phrases like "Deploy my app", "Check logs", etc.}
----
-
-# {Skill Title}
-
-{Brief description of what the skill does.}
-
-## How It Works
-
-{Numbered list explaining the skill's workflow}
-
-## Usage
-
-```bash
-bash /mnt/skills/user/{skill-name}/scripts/{script}.sh [args]
-```
-
-**Arguments:**
-- `arg1` - Description (defaults to X)
-
-**Examples:**
-{Show 2-3 common usage patterns}
-
-## Output
-
-{Show example output users will see}
-
-## Present Results to User
-
-{Template for how Claude should format results when presenting to users}
-
-## Troubleshooting
-
-{Common issues and solutions, especially network/permissions errors}
-```
-
-### Best Practices for Context Efficiency
-
-Skills are loaded on-demand — only the skill name and description are loaded at startup. The full `SKILL.md` loads into context only when the agent decides the skill is relevant. To minimize context usage:
-
-- **Keep SKILL.md under 500 lines** — put detailed reference material in separate files
-- **Write specific descriptions** — helps the agent know exactly when to activate the skill
-- **Use progressive disclosure** — reference supporting files that get read only when needed
-- **Prefer scripts over inline code** — script execution doesn't consume context (only output does)
-- **File references work one level deep** — link directly from SKILL.md to supporting files
-
-### Script Requirements
-
-- Use `#!/bin/bash` shebang
-- Use `set -e` for fail-fast behavior
-- Write status messages to stderr: `echo "Message" >&2`
-- Write machine-readable output (JSON) to stdout
-- Include a cleanup trap for temp files
-- Reference the script path as `/mnt/skills/user/{skill-name}/scripts/{script}.sh`
-
-### Creating the Zip Package
-
-After creating or updating a skill:
-
-```bash
-cd skills
-zip -r {skill-name}.zip {skill-name}/
-```
-
-### End-User Installation
-
-Document these two installation methods for users:
-
-**Claude Code:**
-```bash
-cp -r skills/{skill-name} ~/.claude/skills/
-```
-
-**claude.ai:**
-Add the skill to project knowledge or paste SKILL.md contents into the conversation.
-
-If the skill requires network access, instruct users to add required domains at `claude.ai/settings/capabilities`.
+- Add new reusable workflows as skills in `.opencode/skills/`.
+- Add repetitive entrypoints as commands in `.opencode/commands/`.
+- Add focused specialist behaviors as agents in `.opencode/agents/`.
+- Keep OpenCode documentation and examples aligned with the actual repository layout.
