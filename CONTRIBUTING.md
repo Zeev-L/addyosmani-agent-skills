@@ -34,7 +34,7 @@ Every skill should include these sections:
 - Don't duplicate content between skills — reference other skills instead
 - Don't add skills that are vague advice instead of actionable processes
 - Don't create supporting files unless content exceeds 100 lines
-- Don't put reference material inside skill directories — use `references/` instead
+- Don't put reference material inside skill directories — use `.opencode/references/` instead
 
 ## Modifying Existing Skills
 

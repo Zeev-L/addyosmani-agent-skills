@@ -11,6 +11,23 @@ OpenCode will use these project assets directly:
 - `.opencode/skills/` for native skill discovery via the `skill` tool
 - `.opencode/agents/` for specialist subagents
 - `.opencode/plugins/` for optional runtime extensions
+- `.opencode/references/` for shared checklists and patterns used by the skills
+
+## Bootstrapping Into An Existing Repository
+
+If you want to pull these assets into an existing project instead of cloning this repository directly, use the scripts in `bootstrap/`.
+
+- `bootstrap/install-opencode-assets.sh`
+- `bootstrap/install-opencode-assets.ps1`
+
+They download a GitHub repository archive for a given repo URL and optional ref, then copy these reusable assets into the current repository:
+
+- `.opencode/commands/`
+- `.opencode/skills/`
+- `.opencode/agents/`
+- `.opencode/references/`
+
+They also write `.opencode-vendor.json` so the installed source and ref can be tracked for later updates.
 
 ## Installation
 

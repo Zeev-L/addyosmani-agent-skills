@@ -33,7 +33,7 @@ The specialist agents in `.opencode/agents/` are subagents that can be invoked d
 
 ## References
 
-Supporting checklists live in `references/`. Skills should pull them in only when needed.
+Supporting checklists live in `.opencode/references/`. Skills should pull them in only when needed.
 
 ## Creating New Assets
 

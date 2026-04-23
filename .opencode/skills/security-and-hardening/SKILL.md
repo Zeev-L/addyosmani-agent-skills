@@ -314,7 +314,7 @@ git diff --cached | grep -i "password\|secret\|api_key\|token"
 ```
 ## See Also
 
-For detailed security checklists and pre-commit verification steps, see `references/security-checklist.md`.
+For detailed security checklists and pre-commit verification steps, see `.opencode/references/security-checklist.md`.
 
 ## Common Rationalizations
 

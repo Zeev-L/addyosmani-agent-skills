@@ -8,7 +8,7 @@ This repository is an OpenCode-first collection of reusable engineering skills, 
 - `.opencode/skills/` contains reusable `SKILL.md` definitions that OpenCode discovers through its native `skill` tool.
 - `.opencode/commands/` contains custom commands such as `/spec`, `/plan`, `/build`, `/review`, and `/ship`.
 - `.opencode/agents/` contains specialist subagents for review, testing, and security work.
-- `references/` contains supporting checklists and patterns that skills can reference when needed.
+- `.opencode/references/` contains supporting checklists and patterns that skills can reference when needed.
 
 ## Core Rules
 

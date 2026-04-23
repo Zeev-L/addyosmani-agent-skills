@@ -37,10 +37,11 @@ agent-skills/
 │   ├── commands/     # OpenCode custom commands
 │   ├── skills/       # Native OpenCode skills
 │   ├── agents/       # Specialist subagents
-│   └── plugins/      # Optional OpenCode plugins
+│   ├── plugins/      # Optional OpenCode plugins
+│   └── references/   # Supporting checklists and patterns
 ├── AGENTS.md         # Project instructions for OpenCode
 ├── docs/             # Setup and reference docs
-├── references/       # Supporting checklists and patterns
+├── bootstrap/        # Import scripts for existing repositories
 └── CONTRIBUTING.md
 ```
 
@@ -106,10 +107,30 @@ The repository ships with 21 reusable skills under `.opencode/skills/`.
 
 ## References
 
-- [testing-patterns.md](references/testing-patterns.md)
-- [security-checklist.md](references/security-checklist.md)
-- [performance-checklist.md](references/performance-checklist.md)
-- [accessibility-checklist.md](references/accessibility-checklist.md)
+- [testing-patterns.md](.opencode/references/testing-patterns.md)
+- [security-checklist.md](.opencode/references/security-checklist.md)
+- [performance-checklist.md](.opencode/references/performance-checklist.md)
+- [accessibility-checklist.md](.opencode/references/accessibility-checklist.md)
+
+## Bootstrap Existing Repositories
+
+To import these shared OpenCode assets into an existing repository, use one of the bootstrap scripts in `bootstrap/`.
+
+Unix:
+
+```bash
+curl -fsSL <raw-script-url> -o install-opencode-assets.sh
+sh install-opencode-assets.sh https://github.com/OWNER/REPO [ref]
+```
+
+Windows PowerShell:
+
+```powershell
+Invoke-WebRequest <raw-script-url> -OutFile install-opencode-assets.ps1
+.\install-opencode-assets.ps1 -RepoUrl https://github.com/OWNER/REPO [-Ref <ref>]
+```
+
+Both scripts install the shared assets into the current repository and write `.opencode-vendor.json` so the source and version can be tracked.
 
 ## Why This Repository Exists
 

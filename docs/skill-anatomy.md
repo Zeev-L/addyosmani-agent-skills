@@ -114,7 +114,7 @@ Keep patterns and principles inline when under 50 lines.
 - Skill directories: `lowercase-hyphen-separated`
 - Skill files: `SKILL.md` (always uppercase)
 - Supporting files: `lowercase-hyphen-separated.md`
-- References: stored in `references/` at the project root, not inside skill directories
+- References: stored in `.opencode/references/`, not inside skill directories
 
 ## Cross-Skill References
 
