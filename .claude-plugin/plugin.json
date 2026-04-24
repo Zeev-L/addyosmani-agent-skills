@@ -1,7 +1,7 @@
 {
   "name": "batuta-agent-skills",
   "description": "Batuta fork of addyosmani/agent-skills. Inherits 20 engineering skills and adds 5 Batuta skills: research-first-dev, notion-kb-workflow, batuta-skill-authoring, batuta-agent-authoring, batuta-project-hygiene.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": {
     "name": "jota-batuta",
     "url": "https://github.com/jota-batuta"

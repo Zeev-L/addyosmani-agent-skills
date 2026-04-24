@@ -110,19 +110,34 @@ Required layout (project with N features):
         └── <source files>
 ```
 
+### Decisión previa — ¿el código está organizado por feature o por capa técnica?
+
+Antes de elegir el features root, inspeccioná la estructura existente:
+
+- **Por feature** (vertical slices): cada subfolder bajo `src/`, `packages/`, `app/` contiene un módulo completo de negocio (modelo + vista + lógica + tests). Típico en Next.js App Router, monorepos JS/TS, Rust workspaces.
+  → Usá el árbol de auto-detección normal (`src/<feature>/`, `packages/<feature>/`, etc.).
+
+- **Por capa técnica** (horizontal layers): los subfolders son `models/`, `views/`, `services/`, `activities/`, `reports/`, `tools/`. Típico en Django, Rails, Temporal workers, FastAPI apps con separación clásica.
+  → **NO muevas código.** Los features viven documentalmente en `docs/features/<feature>/` con su `CLAUDE.md`, `SPEC.md`, `PRD.md`. El CLAUDE.md de cada feature lista qué archivos de las capas técnicas la implementan (mapa feature→código).
+
+**Por qué**: forzar un refactor a `src/<feature>/` en proyectos monolito-por-capa rompe imports, tests y registros de worker/router con riesgo desproporcionado al beneficio. La documentación vive en `docs/` de forma honesta; el código queda donde está.
+
+**Regla de bolsillo**: si mover código requeriría un PR de >20 archivos solo para reubicar, estás en el caso "por capa" → `docs/features/`.
+
 Hard rules:
 
-1. **NEVER** create `SPEC.md` at the project root when the project has a `src/`, `packages/`, `app/`, or `features/` directory. Specs are scoped to features, not to the project.
+1. **NEVER** create `SPEC.md` at the project root. Specs are scoped to features — they live in `src/<feature>/`, `packages/<feature>/`, `app/<feature>/`, or `crates/<feature>/` (feature-oriented projects), or in `docs/features/<feature>/` (layer-oriented projects — Django, Rails, FastAPI, Temporal).
 2. **NEVER** overwrite an existing project-level `CLAUDE.md` during `feature-init`. Project-wide and feature-scoped CLAUDE.md are separate files at different levels.
 3. If the upstream `/spec` command from `agent-skills` would write to root, redirect its target to the feature subfolder. The upstream default is wrong for multi-feature projects — override.
 4. Auto-detect the features root from the project structure before asking the operator:
-   - `pyproject.toml` with `src/` directory present → `src/<feature>/`
+   - **Layered project** (subpaquetes bajo `src/` son `models/`, `views/`, `services/`, `activities/`, `reports/`, `tools/`, etc.) → `docs/features/<feature>/` (docs-only; el código queda en su capa original)
+   - `pyproject.toml` with `src/` directory and feature-named subpackages → `src/<feature>/`
    - `package.json` with `packages/` → `packages/<feature>/`
    - Next.js App Router (`app/` directory) → `app/<feature>/`
    - `Cargo.toml` with `[workspace]` → `crates/<feature>/`
    - Fallback → `features/<feature>/`
 
-   Persist the chosen convention in the project-level `CLAUDE.md` under `## Feature folder convention` so future features don't re-ask.
+   Persist the chosen convention in the project-level `CLAUDE.md` under `## Feature folder convention` with explicit `style:` (`feature-oriented` or `layered`) and `features-root:` fields, so future features don't re-ask.
 5. Scoped `CLAUDE.md` must be short (≤ 60 lines) and only contain rules unique to the feature: scope, boundaries, patterns. Do NOT restate user-level or project-level rules — those inherit automatically through Claude Code's nested CLAUDE.md loading.
 
 This prevents the monorepo-spaghetti failure mode where every feature dumps a `SPEC.md` at root and no one can tell which spec belongs to which piece of code.
