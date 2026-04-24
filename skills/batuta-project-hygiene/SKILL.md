@@ -39,6 +39,31 @@ A project can hold one feature or many. Every feature lives in its own subfolder
         └── <source files>
 ```
 
+### Alternate layout — layered projects (Django, Rails, FastAPI monolith, Temporal workers)
+
+When subpackages are technical layers (`models/`, `views/`, `services/`, `activities/`, `reports/`, `tools/`, etc.), code is NOT moved. Features live as documentation under `docs/features/`, and each feature's scoped `CLAUDE.md` maps which layer files implement it.
+
+```
+<project-root>/
+├── CLAUDE.md                ← project-wide rules
+├── pyproject.toml
+├── src/<pkg>/               ← code organized by layer (untouched by hygiene)
+│   ├── models/
+│   ├── services/
+│   ├── activities/
+│   └── reports/
+└── docs/
+    └── features/
+        ├── daily-report/
+        │   ├── CLAUDE.md    ← maps which layer files implement the feature
+        │   └── SPEC.md
+        └── login-email/
+            ├── CLAUDE.md
+            └── SPEC.md
+```
+
+Rule of thumb: if relocating code into `src/<feature>/` would require a PR touching >20 files purely to reorganize, the project is layered → use `docs/features/<feature>/` instead.
+
 ## When to Use
 
 ### Mode `project-init`
@@ -71,6 +96,31 @@ Do NOT trigger:
 
 ### Mode: `project-init`
 
+0. **Detect organization style** — feature-oriented (vertical slices) vs layer-oriented (horizontal layers). This runs BEFORE stack detection because it decides where feature docs will live.
+
+   Inspect immediate children of `src/`, `packages/`, `app/`, or the project root (depending on manifest):
+
+   - Names like `models/`, `views/`, `services/`, `controllers/`, `activities/`, `workflows/`, `reports/`, `tools/`, `schemas/`, `repositories/`, `handlers/`, `tasks/`, `routers/` → **layer-oriented**.
+   - Names like business-domain terms (`auth/`, `billing/`, `daily-report/`, `user-profile/`, `checkout/`) → **feature-oriented**.
+   - Empty `src/` or mixed signals → ask the operator once:
+     ```
+     ¿Cómo está organizado el código?
+       1) Por feature (vertical slice — cada carpeta es un módulo de negocio completo)
+       2) Por capa técnica (horizontal — models/, services/, views/, etc.)
+     ```
+
+   Record the answer in the generated `CLAUDE.md` under `## Feature folder convention` using this format:
+
+   ```markdown
+   ## Feature folder convention
+
+   style: <feature-oriented | layered>
+   features-root: <path-template>
+   ```
+
+   - Feature-oriented example: `features-root: src/<feature>/`
+   - Layered example: `features-root: docs/features/<feature>/` (code lives in existing technical layers; feature folders are docs-only)
+
 1. **Detect stack** from manifest files. Map to stack name:
    - `package.json` with `"next"` dep → `nextjs`
    - `package.json` with `"react"` dep → `react`
@@ -101,29 +151,35 @@ Do NOT trigger:
 **Hard constraint before any step**: the feature's `SPEC.md` and `CLAUDE.md` MUST be created inside a subfolder, NEVER at the project root. If the upstream `/spec` command would write to root, override its target. The root is reserved for project-wide files only.
 
 1. **Read `./CLAUDE.md` `## Feature folder convention` section**:
-   - If it contains a filled-in path template (e.g. `features/<name>/`, `packages/<name>/`, `src/<name>/`, `app/<name>/`) → use it.
-   - If it is a placeholder or missing → **auto-detect first**, then ask only if ambiguous:
-     - `pyproject.toml` + existing `src/` directory → default to `src/<name>/`
-     - `package.json` + existing `packages/` directory → default to `packages/<name>/`
-     - `package.json` with Next.js App Router + `app/` directory → default to `app/<name>/`
-     - `package.json` without `packages/` or `app/` → default to `features/<name>/`
+   - If it records `style: layered` → target is always `docs/features/<name>/`. No auto-detection. Skip to step 2.
+   - If it records `style: feature-oriented` with a filled-in `features-root:` template (e.g. `features/<name>/`, `packages/<name>/`, `src/<name>/`, `app/<name>/`) → use it.
+   - If the section has no explicit `style:` field (legacy CLAUDE.md written before Step 0 existed) → treat as `feature-oriented` and apply the auto-detection tree below.
+   - If the section is a placeholder or missing → run the auto-detection tree:
+     - `pyproject.toml` + existing `src/` directory with layer-named subpackages → treat as layered, use `docs/features/<name>/` and back-fill `style: layered` into CLAUDE.md.
+     - `pyproject.toml` + existing `src/` directory with feature-named subpackages → `src/<name>/`
+     - `package.json` + existing `packages/` directory → `packages/<name>/`
+     - `package.json` with Next.js App Router + `app/` directory → `app/<name>/`
+     - `package.json` without `packages/` or `app/` → `features/<name>/`
      - Rust (`Cargo.toml`) with workspace → `crates/<name>/`
      - Otherwise ask:
        ```
        Qué convención de carpetas usas para features en este proyecto?
-         1) src/<name>/        (detected: Python src-layout or similar)
-         2) packages/<name>/   (pnpm/Yarn workspace)
-         3) app/<name>/        (Next.js App Router)
-         4) features/<name>/
-         5) otra: <ruta>
+         1) src/<name>/           (Python src-layout, feature-oriented)
+         2) packages/<name>/      (pnpm/Yarn workspace)
+         3) app/<name>/           (Next.js App Router)
+         4) features/<name>/      (generic feature-oriented)
+         5) docs/features/<name>/ (layered project — code stays in its layer)
+         6) otra: <ruta>
 
        (La respuesta queda guardada en CLAUDE.md y no se te preguntará de nuevo.)
        ```
-   - After resolving (auto-detect or user answer), write the chosen template into `./CLAUDE.md` at `## Feature folder convention`.
+   - After resolving (auto-detect or user answer), write the chosen `style:` and `features-root:` into `./CLAUDE.md` at `## Feature folder convention`.
 
 2. **Create the feature folder** at the resolved path. Reject if it already exists (operator should use an existing-feature flow, not this mode).
 
 3. **Create `<feature-folder>/CLAUDE.md`** with scoped rules:
+
+   **Feature-oriented variant** (code lives inside the feature folder):
    ```markdown
    # Feature: <name>
 
@@ -136,6 +192,33 @@ Do NOT trigger:
    - Do not modify files outside this folder without opening a separate PR.
    - Commits must stay within this feature branch.
    - Feature tests live alongside source, not in a global test directory.
+   ```
+
+   **Layered variant** (code lives in existing technical layers — use this template when `style: layered`):
+   ```markdown
+   # Feature: <name>
+
+   Inherits from `../../CLAUDE.md` and `~/.claude/CLAUDE.md`. Docs-only — code lives in existing layers.
+
+   ## Scope
+   <one-sentence operator-provided description>
+
+   ## Code map
+
+   | Layer | Files |
+   |---|---|
+   | models | <src/<pkg>/models/<...>.py> |
+   | services | <src/<pkg>/services/<...>.py> |
+   | activities | <src/<pkg>/activities/<...>.py> |
+   | workflows | <src/<pkg>/workflows/<...>.py> |
+   | reports | <src/<pkg>/reports/<...>.py> |
+
+   (Fill in the actual files this feature touches. The spec below must stay consistent with these files.)
+
+   ## Boundaries
+   - Edits to layer files must trace back to SPEC.md in this folder.
+   - Do not create a new layer just for this feature; extend an existing one.
+   - Commits must stay within this feature branch.
    ```
 
 4. **Delegate SPEC creation** to the upstream `spec-driven-development` skill, **explicitly overriding its default write target** to `<feature-folder>/SPEC.md`. The upstream skill defaults to project root — that default is wrong for multi-feature projects. Pass the target path explicitly.
@@ -174,6 +257,9 @@ Do NOT trigger:
 - Skipping the git branch creation in feature-init mode.
 - Pushing to GitHub without asking the operator first, or pushing to a public repo when the operator said `--private`.
 - Ignoring auto-detection signals (if `src/` directory exists in a Python project, default to `src/<name>/`; do not ask the operator a question that the project structure already answers).
+- Creating a feature folder at `src/<name>/` in a project whose `## Feature folder convention` recorded `style: layered`. The style decision is sticky — don't override without asking the operator.
+- Moving existing code into a `features/` folder as a side-effect of `feature-init`. Hygiene never moves code; it only creates documentation folders.
+- Treating a technical layer name (`services/`, `activities/`, `reports/`, `tools/`) as a feature. These are horizontal layers in a layered project, not vertical slices.
 
 ## Verification
 
@@ -185,11 +271,21 @@ grep -q "Feature folder convention" CLAUDE.md     # placeholder present
 git log --oneline -1 | grep -q "project hygiene"  # committed
 ```
 
-After `feature-init <name>`:
+After `feature-init <name>` (feature-oriented):
 ```bash
-test -f features/<name>/CLAUDE.md 2>/dev/null || test -f packages/<name>/CLAUDE.md 2>/dev/null || test -f src/<name>/CLAUDE.md 2>/dev/null
-test -f features/<name>/SPEC.md 2>/dev/null || test -f packages/<name>/SPEC.md 2>/dev/null || test -f src/<name>/SPEC.md 2>/dev/null
+test -f features/<name>/CLAUDE.md 2>/dev/null || test -f packages/<name>/CLAUDE.md 2>/dev/null || test -f src/<name>/CLAUDE.md 2>/dev/null || test -f app/<name>/CLAUDE.md 2>/dev/null
+test -f features/<name>/SPEC.md 2>/dev/null || test -f packages/<name>/SPEC.md 2>/dev/null || test -f src/<name>/SPEC.md 2>/dev/null || test -f app/<name>/SPEC.md 2>/dev/null
 git branch --show-current | grep -q "feature/<name>"
+```
+
+After `feature-init <name>` (layered):
+```bash
+test -f docs/features/<name>/CLAUDE.md
+test -f docs/features/<name>/SPEC.md
+grep -q "## Code map" docs/features/<name>/CLAUDE.md
+git branch --show-current | grep -q "feature/<name>"
+# Negative: no new folder inside src/<pkg>/ for this feature
+test ! -d src/*/<name>
 ```
 
 If any check fails, the mode did not complete — report the failure to the operator and do not proceed to the next user task.

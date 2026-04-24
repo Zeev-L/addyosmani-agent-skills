@@ -60,6 +60,25 @@ cases:
       - "Creates CLAUDE.md in a plain directory with no project markers"
       - "Invokes gh repo create for a directory that isn't a project yet"
 
+  - id: "trigger-03"
+    description: "Layered Python project (Django/FastAPI/Temporal with models/, services/, activities/) — feature-init must target docs/features/<name>/, not src/<name>/"
+    task: >
+      Proyecto Python con pyproject.toml, src/bato/ dentro con subpaquetes
+      models/, services/, activities/, reports/, tools/. Voy a agregar la
+      feature 'daily-report' que toca archivos en services/, activities/ y
+      reports/.
+    quality_criteria:
+      - "Detects layer-oriented organization (models/, services/, activities/ are technical layers, not features)"
+      - "Records 'style: layered' in CLAUDE.md ## Feature folder convention if not already set"
+      - "Creates docs/features/daily-report/CLAUDE.md and docs/features/daily-report/SPEC.md"
+      - "Does NOT create src/bato/daily-report/ or attempt to move code into a new feature folder"
+      - "The scoped CLAUDE.md includes a Code map section listing which layer files implement the feature"
+    anti_criteria:
+      - "Creates src/bato/daily-report/ or src/bato/features/daily-report/"
+      - "Moves existing code from services/, activities/, or reports/ into a new feature folder"
+      - "Treats 'services/' or 'activities/' as features instead of layers"
+      - "Asks about folder convention without first inspecting subpackage names for layer signals"
+
   - id: "edge-02"
     description: "Existing CLAUDE.md in cwd should NOT trigger project-init again"
     task: >
