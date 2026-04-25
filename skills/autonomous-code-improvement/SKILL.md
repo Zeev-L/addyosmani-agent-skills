@@ -9,7 +9,7 @@ description: Drives unattended code-improvement passes through a multi-gate pipe
 
 Autonomous coding agents fail in three predictable ways: they guess when they hit domain-specific code, they have no cost controls, and they let the model that wrote the change confirm the change is good. This skill defines the discipline that prevents all three. Every change goes through a pipeline of orthogonal gates — none of which the executing model can override on its own.
 
-A reference TypeScript implementation lives at [asil-monorepo](https://github.com/dusan-milicevic/asil) (pending publish). This skill is the *process* — apply the gates regardless of language or framework.
+A reference TypeScript implementation lives at [asil-monorepo](https://github.com/telivity-otaip/asil) (pending publish). This skill is the *process* — apply the gates regardless of language or framework.
 
 ## When to Use
 
@@ -176,7 +176,7 @@ Before considering an autonomous loop production-ready:
 
 ## Reference Implementation
 
-A working TypeScript reference is available as a four-package monorepo: [asil-monorepo](https://github.com/dusan-milicevic/asil). It implements every node of the pipeline described above:
+A working TypeScript reference is available as a four-package monorepo: [asil-monorepo](https://github.com/telivity-otaip/asil). It implements every node of the pipeline described above:
 
 - `asil-cost-controller` — token budget governor, checkpoints, kill switch
 - `asil-thought-multiplier` — strategic thinking layer (router, thinkers, synthesizer, papa)
