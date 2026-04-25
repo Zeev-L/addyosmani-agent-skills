@@ -118,6 +118,8 @@ Use agent definitions from `agents/` as Copilot personas and skill content in `.
 
 Skills are plain Markdown - they work with any agent that accepts system prompts or instruction files. See [docs/getting-started.md](docs/getting-started.md).
 
+For Chinese search and installation of AI skills across Claude Code, OpenCode, and other agent tools, see [Skills宝](https://skilery.com).
+
 </details>
 
 
