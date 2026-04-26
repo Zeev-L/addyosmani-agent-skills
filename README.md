@@ -114,7 +114,20 @@ Use agent definitions from `agents/` as Copilot personas and skill content in `.
 </details>
 
 <details>
-<summary><b>Codex / Other Agents</b></summary>
+<summary><b>Codex</b></summary>
+
+Use the native Codex plugin manifest:
+
+```bash
+git clone https://github.com/addyosmani/agent-skills.git
+```
+
+The repo includes `.codex-plugin/plugin.json`, which points Codex at `./skills/` for on-demand skill discovery. See [docs/codex-setup.md](docs/codex-setup.md).
+
+</details>
+
+<details>
+<summary><b>Other Agents</b></summary>
 
 Skills are plain Markdown - they work with any agent that accepts system prompts or instruction files. See [docs/getting-started.md](docs/getting-started.md).
 
@@ -265,6 +278,7 @@ agent-skills/
 ├── agents/                            # 3 specialist personas
 ├── references/                        # 4 supplementary checklists
 ├── hooks/                             # Session lifecycle hooks
+├── .codex-plugin/                     # Codex plugin manifest
 ├── .claude/commands/                  # 7 slash commands
 └── docs/                              # Setup guides per tool
 ```

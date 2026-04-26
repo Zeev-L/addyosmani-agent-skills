@@ -29,6 +29,8 @@ Browse the `skills/` directory. Each subdirectory contains a `SKILL.md` with:
 
 Copy the relevant `SKILL.md` content into your agent's system prompt, rules file, or conversation. The most common approaches:
 
+**Native skill/plugin system:** Use the tool's native skill loader when available. For Codex, this repository includes `.codex-plugin/plugin.json`; see [codex-setup.md](codex-setup.md).
+
 **System prompt:** Paste the skill content at the start of the session.
 
 **Rules file:** Add skill content to your project's rules file (CLAUDE.md, .cursorrules, etc.).

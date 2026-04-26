@@ -1,10 +1,47 @@
 # AGENTS.md
 
-This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, Antigravity, etc.) when working with code in this repository.
+This file provides guidance to AI coding agents (Codex, Claude Code, Cursor, Copilot, Antigravity, OpenCode, etc.) when working with code in this repository.
 
 ## Repository Overview
 
-A collection of skills for Claude.ai and Claude Code for senior software engineers. Skills are packaged instructions and scripts that extend Claude and your coding agents capabilities.
+A collection of skills for AI coding agents and senior software engineers. Skills are packaged instructions and scripts that extend Codex, Claude Code, and other coding agents.
+
+## Codex Integration
+
+Codex uses this repository through:
+
+- `.codex-plugin/plugin.json` for plugin metadata and native skill discovery
+- `skills/<skill-name>/SKILL.md` for on-demand skill instructions
+- this `AGENTS.md` file for repository-level operating rules
+
+When a task matches a skill, Codex must open the matching `SKILL.md` and follow it before implementing. If several skills apply, use the smallest ordered set that covers the task.
+
+### Claude/OpenCode Tool Mapping for Codex
+
+Some skills and commands use Claude- or OpenCode-style tool names. In Codex, map them as follows:
+
+- `Read`: use shell reads such as `sed`, `cat`, or `rg`
+- `Write`: use `apply_patch` for file creation or replacement
+- `Edit` / `MultiEdit`: use `apply_patch`
+- `Bash`: use shell command execution
+- `Grep`: use `rg` first, falling back to `grep` only if needed
+- `Glob`: use `rg --files` or `find`
+- `LS`: use `ls`
+- `WebFetch` / `WebSearch`: use the available web/search tool only when current external information is required
+- `AskUserQuestion` / `Question`: ask the user a concise plain-text question and wait for the reply
+- `TaskCreate` / `TaskUpdate` / `TaskList` / `TodoWrite`: use Codex task tracking when available
+- `Skill`: open the referenced `skills/<skill-name>/SKILL.md` and follow it
+- `ExitPlanMode`: ignore; continue according to the current user request and repository rules
+
+Codex does not need the `.claude/commands/` slash commands. Treat command intent as plain language:
+
+- `/spec` → follow `spec-driven-development`
+- `/plan` → follow `planning-and-task-breakdown`
+- `/build` → follow `incremental-implementation` and `test-driven-development`
+- `/test` → follow `test-driven-development`
+- `/review` → follow `code-review-and-quality`
+- `/code-simplify` → follow `code-simplification`
+- `/ship` → follow `shipping-and-launch`
 
 ## OpenCode Integration
 
