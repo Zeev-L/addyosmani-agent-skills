@@ -75,6 +75,13 @@ Rationale: most bugs come from assuming outdated APIs. Context7 lookup is cheap,
 
 Rationale: the context window is not memory. Notion is.
 
+### agent-architect (delegated)
+**MUST trigger** when a slice requires domain expertise that the base agents (`implementer`, `code-reviewer`, `test-engineer`, `security-auditor`) do not cover — a specific framework, protocol, regulation, or Batuta client domain. Discovery-first is mandatory: the meta-agent lists existing agents before creating a duplicate.
+
+Rationale: keeps the main agent's window for architecture, not for writing long inline prompts. Specialists persist in `<project>/.claude/agents/` so they are reusable across slices.
+
+See `docs/DELEGATION-RULE.md` (Rule #0 — main never writes code, audit chain is mandatory) and `docs/DELEGATION-RULE-SPECIALISTS.md` (when and how to invoke `agent-architect`, model recommendations, promotion to user-global).
+
 ---
 
 ## Vendored Skills

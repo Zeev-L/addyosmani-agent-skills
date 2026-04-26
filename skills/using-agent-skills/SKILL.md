@@ -19,6 +19,10 @@ Task arrives
     ├── Vague idea/need refinement? ──→ idea-refine
     ├── New project/feature/change? ──→ spec-driven-development
     ├── Have a spec, need tasks? ──────→ planning-and-task-breakdown
+    ├── Slice needs domain expertise   ──→ agent-architect
+    │   not covered by base agents?       (creates project-local specialist
+    │                                      on demand, discovery-first; see
+    │                                      docs/DELEGATION-RULE-SPECIALISTS.md)
     ├── Implementing code? ────────────→ incremental-implementation
     │   ├── UI work? ─────────────────→ frontend-ui-engineering
     │   ├── API work? ────────────────→ api-and-interface-design
