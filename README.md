@@ -57,6 +57,17 @@ npx skills add vercel-labs/skills --skill find-skills
 
 Attribution for upstream and vendored sources lives in [`ATTRIBUTION.md`](ATTRIBUTION.md).
 
+## Layers
+
+The plugin contains two independent layers. They do not overlap; pick the right one for the content you are adding.
+
+| Layer | Question | Activation | Format |
+|---|---|---|---|
+| [`skills/`](skills/) | "What do I do when *X* situation arises?" | Auto-invocation by Claude Code via skill description matching | `SKILL.md` per directory with `name`/`description` frontmatter |
+| [`rules/`](rules/) | "How must the code look *always*?" | Explicit `@<path>` import from a project's `CLAUDE.md` | Plain Markdown with light frontmatter (`title`/`applies-to`/`last-reviewed`) |
+
+`skills/` carries 26 procedures (20 upstream + 6 Batuta-specific). `rules/` carries declarative invariants imported à la carte by consumer projects via `@.claude/rules/<rule>.md` (project-relative path resolved through symlinks created by `tools/setup-rules.sh`). New rules require passing the `batuta-rule-authoring` admission gate. See [`rules/README.md`](rules/README.md) for the full layer documentation and [`rules/_meta/how-to-import.md`](rules/_meta/how-to-import.md) for the consumer protocol.
+
 ## Merging upstream updates
 
 ```bash
@@ -299,7 +310,10 @@ batuta-agent-skills/
 │   ├── hooks.json             # SessionStart + PreToolUse registration
 │   ├── session-start.sh       # session-start advice
 │   └── delegation-guard.sh    # PreToolUse Rule #0 enforcement
-├── skills/                    # 20 upstream skills + 6 Batuta-specific (research-first-dev, notion-kb-workflow, batuta-skill-authoring, batuta-agent-authoring, batuta-project-hygiene, using-agent-skills)
+├── skills/                    # 20 upstream skills + 7 Batuta-specific (research-first-dev, notion-kb-workflow, batuta-skill-authoring, batuta-agent-authoring, batuta-rule-authoring, batuta-project-hygiene, using-agent-skills)
+├── rules/                     # engineering invariants library (core/, stack/, domain-co/, delivery/) — imported à la carte by consumer projects
+├── tools/
+│   └── setup-rules.sh         # consumer-side script: symlinks rules into a project's .claude/rules/
 ├── .claude/commands/          # 7 slash commands
 └── references/                # supplementary checklists
 ```

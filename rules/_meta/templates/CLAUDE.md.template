@@ -1,0 +1,51 @@
+# CLAUDE.md — <project-name>
+
+> Replace placeholders. Delete sections that don't apply. Keep this file under 100 lines.
+
+## Project context
+
+<!-- Only information unique to this project belongs here:
+     client type, project scope, stack, business constraints, deployment environment.
+     Do not repeat conventions that are already captured in imported rules.
+
+     NEVER paste secrets, API keys, tokens, connection strings with passwords, or real
+     PII here. CLAUDE.md is committed to git. See @.claude/rules/secrets-and-pii.md for
+     the full contract. Use environment variables and secret managers; reference them
+     by NAME only (e.g. "DATABASE_URL is set in production via Doppler"), never by value. -->
+
+<TODO: client / scope / stack / business constraints — only what is unique to this project>
+
+## Engineering invariants (imported from batuta-agent-skills)
+
+<!-- Step 1: Run from project root to create symlinks:
+     bash <plugin-path>/tools/setup-rules.sh --all
+     (or --rule core/<name> for selective import)
+
+     Step 2: Uncomment the @-import lines for rules that apply to this project. -->
+
+# @.claude/rules/research-first-citations.md
+# @.claude/rules/secrets-and-pii.md
+# @.claude/rules/code-style.md
+
+<!-- Import only what applies. Unused rules cost context tokens without benefit.
+     See rules/README.md for the full index as new rules are added. -->
+
+## Exceptions to imported rules
+
+<!-- Document any deviation from an imported rule using this template.
+     Do not silently violate — document the deviation, justification, and date.
+     Full exception protocol: <plugin>/rules/_meta/how-to-import.md §B.4
+
+### `core/<rule-name>.md` — section "Inviolable rules", rule N
+**Deviation:** <what changes in this project>
+**Justification:** <why — tradeoff, technical constraint, client decision>
+**Date:** YYYY-MM-DD
+-->
+
+## Project-specific conventions
+
+<!-- Rules unique to this project that do not generalize.
+     If a convention here appears in a second project unchanged, consider promoting
+     it to a rule in the plugin via the batuta-rule-authoring skill. -->
+
+<TODO: project-specific conventions that don't belong in the shared rules layer>

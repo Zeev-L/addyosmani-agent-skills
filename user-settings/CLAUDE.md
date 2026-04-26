@@ -141,3 +141,49 @@ Hard rules:
 5. Scoped `CLAUDE.md` must be short (≤ 60 lines) and only contain rules unique to the feature: scope, boundaries, patterns. Do NOT restate user-level or project-level rules — those inherit automatically through Claude Code's nested CLAUDE.md loading.
 
 This prevents the monorepo-spaghetti failure mode where every feature dumps a `SPEC.md` at root and no one can tell which spec belongs to which piece of code.
+
+## Delegation-only main agent (Rule #0)
+
+The main agent NEVER edits source code directly. All implementation, testing, and audit work is delegated via `Task` to subagents whose `model:` field is declared explicitly in their frontmatter — no Opus inheritance.
+
+When delegating, the main picks the model **by task complexity, not surface area**:
+
+- **Haiku** — trivial: CSS or string change, rename without signature shifts, README/CHANGELOG edit, config flip, ≤ 3 files with no new conditional or async. Examples: "change submit button color to blue", "bump react from 18.2 to 18.3", "fix typo in error message".
+- **Sonnet** (default) — anything with control flow, tests, integrations, async, error handling, or refactor across modules.
+- **Opus** (justified exception) — only compliance, regulation, legal, or forensic-accounting work where errors carry legal cost (DIAN, laboral CO, GDPR, forensic audit).
+
+When in doubt between Haiku and Sonnet, choose Sonnet — under-spending on a Sonnet-required task produces broken output that the audit chain catches and reopens, costing more in total.
+
+Mandatory chain (sequential, blocking — each gate reads the previous one's output):
+
+```
+implementer | implementer-haiku | <specialist> → test-engineer → code-reviewer → security-auditor
+```
+
+The main does NOT close a task until every gate returns `AUDIT RESULT: APPROVED`. A `BLOCKED` verdict reopens the cycle with the auditor's report attached. Audits are sequential, not parallel — security needs to see what review accepted.
+
+If the slice needs domain expertise the base agents (`implementer`, `implementer-haiku`, `code-reviewer`, `test-engineer`, `security-auditor`) don't cover, invoke `agent-architect` FIRST to create or reuse a project-local specialist at `<project>/.claude/agents/<name>.md`. Discovery-first against project-local + user-global + plugin agents to avoid duplicates.
+
+When `batuta-agent-skills` is enabled in a project, a PreToolUse hook enforces this rule at runtime: any Write/Edit/MultiEdit/NotebookEdit from the main targeting paths outside `specs/`, `docs/`, `.claude/commands/`, `.claude/CLAUDE.md`, `CLAUDE.md`, `AGENTS.md`, `MEMORY.md`, `memory/`, `build-log.md`, `lessons-learned.md` is blocked. Subagents bypass the hook (their tool scope is enforced by their own `tools:` frontmatter). The hook's own kill-switches (`.claude/settings*.json`, `.claude/hooks/`, `.claude/agents/`) are blocklisted to prevent self-disabling.
+
+See plugin `batuta-agent-skills/docs/DELEGATION-RULE.md` for the full contract and `docs/DELEGATION-RULE-SPECIALISTS.md` for the task-complexity calibration table and specialist creation flow.
+
+## Engineering invariants from `rules/` (batuta-agent-skills)
+
+The plugin ships a `rules/` layer with declarative engineering invariants that any project can import à la carte: research-first citations, secrets/PII handling, code style, and (over time) stack-specific and Colombia-specific patterns. Imports keep the project's own `CLAUDE.md` short — universal conventions live in plugin-provided modules, not copied per project.
+
+**For a NEW project**: the `batuta-project-hygiene` skill (`mode=project-init`) auto-bootstraps the rule symlinks as part of its flow. The operator gets prompted "Bootstrap engineering invariants from batuta-agent-skills? (Y/n)" — answering Y runs `tools/setup-rules.sh --all` and pre-populates the project's `CLAUDE.md` with `@.claude/rules/<rule>.md` import lines. No manual action required beyond answering the prompt.
+
+**For an EXISTING project** that did not run hygiene at init time: invoke `batuta-project-hygiene` again, OR run manually:
+
+```bash
+bash ~/.claude/plugins/marketplaces/batuta-agent-skills/tools/setup-rules.sh --all
+```
+
+Then add `@.claude/rules/<rule>.md` lines to the project's `CLAUDE.md` (one per imported rule). On the next Claude Code session start the rules load automatically into context.
+
+**Updates** propagate via `/plugin update batuta-agent-skills` — the symlinks point at the plugin install path, so rule contents update on each plugin pull. New rules added to the plugin require re-running the setup script (idempotent).
+
+**Add `.claude/rules/` to your project `.gitignore`** — symlinks are per-machine and break on clones without the plugin installed.
+
+See plugin `batuta-agent-skills/rules/_meta/how-to-import.md` for the full consumer protocol, exception protocol when a rule does not apply, and troubleshooting.

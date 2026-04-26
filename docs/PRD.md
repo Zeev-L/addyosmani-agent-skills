@@ -64,8 +64,9 @@ In one paragraph: the plugin ships five base agents (`implementer`, `implementer
 
 - **v1.0 (shipped 2026-04-26)** — Rule #0 enforcement, 5 base agents, agent-architect, plugin-level hook, delegation rule docs
 - **v1.1 (this slice)** — Project-wide documentation scaffolding (PRD, SPEC, ADRs, session-handoff convention)
-- **v1.2 (next)** — E2E test harness for the delegation chain; published metrics dashboard template
-- **v1.3** — Auto-enforcement of session-handoff protocol via Stop hook (if v1.1 reveals operator drift)
-- **v1.4** — First domain specialists promoted to user-global from project-local (candidates: Colombian e-invoicing validator and Colombian bank-statement parser specialists)
+- **v1.2 (shipped 2026-04-26)** — E2E test harness for the delegation chain (run against PR #2 + PR #3 with three calibrated prompts; documented in `docs/sessions/2026-04-26-rule-zero-implementation.md`)
+- **v1.3 (this slice)** — `rules/` layer: declarative engineering invariants library importable à la carte by consumer projects via `@<path>` symlinked through `tools/setup-rules.sh`. Includes `batuta-rule-authoring` skill as admission gate.
+- **v1.4** — Auto-enforcement of session-handoff protocol via Stop hook (if v1.1 reveals operator drift)
+- **v1.5** — First domain specialists promoted to user-global from project-local (candidates: Colombian e-invoicing validator and Colombian bank-statement parser specialists)
 
 Updates to this roadmap require an ADR if they change a v-numbered milestone's intent.

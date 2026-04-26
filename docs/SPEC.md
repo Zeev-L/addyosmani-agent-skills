@@ -26,6 +26,8 @@ batuta-agent-skills/
 │   ├── session-start.sh       ← session-start advice hook
 │   └── delegation-guard.sh    ← PreToolUse Rule #0 enforcement
 ├── skills/                    ← invocable skills (build, plan, spec, test, review, etc.)
+├── rules/                     ← engineering invariants library (declarative; imported via @<path> from consumer CLAUDE.md)
+├── tools/                     ← consumer-side scripts (setup-rules.sh)
 ├── .claude/commands/          ← slash commands (/spec, /plan, /build, ...)
 └── references/                ← supplementary checklists
 ```
@@ -101,6 +103,18 @@ Plans and session journals augment this:
 
 See `CLAUDE.md` section "Session-handoff protocol" for how the operator and the main agent interact with these files.
 
+## Layer 6 — Engineering invariants (`rules/`)
+
+A library of declarative engineering invariants (style, security, multi-tenancy, delivery checklists) that consumer projects import à la carte from their own `CLAUDE.md`.
+
+- **Format:** plain Markdown with light frontmatter (`title`, `applies-to`, `last-reviewed`). NOT `SKILL.md` format.
+- **Activation:** explicit `@<path>` import in the consumer project's `CLAUDE.md`. NOT auto-discovered.
+- **Folder structure:** `rules/core/` (universal), `rules/stack/`, `rules/domain-co/`, `rules/delivery/`. New domain folders are added as evidence accumulates.
+- **Import path:** consumer projects symlink `.claude/rules/<rule>.md` → `<plugin>/rules/<rule>.md` via `tools/setup-rules.sh`, then import via `@.claude/rules/<rule>.md` (project-relative, portable cross-developer).
+- **Authoring gate:** new rules must pass the `batuta-rule-authoring` skill (validates §A.4 format, §A.5 conventions, §A.6 admission gate of N=2 projects evidence).
+
+This layer is independent of `skills/`. Skills are workflows triggered by events; rules are invariants always in effect. The boundary is documented in [`../rules/README.md`](../rules/README.md).
+
 ## Skills (invocable workflows)
 
 The plugin ships skills organized by development phase. Each skill has a `SKILL.md` in `skills/<name>/`. Phases:
@@ -113,7 +127,7 @@ The plugin ships skills organized by development phase. Each skill has a `SKILL.
 | Verify | `browser-testing-with-devtools`, `debugging-and-error-recovery` |
 | Review | `code-review-and-quality`, `code-simplification`, `security-and-hardening`, `performance-optimization` |
 | Ship | `git-workflow-and-versioning`, `ci-cd-and-automation`, `deprecation-and-migration`, `documentation-and-adrs`, `shipping-and-launch` |
-| Meta (Batuta-specific) | `batuta-project-hygiene`, `batuta-skill-authoring`, `batuta-agent-authoring`, `research-first-dev`, `notion-kb-workflow`, `using-agent-skills` |
+| Meta (Batuta-specific) | `batuta-project-hygiene`, `batuta-skill-authoring`, `batuta-agent-authoring`, `batuta-rule-authoring`, `research-first-dev`, `notion-kb-workflow`, `using-agent-skills` |
 
 Each skill is auto-discoverable via the `using-agent-skills` flowchart. The Batuta-specific meta-skills are mandatory triggers documented in `CLAUDE.md`.
 

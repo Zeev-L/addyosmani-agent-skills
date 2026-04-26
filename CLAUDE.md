@@ -11,6 +11,7 @@ This file documents only **how we work in this repo**: conventions, rules, and t
 ## Conventions
 
 - Project structure and component map live in [`docs/SPEC.md`](docs/SPEC.md), not here. This file is rules-only.
+- The plugin contains two independent layers: `skills/` (workflows auto-invocable by Claude Code) and `rules/` (declarative engineering invariants imported à la carte by consumer projects via `@<path>`). See [`rules/README.md`](rules/README.md) for the boundary.
 - Every skill lives in `skills/<name>/SKILL.md`
 - YAML frontmatter with `name` and `description` fields
 - Description starts with what the skill does (third person), followed by trigger conditions ("Use when...")
@@ -49,6 +50,10 @@ Rationale: prevents skill sprawl. Forces `npx skills find` against skills.sh's 9
 ### batuta-agent-authoring
 **MUST trigger** before adding any new agent definition to `agents/`.
 Rationale: prevents agent overlap. Forces distinctness check against existing agents.
+
+### batuta-rule-authoring
+**MUST trigger** before adding any new file under `rules/`.
+Rationale: prevents low-quality rule sprawl. Forces validation of §A.4 (canonical format with mandatory Anti-patterns), §A.5 (50–200 lines, imperative tone, no client names), §A.6 (admission gate of N=2 projects evidence — exception: rules verbatim from `~/.claude/CLAUDE.md` global count as universal). Rules are distilled from practice, not invented.
 
 ### research-first-dev
 **MUST trigger** before writing code that imports or calls any external library/API not yet cited in this session.

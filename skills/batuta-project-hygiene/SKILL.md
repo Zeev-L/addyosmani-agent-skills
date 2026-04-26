@@ -258,6 +258,33 @@ Do NOT trigger:
 
    **Do NOT create** `.cursor/rules/`, `GEMINI.md`, or `.windsurfrules` — the operator opts into those per-tool. `AGENTS.md` and `.aider.conf.yml` are the only auto-bootstrapped cross-tool files.
 
+4b. **Engineering invariants bootstrap (auto-prompted, opt-out)** — for projects with a manifest (`package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`), prompt the operator: *"Bootstrap engineering invariants from batuta-agent-skills (research-first, secrets-and-pii, code-style)? (Y/n)"*. Default Y. Skip on `n` or on pure-docs repos with no manifest markers.
+
+   **On Y:**
+   - Run `bash ~/.claude/plugins/marketplaces/batuta-agent-skills/tools/setup-rules.sh --all` (deterministic path matching the install layout enforced by the plugin's own setup script; do not introduce a `find`-based lookup here)
+   - Append to project's `CLAUDE.md` immediately after the section header `## Mandatory Skills for Batuta Projects` block, a new section:
+
+     ```markdown
+     ## Engineering invariants (imported from batuta-agent-skills)
+
+     @.claude/rules/research-first-citations.md
+     @.claude/rules/secrets-and-pii.md
+     @.claude/rules/code-style.md
+     ```
+
+   - Append `.claude/rules/` to the project's `.gitignore` idempotently. Defensive form that handles missing trailing newline:
+     ```bash
+     if ! grep -qxF '.claude/rules/' .gitignore 2>/dev/null; then
+       [ -s .gitignore ] && [ -n "$(tail -c1 .gitignore)" ] && echo "" >> .gitignore
+       echo '.claude/rules/' >> .gitignore
+     fi
+     ```
+     (Creates the file if missing; ensures a newline before append if existing file lacks one; never duplicates the entry on re-runs.) Symlinks are per-machine.
+
+   **On `n`:** skip silently. Operator can run `bash <plugin>/tools/setup-rules.sh --all` later if they change their mind.
+
+   **Verification:** `test -L .claude/rules/research-first-citations.md` (a symlink exists) and `grep -q "@.claude/rules/" CLAUDE.md`.
+
 5. **GitHub boilerplate** (per user-level CLAUDE.md rule "New project = GitHub repo on day 0"):
    - If no `.git/` exists: `git init && git add CLAUDE.md && git commit -m "chore: initial project hygiene"`
    - If no remote: ask operator `"Crear repo GitHub <jota-batuta/<detected-name>>? (y/n)"`. On `y`: `gh repo create jota-batuta/<name> --private --source=. --remote=origin --push`.
@@ -402,6 +429,9 @@ test -d docs/plans/active && test -d docs/plans/archive    # plans dirs exist
 test -d docs/sessions                                      # sessions dir exists
 test -f AGENTS.md                                          # cross-tool bootstrap (manifest projects)
 test -f .aider.conf.yml || echo skipped                    # Aider config (skipped for pure-docs repos)
+test -L .claude/rules/research-first-citations.md || echo skipped  # rules bootstrap (opted-in)
+grep -q "@.claude/rules/" CLAUDE.md || echo skipped        # invariants import present (opted-in)
+grep -q "\.claude/rules/" .gitignore || echo skipped       # rules dir gitignored (opted-in)
 git log --oneline -1 | grep -q "project hygiene"           # committed
 ```
 
