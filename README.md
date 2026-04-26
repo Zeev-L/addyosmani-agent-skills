@@ -126,9 +126,9 @@ Skills are plain Markdown - they work with any agent that accepts system prompts
 
 ---
 
-## All 20 Skills
+## All 21 Skills
 
-The commands above are the entry points. Under the hood, they activate these 20 skills — each one a structured workflow with steps, verification gates, and anti-rationalization tables. You can also reference any skill directly.
+The commands above are the entry points. Under the hood, they activate 20 core lifecycle skills — each one a structured workflow with steps, verification gates, and anti-rationalization tables. Plus one standalone productivity skill. You can also reference any skill directly.
 
 ### Define - Clarify what to build
 
@@ -179,6 +179,12 @@ The commands above are the entry points. Under the hood, they activate these 20 
 | [deprecation-and-migration](skills/deprecation-and-migration/SKILL.md) | Code-as-liability mindset, compulsory vs advisory deprecation, migration patterns, zombie code removal | Removing old systems, migrating users, or sunsetting features |
 | [documentation-and-adrs](skills/documentation-and-adrs/SKILL.md) | Architecture Decision Records, API docs, inline documentation standards - document the *why* | Making architectural decisions, changing APIs, or shipping features |
 | [shipping-and-launch](skills/shipping-and-launch/SKILL.md) | Pre-launch checklists, feature flag lifecycle, staged rollouts, rollback procedures, monitoring setup | Preparing to deploy to production |
+
+### Productivity & Utilities - Standalone skills
+
+| Skill | What It Does | Invoke With |
+|-------|-------------|-------------|
+| [assistant](skills/assistant/README.md) | Calendar and task management. Creates rich context-aware Google Calendar entries with conversation links, detects conflicts, respects work preferences, manages local task lists | `/assistant` (automatic or explicit invocation) |
 
 ---
 
@@ -242,7 +248,7 @@ Every skill follows a consistent anatomy:
 
 ```
 agent-skills/
-├── skills/                            # 20 core skills (SKILL.md per directory)
+├── skills/                            # 21 skills (SKILL.md per directory)
 │   ├── idea-refine/                   #   Define
 │   ├── spec-driven-development/       #   Define
 │   ├── planning-and-task-breakdown/   #   Plan
@@ -263,6 +269,7 @@ agent-skills/
 │   ├── deprecation-and-migration/     #   Ship
 │   ├── documentation-and-adrs/        #   Ship
 │   ├── shipping-and-launch/           #   Ship
+│   ├── assistant/                     #   Productivity: Calendar & tasks
 │   └── using-agent-skills/            #   Meta: how to use this pack
 ├── agents/                            # 3 specialist personas
 ├── references/                        # 4 supplementary checklists
