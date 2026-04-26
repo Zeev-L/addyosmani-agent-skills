@@ -1,6 +1,14 @@
-# Getting Started with agent-skills
+# Getting Started with batuta-agent-skills
 
-agent-skills works with any AI coding agent that accepts Markdown instructions. This guide covers the universal approach. For tool-specific setup, see the dedicated guides.
+> **Read first** (in this order):
+> 1. [`docs/PRD.md`](PRD.md) — vision, problem, success metrics
+> 2. [`docs/SPEC.md`](SPEC.md) — architecture overview
+> 3. [`docs/DELEGATION-RULE.md`](DELEGATION-RULE.md) — Rule #0 contract (the main agent never edits source code)
+> 4. [`CLAUDE.md`](../CLAUDE.md) — conventions and session-handoff protocol
+>
+> This file is the skills-and-agents quick-start that complements the architectural docs above. It is NOT the source of truth for project structure — `docs/SPEC.md` is.
+
+`batuta-agent-skills` is a Claude Code plugin. The runtime layer (PreToolUse hook, agent delegation, audit chain) is **Claude Code-specific**. The skills, agents, and doc graph are plain Markdown and load into other tools as static context. If you are switching from Claude Code to another tool mid-feature, see [`docs/PORTABILITY.md`](PORTABILITY.md).
 
 ## How Skills Work
 
@@ -8,12 +16,20 @@ Each skill is a Markdown file (`SKILL.md`) that describes a specific engineering
 
 **Skills are not reference docs.** They're step-by-step processes the agent follows.
 
-## Quick Start (Any Agent)
+## Quick Start (Claude Code, the canonical surface)
 
-### 1. Clone the repository
+### 1. Install via marketplace
+
+```
+/plugin marketplace add jota-batuta/batuta-agent-skills
+/plugin install batuta-agent-skills@batuta-agent-skills
+```
+
+Or, for local development:
 
 ```bash
-git clone https://github.com/addyosmani/agent-skills.git
+git clone https://github.com/jota-batuta/batuta-agent-skills.git
+claude --plugin-dir /path/to/batuta-agent-skills
 ```
 
 ### 2. Choose a skill
@@ -89,15 +105,20 @@ See [skill-anatomy.md](skill-anatomy.md) for the full specification.
 
 ## Using Agents
 
-The `agents/` directory contains pre-configured agent personas:
+The `agents/` directory contains six agents — five base + one meta-agent — all with explicit `model:` declarations to prevent silent Opus inheritance:
 
-| Agent | Purpose |
-|-------|---------|
-| `code-reviewer.md` | Five-axis code review |
-| `test-engineer.md` | Test strategy and writing |
-| `security-auditor.md` | Vulnerability detection |
+| Agent | Model | Purpose |
+|-------|-------|---------|
+| `implementer.md` | sonnet | Generic implementer for spec-driven slices |
+| `implementer-haiku.md` | haiku | Trivial-change executor (CSS/string change, rename, README, config flip) — escalates if the task drifts beyond trivial |
+| `code-reviewer.md` | sonnet | GATE 2 — five-axis code review with `AUDIT RESULT: APPROVED\|BLOCKED` contract |
+| `test-engineer.md` | sonnet | GATE 1 — test strategy and writing |
+| `security-auditor.md` | sonnet | GATE 3 — OWASP-grounded vulnerability detection |
+| `agent-architect.md` | sonnet | Meta-agent — creates project-local domain specialists on demand at `<project>/.claude/agents/<name>.md` |
 
-Load an agent definition when you need specialized review. For example, ask your coding agent to "review this change using the code-reviewer agent persona" and provide the agent definition.
+In Claude Code, the main agent invokes these via the `Task` tool. The audit chain (test-engineer → code-reviewer → security-auditor) runs sequentially after the implementer or specialist returns its `READY FOR AUDIT` line. The main does NOT close a task without three `AUDIT RESULT: APPROVED` verdicts. Full contract: [`docs/DELEGATION-RULE.md`](DELEGATION-RULE.md).
+
+In other tools without `Task` support, load the agent body as static context and execute its workflow manually.
 
 ## Using Commands
 
@@ -137,6 +158,9 @@ The `/spec` and `/plan` commands create working artifacts (`SPEC.md`, `tasks/pla
 
 1. **Start with spec-driven-development** for any non-trivial work
 2. **Always load test-driven-development** when writing code
-3. **Don't skip verification steps** — they're the whole point
+3. **Don't skip verification steps** — they're the whole point. The audit chain (test → review → security) is non-negotiable; do not close a task without all three `AUDIT RESULT: APPROVED` verdicts
 4. **Load skills selectively** — more context isn't always better
 5. **Use the agents for review** — different perspectives catch different issues
+6. **In Claude Code, never edit source code from the main agent** — the PreToolUse hook will block you, and that is the desired behavior. Delegate to `implementer` (Sonnet) or `implementer-haiku` (Haiku) instead. See [`docs/DELEGATION-RULE.md`](DELEGATION-RULE.md) for the contract and the four delegation alternatives the hook will list when it blocks an edit.
+7. **For domain expertise the base agents don't cover** (Google OAuth, payment-processor webhooks, Colombian e-invoicing parsers, etc.), invoke `agent-architect` to create or reuse a project-local specialist before delegating.
+8. **Across sessions**, follow the session-handoff protocol in [`CLAUDE.md`](../CLAUDE.md): one active plan in `docs/plans/active/`, session journal in `docs/sessions/`, the `Next:` line in the journal is the next session's entry point.

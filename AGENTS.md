@@ -1,10 +1,36 @@
 # AGENTS.md
 
-This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, Antigravity, etc.) when working with code in this repository.
+This file is the cross-tool entry point for AI coding agents working in this repository. It is the standard companion to tool-specific files (`CLAUDE.md`, `.cursor/rules/`, `.aider.conf.yml`, `GEMINI.md`, etc.) and is read natively by OpenAI Codex CLI, Cursor (as complement), Aider (via `read:`), Gemini CLI, OpenCode, and as fallback by Claude Code.
 
 ## Repository Overview
 
-A collection of skills for Claude.ai and Claude Code for senior software engineers. Skills are packaged instructions and scripts that extend Claude and your coding agents capabilities.
+`batuta-agent-skills` is a Claude Code plugin that ships:
+
+- **Six agents** with explicit `model:` declarations (5 base + `agent-architect` meta-agent)
+- A **plugin-level PreToolUse hook** that enforces Rule #0 (the main agent never edits source code; everything goes through delegation)
+- A **sequential audit chain** (`test-engineer` → `code-reviewer` → `security-auditor`) with literal `AUDIT RESULT: APPROVED|BLOCKED` contract
+- A **project-wide doc graph** (`docs/PRD.md`, `docs/SPEC.md`, `docs/adr/`, `docs/plans/`, `docs/sessions/`)
+- 26 skills (20 upstream engineering skills + 6 Batuta-specific)
+
+## Rule #0 — delegation-only main agent (Claude Code-specific runtime)
+
+**The main agent NEVER edits source code directly.** All implementation, testing, and audit work is delegated via the `Task` tool to subagents whose `model:` field is declared explicitly. The audit chain runs sequentially, blocking, before any task closes. This is enforced at runtime in Claude Code by the PreToolUse hook in `hooks/delegation-guard.sh`.
+
+The full contract lives in [`docs/DELEGATION-RULE.md`](docs/DELEGATION-RULE.md). The Haiku/Sonnet/Opus calibration table for choosing which agent to delegate to lives in [`docs/DELEGATION-RULE-SPECIALISTS.md`](docs/DELEGATION-RULE-SPECIALISTS.md).
+
+## Cross-tool note (Codex CLI, Cursor, Aider, Gemini CLI, Windsurf)
+
+Tools other than Claude Code 1.x do not support PreToolUse hooks, the `Task` subagent model, or the runtime audit chain. **The doc graph (`docs/PRD.md`, `docs/SPEC.md`, `docs/adr/`, `docs/plans/`, `docs/sessions/`) is plain Markdown and ports 100%.** The agent definitions in `agents/*.md` describe the contract but cannot be invoked as Tasks outside Claude Code.
+
+If you are running this repository in a tool other than Claude Code:
+
+1. Read `docs/PRD.md` first (project vision)
+2. Read `docs/SPEC.md` second (architecture)
+3. Read `docs/plans/active/*.md` (in-flight work)
+4. Read the most recent `docs/sessions/*.md` and follow its `Next:` line
+5. **Self-enforce Rule #0** — do not edit source code; produce the same artifacts the agents would have produced (build-log, audit report) by hand. The doc graph survives the lack of runtime enforcement.
+
+Full handoff checklist: [`docs/PORTABILITY.md`](docs/PORTABILITY.md).
 
 ## OpenCode Integration
 

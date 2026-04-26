@@ -1,6 +1,12 @@
 # OpenCode Setup
 
-This guide explains how to use Agent Skills with OpenCode in a way that closely mirrors the Claude Code experience (automatic skill selection, lifecycle-driven workflows, and strict process enforcement).
+> **Scope disclaimer.** OpenCode replicates only the **skill-routing surface** of `batuta-agent-skills`. The Batuta runtime layer — Rule #0 PreToolUse hook, the audit chain (`AUDIT RESULT: APPROVED|BLOCKED` contract), the `Task` subagent delegation model, and the project-local specialist creation via `agent-architect` — is specific to Claude Code 1.x and does **not** port to OpenCode. The agent files in `agents/` describe the contract but cannot be invoked as Tasks in OpenCode.
+>
+> What you DO get on OpenCode: skill auto-discovery and intent → skill mapping (this document). What you DO NOT get: runtime hook enforcement, audit-chain blocking, Haiku/Sonnet/Opus model tier selection per delegation, `agent-architect` specialist creation. If you need those, run in Claude Code.
+>
+> If you are switching from Claude Code to OpenCode mid-feature, also read [`docs/PORTABILITY.md`](PORTABILITY.md) for the doc-graph handoff (PRD → SPEC → active plan → session journal) and how to self-enforce Rule #0 manually.
+
+This guide explains how to use the skill-routing portion of Agent Skills with OpenCode (automatic skill selection, lifecycle-driven workflows, and process enforcement at the skill level).
 
 ## Overview
 
@@ -29,7 +35,7 @@ This more closely matches how Claude Code behaves in practice, where skills are 
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/addyosmani/agent-skills.git
+git clone https://github.com/jota-batuta/batuta-agent-skills.git
 ```
 
 2. Open the project in OpenCode.

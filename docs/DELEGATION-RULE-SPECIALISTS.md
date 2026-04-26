@@ -9,10 +9,10 @@ The five base agents shipped with this plugin (`implementer`, `implementer-haiku
 - Google OAuth flows (refresh tokens, scopes, revocation)
 - Node.js streams and backpressure
 - Postgres zero-downtime migrations
-- Stripe / Bold webhooks (idempotency, retries, signature validation)
+- Payment-processor webhooks (idempotency, retries, signature validation)
 - RAG with pgvector
-- Colombian bank statement parsers (Bancolombia, BBVA, Bold)
-- DIAN electronic invoicing
+- Colombian bank statement parsers
+- Colombian e-invoicing
 
 Building these by hand does not scale. Loading them all up front pollutes the main's context. The solution is a meta-agent that materializes them on demand.
 
@@ -36,8 +36,8 @@ The main calls `agent-architect` when at least one of these holds:
 
 1. **Recurring pattern detected.** During `/spec` or `/plan`, the slice touches a domain that has appeared before in this project, and the base agents are not handling it well.
 2. **Specific stack or protocol.** The slice depends on a library, framework, or protocol with enough complexity to deserve its own body of knowledge (OAuth 2.0, GraphQL federation, WebRTC, gRPC, WebSocket reconnection, etc.).
-3. **Regulation or compliance.** The slice touches specific regulation (DIAN, GDPR, PCI-DSS, HIPAA, Colombian labor law). Here the specialist's model may justifiably be `opus`.
-4. **Batuta client domain.** Slices for Grupo Kiosco, Jardines de Paz, Smart Choice, or Tumatera that touch client-specific business logic (e.g. "how Bold reports electronic deposits with delay", "how Bancolombia formats PDF statements") justify a per-client specialist.
+3. **Regulation or compliance.** The slice touches specific regulation (Colombian e-invoicing, GDPR, PCI-DSS, HIPAA, Colombian labor law). Here the specialist's model may justifiably be `opus`.
+4. **Batuta client domain.** Slices for any consulting client that touch client-specific business logic (e.g. "how a payment processor reports electronic deposits with delay", "how a specific bank formats PDF statements") justify a per-client specialist.
 
 **Anti-pattern to avoid:** creating specialists for one-off tasks. If the slice is "add an endpoint that returns the API version", you do not need `nodejs-versioning-expert`. A `Task` with a detailed prompt to `implementer` is enough.
 
@@ -99,9 +99,9 @@ The main agent picks the model when delegating to a base agent (`implementer-hai
 | "implement retry with exponential backoff for the Stripe client" | `sonnet` | Async + error handling |
 | "refactor the auth module to extract token validation into middleware" | `sonnet` | Cross-module change with semantic preservation |
 | "add pagination to the `/orders` list endpoint" | `sonnet` | New parameters + edge cases (empty, last page, invalid cursor) |
-| "validate the DIAN factura electrónica XML against the 2026 schema" | `opus` | Compliance-critical, errors have legal cost |
+| "validate the Colombian e-invoicing XML against the 2026 schema" | `opus` | Compliance-critical, errors have legal cost |
 | "review the GDPR data subject erasure flow for completeness" | `opus` | Regulatory + cross-cutting concerns |
-| "fix typo in DIAN error message string from `ENVAINDO` to `ENVIANDO`" | `haiku` | Mechanical even when the surrounding domain is regulated — the change does not touch validation logic |
+| "fix typo in e-invoicing error message string from `ENVAINDO` to `ENVIANDO`" | `haiku` | Mechanical even when the surrounding domain is regulated — the change does not touch validation logic |
 
 **Tiebreaker rule:** when a task sits between Haiku and Sonnet, choose Sonnet. The over-spend on a Haiku-eligible task is invisible (a few cents), but under-spending on a Sonnet-required task produces broken output that the audit chain catches and reopens — which costs more in total.
 
@@ -113,10 +113,10 @@ When `agent-architect` creates a project-local specialist, the model defaults fo
 |---|---|---|
 | Frameworks / languages (Node.js, Postgres, React, Django) | `sonnet` | Structured knowledge, Sonnet handles it well |
 | Protocols (OAuth, gRPC, WebRTC, GraphQL) | `sonnet` | Spec-driven, Sonnet with the agent's context is enough |
-| Integrations (Stripe, Bold, Twilio, SendGrid) | `sonnet` | Standard webhook/SDK patterns |
-| Format parsers (bank statements, DIAN XML) | `sonnet` | Deterministic logic plus edge cases |
+| Integrations (payment processors, comms providers) | `sonnet` | Standard webhook/SDK patterns |
+| Format parsers (bank statements, regulatory XML) | `sonnet` | Deterministic logic plus edge cases |
 | Trivial-change executors (CSS/string/rename within a domain) | `haiku` | If the recurring pattern is genuinely trivial, persist as Haiku specialist |
-| Compliance / regulation (DIAN, Colombian labor law, GDPR) | `opus` | **Justified exception**: errors here have legal cost. Opus pays for itself. |
+| Compliance / regulation (Colombian e-invoicing, Colombian labor law, GDPR) | `opus` | **Justified exception**: errors here have legal cost. Opus pays for itself. |
 | Forensic audit (legal, accounting) | `opus` | Critical analysis where Opus reasoning earns its keep |
 | Read-only / discovery (schema mapping, file search) | `haiku` | 25× cheaper, enough for exploration |
 
@@ -265,7 +265,7 @@ The main still **never touches code directly**. The audit chain still blocks clo
 
 **Step 2 (5 min):** confirm the project's `CLAUDE.md` references this document under "Mandatory Skills". Without the reference, the main agent may not invoke `agent-architect` reliably.
 
-**Step 3 (validation, 30 min):** pick the next real slice you have pending. If it touches a specific domain (Bold webhook, statement parsing, ERP integration), start the session and watch whether the main naturally invokes `agent-architect`. If it does not, prompt explicitly: *"this slice touches X, consider invoking agent-architect before delegating to implementer"*. After 2–3 sessions of nudging, the pattern settles.
+**Step 3 (validation, 30 min):** pick the next real slice you have pending. If it touches a specific domain (payment-processor webhook, statement parsing, ERP integration), start the session and watch whether the main naturally invokes `agent-architect`. If it does not, prompt explicitly: *"this slice touches X, consider invoking agent-architect before delegating to implementer"*. After 2–3 sessions of nudging, the pattern settles.
 
 **Step 4 (measurement, 1 week):** at the end of the first week using this pattern, count:
 - How many specialists `agent-architect` created
@@ -277,7 +277,7 @@ If < 50% of created specialists were reused, raise the trigger threshold (≥ 2 
 ## What this resolves
 
 1. **The system scales with your client and domain portfolio.** As you onboard more clients, specialists accumulate in `~/.claude/agents/` global, and new projects start with pre-loaded expertise.
-2. **You stop reinventing prompts every slice.** Knowledge of "how to handle Google refresh tokens", "how to parse Bancolombia statements", "what scopes to ask Bold for" is encoded and versioned — it does not get lost in chat history.
+2. **You stop reinventing prompts every slice.** Knowledge of "how to handle Google refresh tokens", "how to parse a specific bank's statement format", "what scopes to ask a given payment processor for" is encoded and versioned — it does not get lost in chat history.
 3. **Discovery-first prevents duplicates.** Same philosophy already in place for skills via `batuta-skill-authoring`, now applied to agents.
 4. **Each specialist runs at the right model tier.** Sonnet for 95% of cases. Opus only for compliance/legal where it pays for itself. Haiku for read-only. The savings of Rule #0 hold even as the fleet grows past 20 specialists.
 5. **Reusable cross-project via manual promotion.** What one project learns can benefit the next without contaminating the first with foreign details.

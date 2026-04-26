@@ -1,17 +1,21 @@
 # Batuta Agent Skills
 
-**A minimal fork of [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) that adds four Batuta-specific skills on top.**
+**A Claude Code plugin that turns the main agent into a delegation-only architectural seat.** Forked from [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) and extended with runtime enforcement, a Haiku tier, and a project-wide doc graph.
 
-This fork inherits the 20 upstream engineering skills unchanged and layers four additions that enforce Batuta workflows:
+Read these in order to understand the project:
 
-- **`research-first-dev`** — before using any external library, run Context7 lookup and emit a `// Source:` citation at the import site.
-- **`notion-kb-workflow`** — three manual modes (`--read` / `--init` / `--append`) for syncing project context with a Notion knowledge base.
-- **`batuta-skill-authoring`** — discover-first gate. Run `npx skills find` against the 91k+ skills.sh catalog before writing any new SKILL.md.
-- **`batuta-agent-authoring`** — distinctness gate. Compare any proposed new agent against existing agents before adding it.
+1. [`docs/PRD.md`](docs/PRD.md) — vision, problem, success metrics
+2. [`docs/SPEC.md`](docs/SPEC.md) — architecture overview (5 base agents + agent-architect, hook layer, audit chain, doc graph)
+3. [`docs/DELEGATION-RULE.md`](docs/DELEGATION-RULE.md) — Rule #0 contract (the main agent never edits code; mandatory audit chain)
+4. [`docs/DELEGATION-RULE-SPECIALISTS.md`](docs/DELEGATION-RULE-SPECIALISTS.md) — when and how `agent-architect` creates project-local domain specialists
+5. [`docs/adr/`](docs/adr/) — decision records (Rule #0, Haiku tier, hook vs permissions, sequential audit chain)
+6. [`CLAUDE.md`](CLAUDE.md) — project conventions and session-handoff protocol
 
-All four skills pass the eval suite at 100% (see [`docs/qa/benchmark-2026-04-16.md`](docs/qa/benchmark-2026-04-16.md)). Attribution for upstream and vendored sources lives in [`ATTRIBUTION.md`](ATTRIBUTION.md).
+If you're switching from Claude Code to another tool mid-feature (token budget, pair programming, etc.), read [`docs/PORTABILITY.md`](docs/PORTABILITY.md).
 
----
+## Architecture in one paragraph
+
+The plugin ships **six agents** — five base (`implementer` Sonnet, `implementer-haiku` Haiku, `code-reviewer` Sonnet, `test-engineer` Sonnet, `security-auditor` Sonnet) and one meta-agent (`agent-architect` Sonnet) — all with explicit `model:` declarations to prevent silent Opus inheritance. A **plugin-level PreToolUse hook** (`hooks/delegation-guard.sh`) blocks the main agent from editing source code unless the target path falls under a narrow whitelist (`specs/`, `docs/`, `.claude/commands/`, `CLAUDE.md`, etc.). Subagents bypass the hook via `agent_id` verification; their tool scope is enforced by their own frontmatter. After implementation, a **sequential audit chain** runs `test-engineer` → `code-reviewer` → `security-auditor` with a literal `AUDIT RESULT: APPROVED|BLOCKED` contract. The main does not close a task without three APPROVED verdicts. When a slice needs domain expertise the base agents don't cover, `agent-architect` creates a project-local specialist at `<project>/.claude/agents/<name>.md` with discovery-first to avoid duplicates.
 
 ## Install
 
@@ -27,29 +31,31 @@ git clone https://github.com/jota-batuta/batuta-agent-skills.git
 claude --plugin-dir /path/to/batuta-agent-skills
 ```
 
-After installing, enable the Batuta layer by copying the "Mandatory Skills for Batuta Projects" block from this repo's [`CLAUDE.md`](CLAUDE.md) into your own project's CLAUDE.md. The `using-agent-skills` meta-skill upstream routes to each new skill at the declared triggers.
+After installing, the plugin's PreToolUse hook is active in every session where the plugin is enabled. The main agent's first attempt to edit a path outside the whitelist will be blocked with an actionable message pointing at the four delegation alternatives.
 
-Dependency used internally by `batuta-skill-authoring` (install once globally):
+Optional dependency used internally by `batuta-skill-authoring`:
 
 ```bash
 npx skills add vercel-labs/skills --skill find-skills
 ```
 
----
-
 ## What you get
 
 ```
- UPSTREAM (unchanged)                          BATUTA LAYER
- ────────────────────                          ────────────
- 20 engineering skills                         4 skills
- 3 agents (code-reviewer,                      + vendored:
-    test-engineer,                               writing-skills (obra/superpowers, MIT)
-    security-auditor)                            context7 (intellectronica, CC0)
- 7 commands (/spec, /plan, ...)                + CLAUDE.md append section
- 1 hook (SessionStart)                         + ATTRIBUTION.md
-                                               + benchmark report (9/9 PASS)
+ UPSTREAM (unchanged)                  BATUTA LAYER
+ ────────────────────                  ────────────
+ 20 engineering skills                 6 mandatory skills (research-first-dev,
+                                          notion-kb-workflow, batuta-skill-authoring,
+                                          batuta-agent-authoring, batuta-project-hygiene,
+                                          using-agent-skills routing)
+ + 7 slash commands                    + 6 agents with explicit model: (5 base + agent-architect)
+ + supplementary checklists            + 2 hooks (SessionStart + PreToolUse delegation-guard)
+                                       + project doc graph (PRD, SPEC, ADRs, plans, sessions)
+                                       + audit chain contract
+                                       + vendored: writing-skills (obra/superpowers, MIT), context7 (intellectronica, CC0)
 ```
+
+Attribution for upstream and vendored sources lives in [`ATTRIBUTION.md`](ATTRIBUTION.md).
 
 ## Merging upstream updates
 
@@ -58,15 +64,19 @@ git fetch upstream
 git merge upstream/main
 ```
 
-Expect conflicts only in `CLAUDE.md` and `README.md`. Resolve by preserving the Batuta additions.
+Expect conflicts in `CLAUDE.md`, `README.md`, `agents/*.md`, `hooks/hooks.json`, and `docs/`. The Batuta architecture (Rule #0, hook, audit chain, doc graph) supersedes upstream defaults — preserve Batuta on every conflict unless the upstream change is a bugfix in a skill body.
+
+## Cross-tool portability
+
+The plugin's runtime enforcement (hook, audit chain, agent delegation) is specific to **Claude Code 1.x**. The doc graph (PRD/SPEC/ADRs/plans/sessions) is plain Markdown and ports to any tool that reads project files. If you need to continue work in Cursor, Codex CLI, Aider, or another tool, see [`docs/PORTABILITY.md`](docs/PORTABILITY.md) for what survives the switch and how to self-enforce Rule #0 without the hook.
 
 ---
 
 ## Upstream README (reference)
 
-The upstream's README covers the original 20 skills, their design philosophy, and integration into other tools (Cursor, Gemini, Copilot, Kiro, OpenCode). See [`addyosmani/agent-skills`](https://github.com/addyosmani/agent-skills) for that content.
+> **Note:** the sections below are preserved verbatim from the upstream `addyosmani/agent-skills` README. Install commands and tool-setup tables in this section reference the **upstream** repo, not this fork. For the Batuta-specific install (recommended), see the top of this file.
 
-The sections below are the upstream's documentation, preserved as reference for the 20 skills inherited by this fork.
+The sections below are the upstream's documentation, preserved as reference for the 20 skills inherited by this fork. See [`addyosmani/agent-skills`](https://github.com/addyosmani/agent-skills) for the original.
 
 ---
 
@@ -132,63 +142,16 @@ claude --plugin-dir /path/to/agent-skills
 </details>
 
 <details>
-<summary><b>Cursor</b></summary>
-
-Copy any `SKILL.md` into `.cursor/rules/`, or reference the full `skills/` directory. See [docs/cursor-setup.md](docs/cursor-setup.md).
-
-</details>
-
-<details>
-<summary><b>Gemini CLI</b></summary>
-
-Install as native skills for auto-discovery, or add to `GEMINI.md` for persistent context. See [docs/gemini-cli-setup.md](docs/gemini-cli-setup.md).
-
-**Install from the repo:**
-
-```bash
-gemini skills install https://github.com/addyosmani/agent-skills.git --path skills
-```
-
-**Install from a local clone:**
-
-```bash
-gemini skills install ./agent-skills/skills/
-```
-
-</details>
-
-<details>
-<summary><b>Windsurf</b></summary>
-
-Add skill contents to your Windsurf rules configuration. See [docs/windsurf-setup.md](docs/windsurf-setup.md).
-
-</details>
-
-<details>
 <summary><b>OpenCode</b></summary>
 
-Uses agent-driven skill execution via AGENTS.md and the `skill` tool.
-
-See [docs/opencode-setup.md](docs/opencode-setup.md).
+Uses agent-driven skill execution via `AGENTS.md` and the `skill` tool. The Batuta runtime layer (Rule #0 hook, audit chain, agent delegation) is **not available** on OpenCode — only the skill-routing surface ports. See [docs/opencode-setup.md](docs/opencode-setup.md).
 
 </details>
 
 <details>
-<summary><b>GitHub Copilot</b></summary>
+<summary><b>Codex CLI / Cursor / Aider / Gemini CLI / Windsurf / other tools</b></summary>
 
-Use agent definitions from `agents/` as Copilot personas and skill content in `.github/copilot-instructions.md`. See [docs/copilot-setup.md](docs/copilot-setup.md).
-
-</details>
-
-<details>
-  <summary><b>Kiro IDE & CLI </b></summary>
-  Skills for Kiro reside under ".kiro/skills/" and can be stored under Project or Global level. Kiro also supports Agents.md. See Kiro docs at https://kiro.dev/docs/skills/
-</details>
-
-<details>
-<summary><b>Codex / Other Agents</b></summary>
-
-Skills are plain Markdown - they work with any agent that accepts system prompts or instruction files. See [docs/getting-started.md](docs/getting-started.md).
+Skills and the doc graph (PRD, SPEC, ADRs, plans, sessions) are plain Markdown and load into any tool that reads project files. **The Batuta runtime layer is Claude Code-only.** If you switch tools mid-feature, read [docs/PORTABILITY.md](docs/PORTABILITY.md) for the checklist of what survives, what does not, and how to self-enforce Rule #0 without the hook.
 
 </details>
 
@@ -252,15 +215,18 @@ The commands above are the entry points. Under the hood, they activate these 20 
 
 ---
 
-## Agent Personas
+## Agents (six shipped, all with explicit `model:` declarations)
 
-Pre-configured specialist personas for targeted reviews:
+| Agent | Model | Role |
+|-------|-------|------|
+| [implementer](agents/implementer.md) | sonnet | Generic implementer for spec-driven slices |
+| [implementer-haiku](agents/implementer-haiku.md) | haiku | Trivial-change executor (CSS/string change, rename, README edit, config flip, ≤3 files no logic) — escalates to `implementer` if the task drifts beyond trivial |
+| [code-reviewer](agents/code-reviewer.md) | sonnet | GATE 2 of the audit chain — five-axis review with `AUDIT RESULT: APPROVED\|BLOCKED` contract |
+| [test-engineer](agents/test-engineer.md) | sonnet | GATE 1 — test design and coverage; `Write` scoped to test paths only |
+| [security-auditor](agents/security-auditor.md) | sonnet | GATE 3 — OWASP-grounded vulnerability scan |
+| [agent-architect](agents/agent-architect.md) | sonnet | Meta-agent. Creates project-local domain specialists on demand at `<project>/.claude/agents/<name>.md` with discovery-first |
 
-| Agent | Role | Perspective |
-|-------|------|-------------|
-| [code-reviewer](agents/code-reviewer.md) | Senior Staff Engineer | Five-axis code review with "would a staff engineer approve this?" standard |
-| [test-engineer](agents/test-engineer.md) | QA Specialist | Test strategy, coverage analysis, and the Prove-It pattern |
-| [security-auditor](agents/security-auditor.md) | Security Engineer | Vulnerability detection, threat modeling, OWASP assessment |
+The main agent picks which agent to delegate to based on task complexity. See [`docs/DELEGATION-RULE-SPECIALISTS.md`](docs/DELEGATION-RULE-SPECIALISTS.md) for the calibration table (12 worked examples mapped to Haiku / Sonnet / Opus).
 
 ---
 
@@ -310,35 +276,32 @@ Every skill follows a consistent anatomy:
 
 ## Project Structure
 
+For the canonical architecture overview, read [`docs/SPEC.md`](docs/SPEC.md). Short version:
+
 ```
-agent-skills/
-├── skills/                            # 20 core skills (SKILL.md per directory)
-│   ├── idea-refine/                   #   Define
-│   ├── spec-driven-development/       #   Define
-│   ├── planning-and-task-breakdown/   #   Plan
-│   ├── incremental-implementation/    #   Build
-│   ├── context-engineering/           #   Build
-│   ├── source-driven-development/     #   Build
-│   ├── frontend-ui-engineering/       #   Build
-│   ├── test-driven-development/       #   Build
-│   ├── api-and-interface-design/      #   Build
-│   ├── browser-testing-with-devtools/ #   Verify
-│   ├── debugging-and-error-recovery/  #   Verify
-│   ├── code-review-and-quality/       #   Review
-│   ├── code-simplification/          #   Review
-│   ├── security-and-hardening/        #   Review
-│   ├── performance-optimization/      #   Review
-│   ├── git-workflow-and-versioning/   #   Ship
-│   ├── ci-cd-and-automation/          #   Ship
-│   ├── deprecation-and-migration/     #   Ship
-│   ├── documentation-and-adrs/        #   Ship
-│   ├── shipping-and-launch/           #   Ship
-│   └── using-agent-skills/            #   Meta: how to use this pack
-├── agents/                            # 3 specialist personas
-├── references/                        # 4 supplementary checklists
-├── hooks/                             # Session lifecycle hooks
-├── .claude/commands/                  # 7 slash commands
-└── docs/                              # Setup guides per tool
+batuta-agent-skills/
+├── CLAUDE.md                  # project conventions + session-handoff protocol
+├── AGENTS.md                  # cross-tool entry point (mirror of CLAUDE.md essentials)
+├── docs/
+│   ├── PRD.md                 # vision, problem, success metrics
+│   ├── SPEC.md                # architecture overview (≤200 lines)
+│   ├── DELEGATION-RULE.md     # Rule #0 contract + audit chain
+│   ├── DELEGATION-RULE-SPECIALISTS.md  # agent-architect + Haiku/Sonnet/Opus calibration
+│   ├── PORTABILITY.md         # cross-tool fallback when leaving Claude Code
+│   ├── adr/                   # numbered architecture decision records
+│   ├── plans/active/          # exactly one active plan per feature branch
+│   ├── plans/archive/         # completed plans, dated
+│   ├── sessions/              # session journals (Context|Decisions|Changes|Next)
+│   ├── getting-started.md, skill-anatomy.md, opencode-setup.md
+│   └── qa/                    # benchmark reports
+├── agents/                    # 6 agents with explicit model: (5 base + agent-architect)
+├── hooks/
+│   ├── hooks.json             # SessionStart + PreToolUse registration
+│   ├── session-start.sh       # session-start advice
+│   └── delegation-guard.sh    # PreToolUse Rule #0 enforcement
+├── skills/                    # 20 upstream skills + 6 Batuta-specific (research-first-dev, notion-kb-workflow, batuta-skill-authoring, batuta-agent-authoring, batuta-project-hygiene, using-agent-skills)
+├── .claude/commands/          # 7 slash commands
+└── references/                # supplementary checklists
 ```
 
 ---

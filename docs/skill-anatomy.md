@@ -1,6 +1,8 @@
 # Skill Anatomy
 
-This document describes the structure and format of agent-skills skill files. Use this as a guide when contributing new skills or understanding existing ones.
+This document describes the structure and format of skill files (`SKILL.md`) in this plugin. Use it when contributing new skills or understanding existing ones.
+
+> **Skills vs agents.** A **skill** is an invocable workflow (`skills/<name>/SKILL.md`) — instructions the agent follows. An **agent** is a delegation target (`agents/<name>.md`) — a model+role+tools combination the main agent invokes via `Task`. Agents declare `model:` and `tools:` in frontmatter; skills do not. For agent format, see [`skills/batuta-agent-authoring/SKILL.md`](../skills/batuta-agent-authoring/SKILL.md).
 
 ## File Location
 

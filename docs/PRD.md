@@ -1,0 +1,71 @@
+# PRD — batuta-agent-skills
+
+**Status:** living document
+**Last reviewed:** 2026-04-26
+**Owner:** jota-batuta (Batuta)
+
+## Problem
+
+Operating an AI coding agent ecosystem at the Opus 4.7 tier produces three failure modes that compound over months:
+
+1. **Premium model misuse.** The main agent does routine implementation in its own context window because it tends not to delegate by default. Every routine token is an Opus token. A typical engineering session burns 5–15× the necessary cost.
+2. **Subagent inheritance footgun.** When the main does delegate via `Task`, subagents that don't declare `model:` in their frontmatter inherit Opus from the parent. Delegation alone provides no savings.
+3. **Convention drift in long sessions.** Multi-phase sessions accumulate plans, decisions, and state in the conversation buffer. When context compacts or the operator returns the next day, the integrated plan is lost; only the last phase survives. The agent then improvises a partial view.
+
+These are not workflow inconveniences. They translate to real business cost: a single operator running a small consulting practice (Batuta) sees $50–200/day in avoidable Opus tokens, plus rework cycles when partial-context decisions ship to production.
+
+## Vision
+
+**A plugin that turns any Claude Code session into a delegation-only architectural seat.**
+
+The operator talks to Opus about architecture. Opus talks to Sonnet, Haiku, and project-local domain specialists about implementation. A runtime hook prevents the main from sliding back into hands-on coding. A persistent doc graph (PRD, SPEC, ADRs, plans, session journals) preserves context across sessions and across phases within a session.
+
+## Users
+
+- **Primary:** jota-batuta (Batuta consulting). Single-operator workflow serving multiple consulting clients across regulated and operational domains in Colombia, with recurring domain patterns (Colombian e-invoicing, banking integrations, OAuth flows, retail and ops automation).
+- **Secondary:** other Anthropic Claude Code operators who want the same enforcement and don't want to wire it from scratch.
+
+## Success metrics
+
+Tracked per-month after plugin install in a project that adopts the convention:
+
+| Metric | Baseline (no plugin) | Target (plugin enabled) | Verification |
+|---|---|---|---|
+| % session tokens consumed by Opus | 100% (default inheritance) | ≤ 25% | Anthropic billing dashboard tagged by session |
+| Tasks closed without all 3 audit gates passing | high (no enforcement) | 0 | grep `AUDIT RESULT` in session transcripts |
+| Context-window utilization at end of typical session | > 70% | < 50% | `/cost` and `/context` commands |
+| Time spent re-explaining context after `/clear` or new session | minutes per session | seconds (read PRD + active plan) | self-reported, monthly retro |
+| Routine tasks (CSS, rename, README) running on Sonnet instead of Haiku | high | < 10% | sample 20 random tasks/month from session transcripts |
+
+## Non-goals
+
+- **Replacing Claude Code's permissions system.** The plugin uses the existing PreToolUse hook surface; it does not redefine `permissions.allow`/`deny`.
+- **Forcing Spanish-language artifacts.** Conventions follow operator's `~/.claude/CLAUDE.md` (English artifacts, Spanish conversation).
+- **Cross-tool portability.** Designed for Claude Code 1.x. Cursor/Aider/Codex compatibility is incidental, not a goal.
+- **Replacing the operator's judgment on PRs.** The plugin generates PRs but never merges; operator review remains the merge gate.
+- **Generic Anthropic engineering best-practices.** This is opinionated for Batuta's workflow (multi-client, regulated domains in CO).
+
+## Constraints
+
+- Plugin must remain a thin layer over Claude Code's native primitives (hooks, agents, skills, slash commands). No external services for the core enforcement.
+- All artifacts in English (operator preference for engineering deliverables).
+- No `Co-Authored-By: Claude` in commits or PRs.
+- Compatibility target: Claude Code 1.x (specifically validated on 2.1.119 as of 2026-04-26).
+- Windows + Git Bash is a supported development environment (path handling must work on both POSIX and Windows-shaped paths).
+- Backward compatibility with the upstream `addyosmani/agent-skills` patterns where they don't conflict; divergence is documented in ADRs.
+
+## Architecture summary
+
+For the technical architecture, see [`SPEC.md`](SPEC.md). For decision rationale on individual choices, see [`adr/`](adr/).
+
+In one paragraph: the plugin ships five base agents (`implementer`, `implementer-haiku`, `code-reviewer`, `test-engineer`, `security-auditor`) with explicit `model:` declarations, a meta-agent (`agent-architect`) that creates project-local domain specialists on demand, a plugin-level PreToolUse hook (`delegation-guard.sh`) that enforces Rule #0 at runtime by blocking out-of-whitelist writes from the main agent, a sequential audit chain (test → review → security) that the main cannot bypass without ignoring three explicit blocking signals, and a documentation convention (PRD + SPEC + ADRs + active plans + session journals) that persists context across sessions.
+
+## Roadmap (rolling)
+
+- **v1.0 (shipped 2026-04-26)** — Rule #0 enforcement, 5 base agents, agent-architect, plugin-level hook, delegation rule docs
+- **v1.1 (this slice)** — Project-wide documentation scaffolding (PRD, SPEC, ADRs, session-handoff convention)
+- **v1.2 (next)** — E2E test harness for the delegation chain; published metrics dashboard template
+- **v1.3** — Auto-enforcement of session-handoff protocol via Stop hook (if v1.1 reveals operator drift)
+- **v1.4** — First domain specialists promoted to user-global from project-local (candidates: Colombian e-invoicing validator and Colombian bank-statement parser specialists)
+
+Updates to this roadmap require an ADR if they change a v-numbered milestone's intent.
