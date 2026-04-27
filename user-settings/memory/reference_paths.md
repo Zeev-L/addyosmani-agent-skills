@@ -53,9 +53,9 @@ The plugin's own `${CLAUDE_PLUGIN_ROOT}` env var resolves here at runtime, BUT o
 ## In-repo plan and session conventions
 
 ```
-e:/BATUTA PROJECTS/batuta-agent-skills/docs/plans/active/<YYYY-MM-DD>-<slug>.md
-                                       /docs/plans/archive/...
-                                       /docs/sessions/<YYYY-MM-DD>-<slug>.md
+<projects-root>/batuta-agent-skills/docs/plans/active/<YYYY-MM-DD>-<slug>.md
+                                    /docs/plans/archive/...
+                                    /docs/sessions/<YYYY-MM-DD>-<slug>.md
 ```
 
 `Next:` line at the end of each session journal is the entry point for the next session.
