@@ -1,7 +1,7 @@
 {
   "name": "batuta-agent-skills",
-  "description": "Batuta fork of addyosmani/agent-skills. Rule #0 enforced via PreToolUse hook, 6 agents with explicit model: + pre-flight, audit chain, doc graph, rules/ layer, hygiene init/retrofit/feature modes.",
-  "version": "2.4.0",
+  "description": "Batuta fork of addyosmani/agent-skills. Rule #0 hook, 6 agents with model: + pre-flight + research-first, scoped audit chain, doc graph, rules/ layer, hygiene init/retrofit/feature.",
+  "version": "2.5.0",
   "author": {
     "name": "jota-batuta",
     "url": "https://github.com/jota-batuta"

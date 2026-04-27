@@ -91,6 +91,8 @@ Body sections:
 - Description repeats the plugin name or uses marketing phrases
 - No "When NOT to invoke" section
 - Body exceeds 150 lines
+- Code-writing agent (`Edit`/`Write`/`MultiEdit` in `tools`) without an explicit research-first step
+- Audit-gate agent (closes with `AUDIT RESULT:` literal) without a Step 0 NOT-APPLICABLE pre-flight
 
 ## Verification
 
@@ -103,5 +105,7 @@ Before committing a new agent:
    ```
 3. **Dry-run**: invoke the agent with each of the 2 example prompts from the body. Confirm output matches the declared format.
 4. **Tool minimality**: for each tool in the frontmatter `tools` list, show which step in the body uses it. If a tool is listed but unused, remove it.
+5. **Research-first wiring (mandatory for code-writing agents)**: if the `tools` list includes `Edit`, `Write`, `MultiEdit`, or `NotebookEdit`, the agent body MUST include an explicit research-first step before any code-writing step. The step requires Context7 lookup against the pinned library version, web-search fallback when Context7 has no coverage, and a `// Source: <url> (verified YYYY-MM-DD, <lib>@<version>)` citation comment at every import site. Mirror the wording used in `agents/implementer.md` Step 2 — do not paraphrase. Read-only agents (Read/Grep/Glob/Bash only) are exempt. Audit-only agents whose Step 0 returns `AUDIT RESULT: NOT APPLICABLE` on a clean tree are also exempt — they are bound by the audit chain scope contract instead (see `docs/DELEGATION-RULE.md` § Audit chain scope).
+6. **Audit chain scope wiring (mandatory for audit-gate agents)**: if the agent ends with an `AUDIT RESULT:` literal as its closing line (i.e. it's a gate in the chain), the body MUST include a Step 0 pre-flight that checks `git diff --staged --stat` and `git diff HEAD --stat` and returns `AUDIT RESULT: NOT APPLICABLE` when both report no changes. Mirror the wording used in `agents/code-reviewer.md` Step 0 — do not paraphrase.
 
 If any check fails, do not commit.

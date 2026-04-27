@@ -41,6 +41,41 @@ The main agent does NOT mark a task as complete until gates 1, 2, and 3 have ret
 
 A task closed without three APPROVED verdicts is a violation of this rule and must be reopened.
 
+### Audit chain scope (when the chain runs vs. when it does not)
+
+The chain is **post-implementation**. It exists to validate that code produced by `implementer`, `implementer-haiku`, or a specialist meets the project's quality and security bar before merging. It does **not** apply to exploration, planning, conversation, or any phase that does not produce code.
+
+**The chain runs when:**
+
+| Phase | Why the chain applies |
+|---|---|
+| `implementer` returns staged code changes | New or modified source needs review, tests, and security scan before merge. |
+| `implementer-haiku` returns trivial changes | Even trivial changes (CSS, version bump, copy edit) can introduce regressions or supply-chain risk; the chain runs but auditors typically pass quickly. |
+| A specialist returns staged code changes | Specialists are subject to the same gates as the generic implementer. Domain knowledge is not a license to skip review. |
+| A docs-only slice modifies `agents/`, `skills/`, `hooks/`, or any agent/skill prompt | Agent definitions are runtime contracts — code-reviewer evaluates clarity and distinctness; security-auditor checks for prompt-injection surface. |
+
+**The chain does NOT run when:**
+
+| Phase | Why the chain does not apply |
+|---|---|
+| Exploration / research / discovery | No code is produced. Reading files, running `git log`, asking questions, browsing the codebase — there is nothing to audit. |
+| Planning / spec-writing / ADR drafting | Outputs are docs, captured in `docs/plans/active/` and `docs/adr/`. The audit chain is for code; doc reviews happen at PR time by the operator. |
+| Ad-hoc database queries / data analysis | A specialist running read-only SQL or analyzing a parquet file produces a report, not a diff. No code to review. |
+| Conversation with the operator | Architectural deliberation, scope negotiation, tradeoff discussion — pure dialogue, no diff. |
+| Pre-flight BLOCKERs from a subagent | If the implementer or a specialist returns BLOCKER (missing skeleton, missing dep, contradictory spec), the chain does NOT run. The main resolves the BLOCKER and re-delegates; the chain runs on the *next* return that produces a diff. |
+
+**Rule of thumb:** if `git diff --staged --stat` and `git diff HEAD --stat` both report zero changes after the subagent returns, the chain is not applicable. Skip directly to "main consolidates results" or to the next conversation turn.
+
+**Runtime defense.** Each auditor (`code-reviewer`, `test-engineer`, `security-auditor`) runs a Step 0 pre-flight at the top of its workflow that checks for staged or unstaged diff. If both are empty, the auditor returns `AUDIT RESULT: NOT APPLICABLE — no code diff to audit; the audit chain runs only after an implementation slice produces changes` and stops. This stops the main from accidentally firing the chain mid-exploration.
+
+**Anti-rationalization for the main agent:**
+
+| Excuse | Reality |
+|---|---|
+| "We just had a long conversation, let's run the audit chain to be safe" | The chain has nothing to audit if no code changed. Running it produces no value and burns Sonnet tokens. |
+| "The specialist did some analysis, audit it just in case" | If the specialist produced a markdown report (no diff), there is nothing for `code-reviewer` to read. Audit the report content yourself or in conversation; the chain doesn't apply. |
+| "The plan changed mid-session, run security on the new plan" | Plans are docs. Security review of a plan is the operator's job at PR time, not the security-auditor agent's. |
+
 ### GATE 3 skip allowlist
 
 GATE 3 (security-auditor) is default-on. The main may skip it ONLY when ALL of the following hold:
