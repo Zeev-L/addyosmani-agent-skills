@@ -1,7 +1,7 @@
 {
   "name": "batuta-agent-skills",
-  "description": "Batuta fork of addyosmani/agent-skills. Inherits 20 engineering skills and adds 5 Batuta skills: research-first-dev, notion-kb-workflow, batuta-skill-authoring, batuta-agent-authoring, batuta-project-hygiene.",
-  "version": "1.2.0",
+  "description": "Batuta fork of addyosmani/agent-skills. Delegation-only main agent (Rule #0 enforced via PreToolUse hook), 6 agents with explicit model:, sequential audit chain, project-wide doc graph (PRD/SPEC/ADR/plans/sessions), engineering invariants library (rules/), 7 Batuta skills.",
+  "version": "2.3.0",
   "author": {
     "name": "jota-batuta",
     "url": "https://github.com/jota-batuta"

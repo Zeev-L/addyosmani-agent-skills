@@ -150,7 +150,7 @@ When delegating, the main picks the model **by task complexity, not surface area
 
 - **Haiku** — trivial: CSS or string change, rename without signature shifts, README/CHANGELOG edit, config flip, ≤ 3 files with no new conditional or async. Examples: "change submit button color to blue", "bump react from 18.2 to 18.3", "fix typo in error message".
 - **Sonnet** (default) — anything with control flow, tests, integrations, async, error handling, or refactor across modules.
-- **Opus** (justified exception) — only compliance, regulation, legal, or forensic-accounting work where errors carry legal cost (DIAN, laboral CO, GDPR, forensic audit).
+- **Opus** (justified exception) — only compliance, regulation, legal, or forensic-accounting work where errors carry legal cost (Colombian e-invoicing compliance, Colombian labor law, GDPR, forensic audit).
 
 When in doubt between Haiku and Sonnet, choose Sonnet — under-spending on a Sonnet-required task produces broken output that the audit chain catches and reopens, costing more in total.
 
