@@ -115,6 +115,17 @@ A library of declarative engineering invariants (style, security, multi-tenancy,
 
 This layer is independent of `skills/`. Skills are workflows triggered by events; rules are invariants always in effect. The boundary is documented in [`../rules/README.md`](../rules/README.md).
 
+## Layer 7 — Static contract validators (`tests/v2.5-validators/`)
+
+A static-check test suite that grep-verifies the v2.5+ enforcement contracts (audit chain scope Step 0, research-first Step 2, meta-agent template baking, batuta-agent-authoring verification rules) are present in their respective files.
+
+- **Format:** bash scripts under `tests/v2.5-validators/<NN>-<short-name>.sh`. Each case exits 0 on PASS, non-zero on FAIL.
+- **Orchestration:** `tests/v2.5-validators/run.sh` runs all cases and aggregates the result. CI-friendly exit code.
+- **Scope:** static contract checks only — grep against expected wording in the agent prompts and skill files. NOT runtime tests; does not invoke `claude` CLI. The decision to ship static-only validators in v2.6 is documented as a tradeoff: deterministic, fast, no model-dependency vs. less faithful coverage of live behavior. A runtime E2E suite is a v2.9 candidate when CI infrastructure is in place.
+- **Adding a case:** required whenever a new enforcement contract is wired into an agent prompt or skill. The case must grep-check for the canonical wording the contract uses, not paraphrase, so source-file drift fails the test deliberately.
+
+This layer is the regression net for the runtime enforcement layers (3 and 4). When an auditor's Step 0 or an implementer's Step 2 gets accidentally edited away during a refactor, validators catch it before merge.
+
 ## Skills (invocable workflows)
 
 The plugin ships skills organized by development phase. Each skill has a `SKILL.md` in `skills/<name>/`. Phases:

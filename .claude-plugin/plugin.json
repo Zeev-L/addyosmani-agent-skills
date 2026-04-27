@@ -1,7 +1,7 @@
 {
   "name": "batuta-agent-skills",
-  "description": "Batuta fork of addyosmani/agent-skills. Rule #0 hook, 6 agents with model: + pre-flight + research-first, scoped audit chain, doc graph, rules/ layer, hygiene init/retrofit/feature.",
-  "version": "2.5.0",
+  "description": "Batuta fork of addyosmani/agent-skills. Rule #0 hook, 6 agents with model: + research-first, scoped audit chain, agent-architect bakes v2.5+ patterns, /save-plan, static validators, rules/ layer.",
+  "version": "2.6.0",
   "author": {
     "name": "jota-batuta",
     "url": "https://github.com/jota-batuta"

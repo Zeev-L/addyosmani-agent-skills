@@ -134,4 +134,6 @@ Anything else — reading source files in detail, editing code, running test sui
 
 This rule is currently a documented contract that the main agent reads at session start. If the contract is violated in practice — the main edits a source file directly, or closes a task without invoking the audit chain — the next iteration adds a hook that blocks `Edit`/`Write` from the main agent's tool set, forcing the delegation. For now, the contract is the enforcement.
 
+**Plan-mode persistence:** Claude Code defaults plan-mode plans to `~/.claude/plans/<auto-name>.md` (user-global). This convention requires plans to live at `<project>/docs/plans/active/<YYYY-MM-DD>-<slug>.md` so they travel with the repo via git and the implementer pre-flight finds them. After exiting plan mode, run `/save-plan <slug>` to copy the plan project-local. ADR-0005 documents why this is operator-invoked (slash command) rather than runtime-automatic (hook on `ExitPlanMode`).
+
 See [DELEGATION-RULE-SPECIALISTS.md](DELEGATION-RULE-SPECIALISTS.md) for the dynamic specialist creation flow that extends this rule.

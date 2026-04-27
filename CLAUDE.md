@@ -23,6 +23,7 @@ This file documents only **how we work in this repo**: conventions, rules, and t
 
 - `npm test` — Not applicable (this is a documentation project)
 - Validate: Check that all SKILL.md files have valid YAML frontmatter with name and description
+- `bash tests/v2.5-validators/run.sh` — Static contract validators for v2.5+ enforcement (audit chain scope Step 0, research-first Step 2, agent-architect baking, batuta-agent-authoring rules 5–6). Run before opening a PR that touches `agents/`, `skills/batuta-agent-authoring/`, or `docs/DELEGATION-RULE.md`. Exit 0 on all-pass; non-zero blocks merge.
 
 ## Boundaries
 

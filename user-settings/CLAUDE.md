@@ -172,7 +172,7 @@ When `batuta-agent-skills` is enabled in a project, a PreToolUse hook enforces t
 
 See plugin `batuta-agent-skills/docs/DELEGATION-RULE.md` for the full contract and `docs/DELEGATION-RULE-SPECIALISTS.md` for the task-complexity calibration table and specialist creation flow.
 
-**After exiting plan mode**, write the plan to `<project>/docs/plans/active/<YYYY-MM-DD>-<slug>.md` so it persists with the repo. Plan mode's default location (`~/.claude/plans/<auto-name>.md`) is user-global ephemera; the project-local plan is canonical and travels with the code via git. The implementer pre-flight check rejects any slice whose plan is not at the project-local path — there is no improvising.
+**After exiting plan mode**, run `/save-plan <slug>` (added in v2.6) to copy the plan from `~/.claude/plans/<auto-name>.md` to `<project>/docs/plans/active/<YYYY-MM-DD>-<slug>.md`. Plan mode's default location is user-global ephemera; the project-local plan is canonical and travels with the code via git. The implementer pre-flight check rejects any slice whose plan is not at the project-local path — there is no improvising. ADR-0005 documents why this is a slash command rather than a runtime hook (the `ExitPlanMode` tool does not expose the plan file path, making automatic detection fragile).
 
 **For projects that already have CLAUDE.md but lack `docs/PRD.md`, `docs/SPEC.md`, `docs/plans/active/`, or related skeleton**, invoke `batuta-project-hygiene` with `mode=project-retrofit` (added in v2.4). The mode is purely additive — completes what is missing without overwriting what exists. Use it when a project bootstrapped against an older plugin version or against a stale cache (phantom SHA scenarios).
 
