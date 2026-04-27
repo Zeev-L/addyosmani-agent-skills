@@ -280,6 +280,77 @@ Production secrets  → Stored in deployment platform / vault
 
 CI should never have production secrets. Use separate secrets for CI testing.
 
+## Containerized Services
+
+When the project builds and deploys Docker images, the CI pipeline owns image building, tagging, and pushing. The runtime deployment config (Compose files, named volumes, networks, health checks) lives in `references/docker-compose-checklist.md`.
+
+### Image Tagging Strategy
+
+Tag every image with the git commit SHA. Never use `latest` — it cannot be rolled back or audited.
+
+```bash
+IMAGE_TAG=$(git rev-parse --short HEAD)
+docker build -t myapp:${IMAGE_TAG} .
+docker push myapp:${IMAGE_TAG}
+```
+
+Pass the tag downstream to deployment:
+```bash
+echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+```
+
+### Multi-Stage Build in CI
+
+Use multi-stage Dockerfiles so the CI runner produces a minimal runtime image without dev dependencies or build tools:
+
+```dockerfile
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:22-alpine AS runtime
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+USER node
+CMD ["node", "dist/index.js"]
+```
+
+### GitHub Actions: Build and Push
+
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set image tag
+        run: echo "IMAGE_TAG=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Log in to registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/${{ github.repository }}:${{ env.IMAGE_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+```
+
+**Never bake secrets into the image.** Pass runtime secrets via environment variables at deploy time, not as `ARG` or `ENV` in the Dockerfile — they persist in image layer history.
+
 ## Automation Beyond CI
 
 ### Dependabot / Renovate

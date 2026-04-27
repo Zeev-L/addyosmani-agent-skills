@@ -66,6 +66,15 @@ Ship with confidence. The goal is not just to deploy — it's to deploy safely, 
 - [ ] Logging and error reporting configured
 - [ ] Health check endpoint exists and responds
 
+**If deploying with Docker Compose**, also verify (see `references/docker-compose-checklist.md`):
+
+- [ ] `name:` set in `docker-compose.yml`; all services have `container_name`
+- [ ] All images use explicit version tags, not `latest`
+- [ ] Secrets injected via `env_file`, not baked into the image
+- [ ] Stateful services use named volumes, not host bind mounts
+- [ ] Every `depends_on` uses `condition: service_healthy` where startup order matters
+- [ ] Rollback image tag is recorded before deploying
+
 ### Documentation
 
 - [ ] README updated with any new setup requirements
