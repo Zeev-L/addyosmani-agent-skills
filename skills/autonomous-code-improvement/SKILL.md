@@ -9,7 +9,7 @@ description: Drives unattended code-improvement passes through a multi-gate pipe
 
 Autonomous coding agents fail in three predictable ways: they guess when they hit domain-specific code, they have no cost controls, and they let the model that wrote the change confirm the change is good. This skill defines the discipline that prevents all three. Every change goes through a pipeline of orthogonal gates — none of which the executing model can override on its own.
 
-A reference TypeScript implementation lives at [asil-monorepo](https://github.com/telivity-otaip/asil) (pending publish). This skill is the *process* — apply the gates regardless of language or framework.
+A reference TypeScript implementation lives at [asil-monorepo](https://github.com/telivity-otaip/asil). This skill is the *process* — apply the gates regardless of language or framework.
 
 ## When to Use
 
@@ -25,7 +25,7 @@ A reference TypeScript implementation lives at [asil-monorepo](https://github.co
 - Pure refactoring tasks with strong existing test coverage and no new behavior
 - Tasks fully covered by `incremental-implementation` and `test-driven-development` with a human at the keyboard
 
-**Related:** Combine with `code-review-and-quality` (the persona prompts), `security-and-hardening` (the security auditor persona), and `git-workflow-and-versioning` (worktree isolation discipline).
+**Related:** This skill *composes* existing repo primitives rather than duplicating them. The three review gates in Step 6 dispatch to the existing `agents/code-reviewer.md`, `agents/security-auditor.md`, and `agents/test-engineer.md` personas — the same ones `/ship` fans out to. The worktree discipline in Step 3 follows `git-workflow-and-versioning`'s "Working with Worktrees" section. The novel parts of this skill are the *unattended-loop wrapper* around those primitives: domain-question gating, adversarial cross-family review, and per-task cost checkpoints.
 
 ## The Pipeline
 
@@ -85,12 +85,11 @@ The point: the agent must not invent a domain answer to keep going.
 
 ### Step 3: ISOLATE — One disposable worktree per task
 
-```
-git worktree add /tmp/<task-id> <branch>      # primary path
-git clone <repo> /tmp/<task-id> && checkout   # fallback for FUSE/Drive
-```
+For the worktree mechanics, follow `skills/git-workflow-and-versioning` ("Working with Worktrees"). The autonomous-loop deltas on top of that baseline:
 
-The main checkout is read-only from the loop's perspective. If a task fails halfway, the worktree gets deleted and the task is requeued — not retried in place.
+- **One worktree per task, disposable.** Created at task start, deleted whether the task succeeds or fails. The worktree is never reused across tasks.
+- **Main checkout is read-only from the loop's perspective.** The loop never touches `<repo-root>` directly. If a task fails halfway, the worktree gets deleted and the task is requeued — not retried in place.
+- **FUSE / Google Drive fallback.** On filesystems where `git worktree add` fails (some FUSE mounts, Google Drive's case-insensitive cloud filesystem), fall back to `git clone <repo> <task-dir>` plus a checkout of the task branch. The loop must detect the failure and switch automatically — manual intervention defeats the unattended model.
 
 ### Step 4: EXECUTE — LLM-generated patch, applied programmatically
 
@@ -104,13 +103,17 @@ Compute the diff yourself (`diff -u`), validate with `git apply --check`, then a
 
 ### Step 6: SELF-REVIEW — Three personas, diff only
 
-Run three independent review passes:
+Dispatch the diff to the three review personas already defined in this repo:
 
-1. **Code reviewer** — diff hygiene, naming, consistency, dead code introduced
-2. **Security auditor** — input validation, secrets, authz/authn, injection vectors
-3. **Test engineer** — test depth, edge cases, real assertions vs. `toBeDefined()`
+- `agents/code-reviewer.md` — the five-axis review (correctness, readability, architecture, security, performance)
+- `agents/security-auditor.md` — vulnerability detection, threat modeling, secure-coding practices
+- `agents/test-engineer.md` — test strategy, coverage, edge-case analysis
 
-Each persona gets the diff and **only** the diff. No surrounding code. No prior context. Each can return `pass`, `concerns`, or `blocker`. Blockers stop the task. Concerns are logged on the PR.
+The fan-out structure is the same one `/ship` already implements — read its Phase A for the parallel-dispatch pattern. The autonomous-loop variant differs in three specific ways:
+
+- **Diff-only scoping.** Each persona receives the diff and *only* the diff — no surrounding source, no prior conversation context, no commit history. `/ship` runs against staged changes in a working repo where the persona can read more for context; this loop runs in an isolated worktree against a single patch and refuses to widen the view. Cross-persona pollution is what makes self-review theater; bounded scope is what prevents it.
+- **No human merge step.** `/ship` ends in a go/no-go decision a human acts on. This loop has no human in the immediate path — the personas' verdicts directly determine whether the task continues. That's why the return values are tightened to `pass | concerns | blocker` rather than narrative reports: blockers automatically terminate the task and roll back the worktree, concerns are logged on the eventual PR, only `pass` lets the task proceed to Step 7.
+- **Hard pass/concerns/blocker contract.** Each persona's prompt must enforce the three-state output schema. Free-form review prose is ambiguous to a downstream automaton — the loop needs a machine-checkable verdict.
 
 ### Step 7: ADVERSARIAL GATE — Different LLM, different provider
 
