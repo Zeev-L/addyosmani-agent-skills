@@ -298,6 +298,41 @@ Do NOT trigger:
    - `git log -1 --oneline` shows the hygiene commit
    - `git remote get-url origin` returns a URL (if GitHub step ran)
 
+### Mode: `project-retrofit`
+
+**Trigger:** invoked explicitly by the operator — or by the main agent acting on a BLOCKER returned from `implementer` / `implementer-haiku` pre-flight Step 0 (the implementer does NOT call this skill programmatically; it returns a BLOCKER, the main reads the BLOCKER and invokes retrofit, then re-delegates). Apply when a project has CLAUDE.md but is missing parts of the doc skeleton. Auto-detect candidates:
+
+- `./CLAUDE.md` EXISTS, AND
+- ANY of these is missing: `./docs/PRD.md`, `./docs/SPEC.md`, `./docs/plans/active/`, `./docs/plans/archive/`, `./docs/sessions/`, `./docs/adr/`, `./.claude/rules/`
+
+**Do NOT trigger** if the project is fully bootstrapped (all of the above exist).
+
+**Process:**
+
+1. **Detect what is missing** — scan the candidates above and build a list.
+2. **For each missing item, run only the corresponding sub-step from `Mode: project-init`**:
+   - Missing `docs/{PRD,SPEC}.md` or `docs/adr/0001-template-decision.md` → run step 4 (Create project documentation skeleton) for those files only. NEVER overwrite existing files.
+   - Missing `docs/plans/active|archive/` or `docs/sessions/` → create directories with `.gitkeep`.
+   - Missing `.claude/rules/` symlinks → run step 4a (Cross-tool bootstrap) for rules only (call `bash ~/.claude/plugins/marketplaces/batuta-agent-skills/tools/setup-rules.sh --all` if operator opts in).
+   - Missing `## Engineering invariants` section in CLAUDE.md → append the section with the @ imports (per step 4b on project-init), preserving everything that's already in CLAUDE.md.
+3. **Preserve everything that already exists.** This mode is purely additive. If the operator has customized any of the existing files, those customizations stay.
+4. **Report what was added vs preserved.** Output format:
+   ```
+   batuta-project-hygiene mode=project-retrofit complete
+     added : docs/PRD.md (skeleton)
+     added : docs/SPEC.md (skeleton)
+     added : docs/plans/active/.gitkeep
+     added : docs/sessions/.gitkeep
+     added : .claude/rules/<3 symlinks>
+     added : ## Engineering invariants section in CLAUDE.md
+     preserved : CLAUDE.md (existing custom rules untouched)
+     preserved : docs/adr/ (already had user-authored ADRs)
+   ```
+
+**Verification (idempotent):** running `mode=project-retrofit` again on the same project should detect nothing missing and report "all sections present, no action needed".
+
+---
+
 ### Mode: `feature-init <name>`
 
 **Hard constraint before any step**: the feature's `SPEC.md` and `CLAUDE.md` MUST be created inside a subfolder, NEVER at the project root. If the upstream `/spec` command would write to root, override its target. The root is reserved for project-wide files only.

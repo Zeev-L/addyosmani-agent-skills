@@ -84,6 +84,8 @@ At the start of any session, before writing or editing files, invoke the `batuta
 
 Before starting work on a new feature — when the operator describes a new feature, capability, or slice — invoke `batuta-project-hygiene` with `mode=feature-init <name>`. The skill handles folder convention, scoped CLAUDE.md, and SPEC.md placement. Do not create CLAUDE.md or feature folders manually in these two cases — delegate to the skill.
 
+Before delegating implementation work on an existing project — when the implementer returns a BLOCKER citing missing doc skeleton (`docs/plans/active/` or `specs/current/` not present) — invoke `batuta-project-hygiene` with `mode=project-retrofit`. The mode is purely additive: it completes what is missing without overwriting what exists. Required when a project bootstrapped against an older plugin version or a stale plugin cache (phantom-SHA scenarios) and is now stuck because `mode=project-init` no longer fires (gated on missing CLAUDE.md). Documented in the v2.4 release notes.
+
 ### Feature files NEVER go at project root
 
 A project can have one feature or many. Every feature gets its own subfolder under the project's features root (`src/`, `packages/`, `app/`, or `features/` — whichever the project uses). Both `SPEC.md` and `CLAUDE.md` for a feature MUST be created inside that feature's subfolder, NEVER at the project root.
@@ -167,6 +169,10 @@ If the slice needs domain expertise the base agents (`implementer`, `implementer
 When `batuta-agent-skills` is enabled in a project, a PreToolUse hook enforces this rule at runtime: any Write/Edit/MultiEdit/NotebookEdit from the main targeting paths outside `specs/`, `docs/`, `.claude/commands/`, `.claude/CLAUDE.md`, `CLAUDE.md`, `AGENTS.md`, `MEMORY.md`, `memory/`, `build-log.md`, `lessons-learned.md` is blocked. Subagents bypass the hook (their tool scope is enforced by their own `tools:` frontmatter). The hook's own kill-switches (`.claude/settings*.json`, `.claude/hooks/`, `.claude/agents/`) are blocklisted to prevent self-disabling.
 
 See plugin `batuta-agent-skills/docs/DELEGATION-RULE.md` for the full contract and `docs/DELEGATION-RULE-SPECIALISTS.md` for the task-complexity calibration table and specialist creation flow.
+
+**After exiting plan mode**, write the plan to `<project>/docs/plans/active/<YYYY-MM-DD>-<slug>.md` so it persists with the repo. Plan mode's default location (`~/.claude/plans/<auto-name>.md`) is user-global ephemera; the project-local plan is canonical and travels with the code via git. The implementer pre-flight check rejects any slice whose plan is not at the project-local path — there is no improvising.
+
+**For projects that already have CLAUDE.md but lack `docs/PRD.md`, `docs/SPEC.md`, `docs/plans/active/`, or related skeleton**, invoke `batuta-project-hygiene` with `mode=project-retrofit` (added in v2.4). The mode is purely additive — completes what is missing without overwriting what exists. Use it when a project bootstrapped against an older plugin version or against a stale cache (phantom SHA scenarios).
 
 ## Engineering invariants from `rules/` (batuta-agent-skills)
 

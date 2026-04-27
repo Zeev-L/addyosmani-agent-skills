@@ -1,7 +1,7 @@
 # PRD — batuta-agent-skills
 
 **Status:** living document
-**Last reviewed:** 2026-04-26
+**Last reviewed:** 2026-04-27
 **Owner:** jota-batuta (Batuta)
 
 ## Problem
@@ -66,8 +66,9 @@ In one paragraph: the plugin ships five base agents (`implementer`, `implementer
 - **v1.1 (shipped 2026-04-26, PR #3)** — Project-wide documentation scaffolding (PRD, SPEC, ADRs, session-handoff convention, cross-tool portability)
 - **v1.2 (shipped 2026-04-26)** — E2E test harness for the delegation chain (run against PR #2 + PR #3 with three calibrated prompts; documented in `docs/sessions/2026-04-26-rule-zero-implementation.md`)
 - **v1.3 (shipped 2026-04-26, PR #4)** — `rules/` layer: declarative engineering invariants library importable à la carte by consumer projects via `@<path>` symlinked through `tools/setup-rules.sh`. Includes `batuta-rule-authoring` skill as admission gate. Auto-bootstrap via `batuta-project-hygiene` `mode=project-init`.
-- **v2.3 (this slice, PR #5)** — User-level memory backup in `user-settings/` (MEMORY.md + 7 entries) so `~/.claude/MEMORY.md` and `~/.claude/memory/*.md` survive machine changes alongside the existing CLAUDE.md backup. Version bumps to 2.x to mark the architectural maturity inflection: post-v2 the plugin ships a complete delegation system + audit chain + doc graph + rules layer + memory persistence — the 1.x line was the bootstrap of those primitives.
-- **v2.4 (next)** — Auto-enforcement of session-handoff protocol via Stop hook (if v2.3 reveals operator drift)
-- **v2.5** — First domain specialists promoted to user-global from project-local (candidates: Colombian e-invoicing validator and Colombian bank-statement parser specialists)
+- **v2.3 (shipped 2026-04-26, PR #5)** — User-level memory backup in `user-settings/` (MEMORY.md + 7 entries) so `~/.claude/MEMORY.md` and `~/.claude/memory/*.md` survive machine changes alongside the existing CLAUDE.md backup. Version bumps to 2.x to mark the architectural maturity inflection: post-v2 the plugin ships a complete delegation system + audit chain + doc graph + rules layer + memory persistence — the 1.x line was the bootstrap of those primitives.
+- **v2.4 (this slice, PR #7)** — Closes operator-detected gap: when a project bootstraps against a stale plugin cache (phantom-SHA scenario) the doc skeleton step never runs, leaving `docs/` missing; the implementer then improvises `build-log.md` in project root. Three structural fixes: (1) `batuta-project-hygiene` gains `mode=project-retrofit` to additively complete missing skeleton on projects with pre-existing `CLAUDE.md`; (2) `implementer` and `implementer-haiku` gain a Step 0 pre-flight that hard-fails with BLOCKER if `docs/plans/active/` is missing, refusing to improvise; (3) user-global `CLAUDE.md` and the `user-settings/` backup gain explicit reminder to persist plan-mode plans to `<project>/docs/plans/active/<YYYY-MM-DD>-<slug>.md` instead of leaving them at the user-global default `~/.claude/plans/`.
+- **v2.5 (next)** — Auto-enforcement of session-handoff protocol via Stop hook (if v2.4 reveals operator drift on the plan-persistence reminder)
+- **v2.6** — First domain specialists promoted to user-global from project-local (candidates: Colombian e-invoicing validator and Colombian bank-statement parser specialists)
 
 Updates to this roadmap require an ADR if they change a v-numbered milestone's intent.
