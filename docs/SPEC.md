@@ -18,13 +18,13 @@ batuta-agent-skills/
 │   ├── plans/active/          ← exactly one active plan per feature branch
 │   ├── plans/archive/         ← completed plans, dated
 │   ├── sessions/              ← session journals (YYYY-MM-DD-<slug>.md)
-│   ├── DELEGATION-RULE.md            ← feature spec: Rule #0 contract
+│   ├── DELEGATION-RULE.md            ← delegation contract
 │   └── DELEGATION-RULE-SPECIALISTS.md ← feature spec: agent-architect + Haiku/Sonnet calibration
 ├── agents/                    ← 6 plugin-shipped agents (5 base + 1 meta), all with explicit model:
 ├── hooks/
 │   ├── hooks.json             ← SessionStart + PreToolUse registration
 │   ├── session-start.sh       ← session-start advice hook
-│   └── delegation-guard.sh    ← PreToolUse Rule #0 enforcement
+│   └── delegation-guard.sh    ← PreToolUse kill-switch hook
 ├── skills/                    ← invocable skills (build, plan, spec, test, review, etc.)
 ├── rules/                     ← engineering invariants library (declarative; imported via @<path> from consumer CLAUDE.md)
 ├── tools/                     ← consumer-side scripts (setup-rules.sh)
@@ -58,17 +58,20 @@ See [`DELEGATION-RULE-SPECIALISTS.md`](DELEGATION-RULE-SPECIALISTS.md) for the f
 
 ## Layer 3 — Runtime enforcement (PreToolUse hook)
 
-`hooks/delegation-guard.sh` registered in `hooks/hooks.json` with matcher `Write|Edit|MultiEdit|NotebookEdit`. Behavior:
+`hooks/delegation-guard.sh` registered in `hooks/hooks.json` with matcher `Write|Edit|MultiEdit|NotebookEdit`. Kill-switch-only model (v2.7+, aligned with Anthropic's platform pattern):
 
-- Subagent detection: requires non-empty `agent_id` AND `hook_event_name == "PreToolUse"` in stdin JSON. Subagents bypass the path check; their tool scope is enforced by their own frontmatter.
-- Whitelist for the main agent: `specs/`, `docs/`, `.claude/commands/`, `.claude/CLAUDE.md`, `CLAUDE.md`, `AGENTS.md`, `MEMORY.md`, `memory/`, `build-log.md`, `lessons-learned.md`.
-- Blocklist (kill-switches, even within `.claude/`): `.claude/settings*.json`, `.claude/hooks/`, `.claude/agents/`. The hook cannot be disabled by the main editing one Edit away.
+- **Subagent bypass**: requires non-empty `agent_id` AND `hook_event_name == "PreToolUse"` in stdin JSON. Subagents bypass the hook entirely; their tool scope is enforced by their own frontmatter.
+- **Kill-switch blocklist** (always blocked from the main, regardless of other path): `.claude/settings*.json`, `.claude/hooks/*`, `.claude/agents/*`, `.env`, `.env.*`, `secrets/*`. These are the surfaces that would let the main self-disable the plugin or commit secrets.
+- **All other paths: allowed.** Claude uses its native judgment for the delegate-vs-edit decision. No path-whitelist enforcement — that was the v1/v2.6 model, removed in v2.7 to align with Anthropic's guidance that PreToolUse hooks are for hard constraints, not workflow routing.
+- **Failure mode (v2.7)**: if JSON parsing fails, the hook ALLOWs (does not fail closed). A parse error should not block the session; the hook's purpose is kill-switch protection.
 - Path-traversal guard: matches `..` only as a path segment.
 - Defensive Windows backslash normalization for Git Bash compatibility.
 - Fail-soft on missing `jq` (warns to stderr, allows). Operator install hint provided.
-- Output protocol: `exit 0` allows; `exit 2` blocks with stderr message. No legacy JSON `decision: block` shape.
+- Output protocol: `exit 0` allows; `exit 1` blocks with stderr message.
 
-See [`adr/0003-plugin-level-hook-vs-permissions-deny.md`](adr/0003-plugin-level-hook-vs-permissions-deny.md) for why a hook and not the `permissions.deny` system.
+**Audit chain as post-edit safeguard**: the primary quality + security enforcement is the post-edit audit chain (Layer 4), not the pre-edit hook. The hook's sole remaining job is preventing the main from writing to kill-switch paths.
+
+See [`adr/0003-plugin-level-hook-vs-permissions-deny.md`](adr/0003-plugin-level-hook-vs-permissions-deny.md) for why a hook and not the `permissions.deny` system. See [`adr/0006-trust-native-delegation.md`](adr/0006-trust-native-delegation.md) for the v2.7 realignment rationale.
 
 ## Layer 4 — Audit chain (sequential, blocking)
 

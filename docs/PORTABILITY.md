@@ -37,7 +37,7 @@ When you open a session in any tool — Claude Code or otherwise — read in thi
 4. `docs/sessions/*.md` (most recent — its `Next:` line is your entry point)
 5. `git log --oneline -10` (the actual ground truth when docs lag)
 
-## How to self-enforce Rule #0 without the hook
+## How to self-enforce the audit chain without the hook
 
 In a tool without PreToolUse hooks, you (the operator) become the enforcement layer. The discipline:
 
@@ -47,7 +47,7 @@ In a tool without PreToolUse hooks, you (the operator) become the enforcement la
    - Repeat with `agents/code-reviewer.md` (GATE 2) and `agents/security-auditor.md` (GATE 3).
    - Do not commit until all three return APPROVED.
 3. **Log the verdict.** Write the audit results into `docs/sessions/<today>.md` `Decisions:` section so the next session has the same evidence the audit-chain would have produced.
-4. **Stay within the whitelist by hand.** When asked to edit something outside `specs/`, `docs/`, `.claude/`, `CLAUDE.md`, etc., pause: would the hook have blocked this? If yes, either reframe the task (delegate to a sub-conversation or file) or accept that you are operating outside Rule #0 and document why in the session journal.
+4. **Protect kill-switch paths by hand.** When asked to edit `.claude/settings*.json`, `.claude/hooks/*`, `.claude/agents/*`, `.env*`, or `secrets/*` paths from the main agent, pause: would the hook have blocked this? If yes, either reframe the task (delegate to a sub-conversation or file) or accept that you are operating without plugin enforcement and document why in the session journal.
 
 This is slower and weaker than the runtime enforcement in Claude Code. The doc graph is what makes the switch survivable: by reading the same artifacts, the alternative tool can produce the same shape of output, even without the runtime guard.
 

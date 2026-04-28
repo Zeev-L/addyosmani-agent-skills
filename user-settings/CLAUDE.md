@@ -144,33 +144,41 @@ Hard rules:
 
 This prevents the monorepo-spaghetti failure mode where every feature dumps a `SPEC.md` at root and no one can tell which spec belongs to which piece of code.
 
-## Delegation-only main agent (Rule #0)
+## Native delegation + post-edit audit
 
-The main agent NEVER edits source code directly. All implementation, testing, and audit work is delegated via `Task` to subagents whose `model:` field is declared explicitly in their frontmatter — no Opus inheritance.
+The main agent uses Claude's native judgment for the delegate-vs-edit decision. The plugin provides high-quality subagents as the destination when delegation is chosen, and enforces an audit chain post-edit on any staged diff.
+
+**Subagent destinations** (when Claude delegates):
+
+- `implementer` (Sonnet) — multi-file slices, control flow, async, integrations
+- `implementer-haiku` (Haiku) — trivial edits ≤ 3 files no new conditional/async
+- `code-reviewer`, `test-engineer`, `security-auditor` (Sonnet) — sequential audit chain
+- `agent-architect` (Sonnet) — meta-agent that creates project-local specialists
 
 When delegating, the main picks the model **by task complexity, not surface area**:
 
-- **Haiku** — trivial: CSS or string change, rename without signature shifts, README/CHANGELOG edit, config flip, ≤ 3 files with no new conditional or async. Examples: "change submit button color to blue", "bump react from 18.2 to 18.3", "fix typo in error message".
+- **Haiku** — trivial: CSS or string change, rename without signature shifts, README/CHANGELOG edit, config flip, ≤ 3 files with no new conditional or async.
 - **Sonnet** (default) — anything with control flow, tests, integrations, async, error handling, or refactor across modules.
 - **Opus** (justified exception) — only compliance, regulation, legal, or forensic-accounting work where errors carry legal cost (Colombian e-invoicing compliance, Colombian labor law, GDPR, forensic audit).
 
-When in doubt between Haiku and Sonnet, choose Sonnet — under-spending on a Sonnet-required task produces broken output that the audit chain catches and reopens, costing more in total.
-
-Mandatory chain (sequential, blocking — each gate reads the previous one's output):
+**Post-edit audit chain** (always runs when there's a staged diff):
 
 ```
-implementer | implementer-haiku | <specialist> → test-engineer → code-reviewer → security-auditor
+implementer | implementer-haiku | <specialist> | <main edits> → test-engineer → code-reviewer → security-auditor
 ```
 
-The main does NOT close a task until every gate returns `AUDIT RESULT: APPROVED`. A `BLOCKED` verdict reopens the cycle with the auditor's report attached. Audits are sequential, not parallel — security needs to see what review accepted.
+The chain is sequential and each gate reads `git diff`. NOT-APPLICABLE returns immediately on a clean tree. The chain applies regardless of who produced the diff — the main agent or a subagent.
 
-**The audit chain is post-implementation only**, not a default for every delegation. It runs when `implementer`, `implementer-haiku`, or a specialist returns staged code changes. It does NOT run during exploration, planning, ad-hoc database queries, data analysis, spec-writing, ADR drafting, or pure conversation — none of those produce a code diff. Each auditor (`code-reviewer`, `test-engineer`, `security-auditor`) defends in depth by returning `AUDIT RESULT: NOT APPLICABLE` on a clean working tree (no staged or unstaged changes), so an accidental main-side invocation mid-exploration is harmless. Documented in `batuta-agent-skills/docs/DELEGATION-RULE.md` § Audit chain scope (added in v2.5).
+**Hard kill-switches** (plugin-enforced, not negotiable):
 
-If the slice needs domain expertise the base agents (`implementer`, `implementer-haiku`, `code-reviewer`, `test-engineer`, `security-auditor`) don't cover, invoke `agent-architect` FIRST to create or reuse a project-local specialist at `<project>/.claude/agents/<name>.md`. Discovery-first against project-local + user-global + plugin agents to avoid duplicates.
+- `.claude/settings*.json`, `.claude/hooks/*`, `.claude/agents/*`
+- `.env`, `.env.*`, `secrets/*`
 
-When `batuta-agent-skills` is enabled in a project, a PreToolUse hook enforces this rule at runtime: any Write/Edit/MultiEdit/NotebookEdit from the main targeting paths outside `specs/`, `docs/`, `.claude/commands/`, `.claude/CLAUDE.md`, `CLAUDE.md`, `AGENTS.md`, `MEMORY.md`, `memory/`, `build-log.md`, `lessons-learned.md` is blocked. Subagents bypass the hook (their tool scope is enforced by their own `tools:` frontmatter). The hook's own kill-switches (`.claude/settings*.json`, `.claude/hooks/`, `.claude/agents/`) are blocklisted to prevent self-disabling.
+Everything else: Claude's native judgment. Direct edits from the main are allowed on all other paths.
 
-See plugin `batuta-agent-skills/docs/DELEGATION-RULE.md` for the full contract and `docs/DELEGATION-RULE-SPECIALISTS.md` for the task-complexity calibration table and specialist creation flow.
+If the slice needs domain expertise the base agents don't cover, invoke `agent-architect` FIRST to create or reuse a project-local specialist at `<project>/.claude/agents/<name>.md`. Discovery-first against project-local + user-global + plugin agents to avoid duplicates.
+
+See plugin `batuta-agent-skills/docs/DELEGATION-RULE.md` for the full contract, `docs/DELEGATION-RULE-SPECIALISTS.md` for the task-complexity calibration table, and `docs/adr/0006-trust-native-delegation.md` for the v2.7 realignment rationale.
 
 **After exiting plan mode**, run `/save-plan <slug>` (added in v2.6) to copy the plan from `~/.claude/plans/<auto-name>.md` to `<project>/docs/plans/active/<YYYY-MM-DD>-<slug>.md`. Plan mode's default location is user-global ephemera; the project-local plan is canonical and travels with the code via git. The implementer pre-flight check rejects any slice whose plan is not at the project-local path — there is no improvising. ADR-0005 documents why this is a slash command rather than a runtime hook (the `ExitPlanMode` tool does not expose the plan file path, making automatic detection fragile).
 

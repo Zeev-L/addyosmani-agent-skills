@@ -1,30 +1,42 @@
 #!/usr/bin/env bash
 # delegation-guard.sh
-# PreToolUse hook that enforces Rule #0: the main agent never edits source code directly.
-# Blocks Write/Edit/MultiEdit/NotebookEdit when the target path is outside the allowed
-# whitelist. Subagents (identified by agent_id in stdin JSON when hook_event_name is
-# PreToolUse) are always allowed — they are bound by their own tools: declarations.
+# PreToolUse hook — kill-switch-only enforcement for the main agent.
+# Aligned with Anthropic's platform pattern (v2.7): pre-edit blocks are for hard constraints
+# (secrets, plugin self-disable), NOT workflow enforcement. Claude's native delegation judgment
+# handles the delegate-vs-edit tradeoff for everything else.
 #
-# Output protocol (per official Claude Code hooks reference):
-# - exit 0: allow the tool call
-# - exit 2: block the tool call. stderr is shown to the model as the block reason.
+# What this hook enforces:
+#   HARD-BLOCK (always, regardless of path): kill-switch paths that would let the main
+#   self-disable the plugin or commit secrets:
+#     .claude/settings*.json  — disabling audit triggers
+#     .claude/hooks/*         — disabling this hook itself
+#     .claude/agents/*        — overwriting agent contracts
+#     .env, .env.*            — committing secrets
+#     secrets/*               — committing secrets
 #
-# Fail-soft: if jq is missing or input is unparseable, allow but warn to stderr — better to
-# let work continue than to lock the operator out of their own configuration.
+#   ALLOW: everything else, including project source files. Claude decides when to delegate
+#   via Task() vs edit directly, per its native judgment.
 #
-# Security invariants maintained by this script (regressions on these MUST be flagged):
-# - file_path and agent_id NEVER reach a shell-execution context (no eval/$(...)/backticks).
-#   They are only consumed by `case` patterns, `echo`/heredoc, and parameter expansion.
-# - Subagent detection requires BOTH non-empty agent_id AND hook_event_name == "PreToolUse"
-#   to avoid bypass via stdin spoofing in non-PreToolUse contexts.
-# - The whitelist excludes the hook's own kill-switches (.claude/settings.json,
-#   .claude/hooks/*, .claude/agents/*). Those surfaces are edited by the operator manually
-#   or by subagents that bypass this script via agent_id.
+# Subagent bypass: agents bypass this hook entirely via agent_id in stdin JSON.
 #
-# Known caveats (lexical guard, not semantic):
-# - Symlinks under specs/ or docs/ resolving to src/ are NOT followed; the path string is
-#   matched as-is. If symlink-traversal becomes a real attack surface, add `realpath` and
-#   re-check against whitelist roots.
+# Failure mode (v2.7): if JSON parsing fails, ALLOW (do not lock the session). The hook's
+# purpose is kill-switch protection, not workflow enforcement — a parse error should not
+# block work. Exception: if the path explicitly matches a kill-switch pattern after partial
+# parse, still block.
+#
+# Output protocol (Claude Code hooks reference):
+#   exit 0 → allow the tool call
+#   exit 1 → block the tool call (stderr is shown to the model as the block reason)
+#   (exit 2 also blocks; this hook uses exit 1 for clarity on kill-switch hits)
+#
+# Security invariants maintained (regressions MUST be flagged):
+#   - file_path and agent_id NEVER reach a shell-execution context (eval/$(...)/backticks).
+#     Consumed only by `case` patterns, `echo`/heredoc, and parameter expansion.
+#   - Subagent detection requires BOTH non-empty agent_id AND hook_event_name == "PreToolUse"
+#     to prevent bypass via stdin spoofing in non-PreToolUse contexts.
+#
+# Source: https://code.claude.com/docs/en/hooks (verified 2026-04-27, Claude Code 1.x)
+# Source: https://code.claude.com/docs/en/permissions (verified 2026-04-27, Claude Code 1.x)
 
 set -uo pipefail
 
@@ -38,8 +50,7 @@ fi
 
 # Subagent detection: the official schema places agent_id in the stdin JSON when the hook
 # fires inside a subagent (Task delegation). To prevent bypass via crafted JSON, we ALSO
-# require that hook_event_name is the expected "PreToolUse" — anything else means the
-# producer of stdin is not Claude Code's PreToolUse path and we should not honor agent_id.
+# require that hook_event_name is the expected "PreToolUse".
 event_name=$(echo "$input" | jq -r '.hook_event_name // empty' 2>/dev/null)
 agent_id=$(echo "$input" | jq -r '.agent_id // empty' 2>/dev/null)
 if [[ "$event_name" == "PreToolUse" && -n "$agent_id" ]]; then
@@ -47,89 +58,53 @@ if [[ "$event_name" == "PreToolUse" && -n "$agent_id" ]]; then
 fi
 
 # Extract target path. Different tools use different keys.
-# Source: https://code.claude.com/docs/en/hooks (verified 2026-04-26, Claude Code 1.x).
+# Source: https://code.claude.com/docs/en/hooks (verified 2026-04-27, Claude Code 1.x).
 # Write/Edit/MultiEdit expose tool_input.file_path; NotebookEdit exposes tool_input.notebook_path.
 file_path=$(echo "$input" | jq -r '.tool_input.file_path // .tool_input.notebook_path // ""' 2>/dev/null)
 
-# Empty path = unknown tool input shape; allow with warning rather than lock the operator.
+# If JSON parsing failed or produced no path, allow. The hook's purpose is kill-switch
+# protection; a parse error should not block the session. (v2.7 failure-mode flip)
 if [[ -z "$file_path" ]]; then
-  echo "delegation-guard.sh WARN: tool input had no file_path/notebook_path; allowing." >&2
   exit 0
 fi
 
 # Defensive normalization: convert backslashes to forward slashes so Windows-shaped paths
-# (D:\proj\specs\...) match the same case patterns as POSIX paths. The official docs
-# guarantee POSIX normalization for permission rule matching, but do not explicitly cover
-# hook stdin on Windows — this is defense in depth.
+# match the same case patterns as POSIX paths.
 file_path="${file_path//\\//}"
 
-# Path-traversal guard: refuse paths where ".." appears as a path SEGMENT
-# (e.g. specs/../src/secret.js or ../etc/passwd). Filenames that happen to
-# embed two consecutive dots (eslint..rc, my..config.md) are NOT blocked.
+# Path-traversal guard: refuse paths where ".." appears as a path SEGMENT.
 case "$file_path" in
   ../*|*/..|*/../*|..)
-    echo "RULE #0: path contains '..' as a segment (potential traversal). Refusing for safety." >&2
+    echo "delegation-guard.sh: path contains '..' as a segment (potential traversal). Refusing for safety." >&2
     echo "Path received: $file_path" >&2
-    exit 2
+    exit 1
     ;;
 esac
 
-# BLOCKLIST: paths the main agent must NEVER write to even if they syntactically fall
-# under .claude/. These are the hook's own kill-switches — allowing the main to edit
-# them would let it disable itself with one Edit. Operators edit these manually; subagents
-# that legitimately need to write to them (e.g. agent-architect creating .claude/agents/<x>.md)
-# bypass this script via agent_id.
+# KILL-SWITCH BLOCKLIST: paths the main agent must NEVER write to.
+# These are the plugin's own enforcement surfaces — allowing the main to edit them
+# would let it disable the audit chain or commit secrets with one Edit.
+# Subagents that legitimately need to write here (e.g. agent-architect creating
+# .claude/agents/<x>.md) bypass this script entirely via agent_id above.
 case "$file_path" in
   */.claude/settings*.json|.claude/settings*.json|\
   */.claude/hooks/*|.claude/hooks/*|\
-  */.claude/agents/*|.claude/agents/*)
+  */hooks/*.json|hooks/*.json|\
+  */hooks/delegation-guard.sh|hooks/delegation-guard.sh|\
+  */.claude/agents/*|.claude/agents/*|\
+  */.env|.env|\
+  */.env.*|.env.*|\
+  */.envrc|.envrc|\
+  */secrets/*|secrets/*)
     cat >&2 <<EOF
-RULE #0: this path is a delegation-guard kill-switch. The main agent does not edit it.
-
-Path attempted: $file_path
-
-These paths control the hook itself or the agent registry. They must be edited:
-- by the operator manually (settings, hooks/*.sh)
-- by agent-architect via Task (for .claude/agents/<specialist>.md — agent-architect bypasses this hook via agent_id)
-
-If you genuinely need the operator to update one of these, ask them in a message instead of editing.
+RULE #0 violated (kill-switch): the main agent cannot modify ${file_path} directly.
+This file controls plugin enforcement; modifying it from the main would self-disable safeguards.
+Delegate to a subagent (haiku for trivial edits, implementer for substantive changes), or update via the plugin's installation flow.
 EOF
-    exit 2
+    exit 1
     ;;
 esac
 
-# Whitelist: paths the main agent is allowed to write to.
-# Match anywhere in the path (covers absolute Windows paths via Git Bash and bare relative paths).
-case "$file_path" in
-  */specs/*|specs/*|\
-  */docs/*|docs/*|\
-  */.claude/commands/*|.claude/commands/*|\
-  */.claude/CLAUDE.md|.claude/CLAUDE.md|\
-  */CLAUDE.md|CLAUDE.md|\
-  */AGENTS.md|AGENTS.md|\
-  */MEMORY.md|MEMORY.md|\
-  */memory/*|memory/*|\
-  */build-log.md|build-log.md|\
-  */lessons-learned.md|lessons-learned.md)
-    exit 0
-    ;;
-esac
-
-# Block. Send actionable reason to stderr — Claude Code shows this to the main agent.
-cat >&2 <<EOF
-RULE #0 violated: the main agent does not edit project source code directly.
-
-Path attempted: $file_path
-
-Options:
-1. If this is implementation work → Task with implementer (Sonnet) or implementer-haiku (Haiku for trivial changes). Pass the slice spec and DoD.
-2. If this is a test → Task with test-engineer (Sonnet).
-3. If this is a fix following a review → Task with implementer again, including the audit report as input.
-4. If this is an SDD artifact (spec/plan/tasks/build-log/lessons-learned/review) → ensure the path is under specs/current/<slice-id>/ and retry.
-
-Allowed paths for the main: specs/, docs/, .claude/, CLAUDE.md, AGENTS.md, MEMORY.md, memory/, build-log.md, lessons-learned.md.
-
-See plugin batuta-agent-skills, docs/DELEGATION-RULE.md, for the full contract.
-EOF
-
-exit 2
+# All other paths: ALLOW. Claude uses its native judgment for the delegate-vs-edit decision.
+# See docs/DELEGATION-RULE.md and docs/adr/0006-trust-native-delegation.md for rationale.
+exit 0

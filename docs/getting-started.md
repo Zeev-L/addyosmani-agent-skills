@@ -3,7 +3,7 @@
 > **Read first** (in this order):
 > 1. [`docs/PRD.md`](PRD.md) — vision, problem, success metrics
 > 2. [`docs/SPEC.md`](SPEC.md) — architecture overview
-> 3. [`docs/DELEGATION-RULE.md`](DELEGATION-RULE.md) — Rule #0 contract (the main agent never edits source code)
+> 3. [`docs/DELEGATION-RULE.md`](DELEGATION-RULE.md) — native delegation + post-edit audit chain; kill-switch enforcement
 > 4. [`CLAUDE.md`](../CLAUDE.md) — conventions and session-handoff protocol
 >
 > This file is the skills-and-agents quick-start that complements the architectural docs above. It is NOT the source of truth for project structure — `docs/SPEC.md` is.

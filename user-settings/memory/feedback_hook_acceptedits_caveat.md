@@ -1,30 +1,39 @@
 ---
 name: feedback_hook_acceptedits_caveat
-description: Rule #0 PreToolUse hook is bypassed under --permission-mode acceptEdits; convention still holds via CLAUDE.md but no runtime enforcement under that flag
+description: v2.7 hook is kill-switch only; acceptEdits no longer bypasses meaningful enforcement. Hook semantics changed from workflow gate to self-disable defense.
 type: feedback
 ---
 
-# `--permission-mode acceptEdits` bypasses the Rule #0 hook
+# `--permission-mode acceptEdits` and the v2.7 kill-switch hook
 
-## What we discovered
+## What changed in v2.7
 
-During the E2E test of PR #2 (delegation-enforcement) on 2026-04-26, the `tools/setup-rules.sh` hook (`hooks/delegation-guard.sh`) of plugin `batuta-agent-skills` did NOT block direct edits from the main agent when the session was launched with `claude -p --permission-mode acceptEdits`.
+The `hooks/delegation-guard.sh` hook shifted from workflow-enforcement (the old v1/v2.6 model that blocked main edits to any source file) to kill-switch only. The kill-switch list is exactly the paths where a bypass would be catastrophic:
 
-Evidence: tested by explicitly asking the main agent to edit `src/server.js` directly without delegating. Under `--permission-mode acceptEdits` the edit went through. Under default mode the hook blocked correctly with the actionable Rule #0 error message.
+- `.claude/settings*.json` — would let the main disable audit triggers
+- `.claude/hooks/*` — would let the main disable the hook itself
+- `.claude/agents/*` — would let the main overwrite agent contracts
+- `.env*` — would let the main commit secrets
+- `secrets/*` — would let the main commit secrets
 
-## Why this matters
+All other paths (including project source files) are allowed; Claude uses its native judgment for the delegate-vs-edit decision.
 
-The hook is the ONLY runtime enforcement layer of Rule #0 (the main agent never edits source code). Documentary contracts in CLAUDE.md hold by convention but are not enforced.
+## Why the memory file still matters
 
-When `--permission-mode acceptEdits` is in use, Rule #0 is **convention-only**. The system prompt instruction (Rule #0 section in `~/.claude/CLAUDE.md`) is sufficient for Sonnet/Opus to delegate correctly in normal cases — that is what kept the E2E prompts A and B passing — but if the model rationalizes around the rule, there is nothing to stop it.
+With v2.7, the hook's interaction with `--permission-mode acceptEdits` changed:
+
+- **Before v2.7:** The hook blocked all main edits to source code, and `acceptEdits` bypassed the hook. Thus, `acceptEdits` = convention-only enforcement.
+- **After v2.7:** The hook ONLY blocks kill-switch paths. `acceptEdits` still bypasses the hook, BUT the kill-switch paths should never be edited by the main anyway, so there is no longer a meaningful gap when `acceptEdits` is in use.
+
+**However**, operators who set `acceptEdits` based on the v1 behavior should be aware that the hook's contract changed. If they were relying on the "accept all edits" escape hatch, they should understand that kill-switch paths are still dangerous and should be delegated (e.g., via `implementer-haiku` or a subagent).
 
 ## How to apply
 
-- **For interactive sessions:** prefer default permission mode. The hook fires and enforces.
-- **For headless `claude -p` runs:** if you must use `acceptEdits`, treat Rule #0 as convention-only. Do not assume the hook is enforcing.
-- **For E2E tests of the audit chain:** use default mode, accept the per-edit prompts. `acceptEdits` is convenient for cost control but breaks the test's assumption.
-- **If you observe the main editing source code in any session:** that is a Rule #0 violation regardless of mode. Report it; the operator may want to harden the hook so it works under `acceptEdits` too (future plugin work).
+- **Default enforcement:** prefer default permission mode. The hook fires for kill-switch checks.
+- **Under `acceptEdits`:** the main agent can edit any path including source files. Convention-only rules apply; treat the delegation contract in `CLAUDE.md` and `DELEGATION-RULE.md` as non-binding. The audit chain (test → review → security) becomes critical to catch bad main edits before merge.
+- **Kill-switch paths are still dangerous:** even under `acceptEdits`, editing `.env*`, `secrets/*`, `.claude/hooks/*`, etc. from the main is a self-disable risk. Delegate them.
+- **For E2E tests of the audit chain:** use default mode if possible. `acceptEdits` skips the hook entirely, which limits what you can test about the runtime enforcement layer.
 
 ## Status
 
-Documented as a known caveat in `docs/PORTABILITY.md` and `docs/DELEGATION-RULE.md`. A future plugin slice may add a `Stop` hook or a `permissions.deny` rule as additional defense-in-depth, but as of 2026-04-26 the gap exists.
+Documented in `docs/SPEC.md` (Layer 3) and `docs/adr/0006-trust-native-delegation.md`. The hook semantics as of 2026-04-27 are kill-switch only, not workflow enforcement.

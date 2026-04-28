@@ -17,6 +17,7 @@ cases=(
   "03-implementer-haiku-conditional.sh"
   "04-architect-bakes-research-first.sh"
   "05-batuta-agent-authoring-rules.sh"
+  "06-delegation-guard-killswitch.sh"
 )
 
 pass=0
