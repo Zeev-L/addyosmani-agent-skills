@@ -2,9 +2,11 @@
 
 > **Read first** (in this order):
 > 1. [`docs/PRD.md`](PRD.md) — vision, problem, success metrics
-> 2. [`docs/SPEC.md`](SPEC.md) — architecture overview
-> 3. [`docs/DELEGATION-RULE.md`](DELEGATION-RULE.md) — native delegation + post-edit audit chain; kill-switch enforcement
+> 2. [`docs/SPEC.md`](SPEC.md) — architecture overview (10 layers including code-graph + supply-chain + runtime CI)
+> 3. [`docs/DELEGATION-RULE.md`](DELEGATION-RULE.md) — native delegation + post-edit audit chain; kill-switch enforcement (v2.7+)
 > 4. [`CLAUDE.md`](../CLAUDE.md) — conventions and session-handoff protocol
+>
+> For **operator recipes** (upgrade, code-graph install, retrofit, CI), see [`docs/usage/`](usage/) — brief, action-oriented guides with copy-pasteable commands.
 >
 > This file is the skills-and-agents quick-start that complements the architectural docs above. It is NOT the source of truth for project structure — `docs/SPEC.md` is.
 
@@ -161,6 +163,8 @@ The `/spec` and `/plan` commands create working artifacts (`SPEC.md`, `tasks/pla
 3. **Don't skip verification steps** — they're the whole point. The audit chain (test → review → security) is non-negotiable; do not close a task without all three `AUDIT RESULT: APPROVED` verdicts
 4. **Load skills selectively** — more context isn't always better
 5. **Use the agents for review** — different perspectives catch different issues
-6. **In Claude Code, never edit source code from the main agent** — the PreToolUse hook will block you, and that is the desired behavior. Delegate to `implementer` (Sonnet) or `implementer-haiku` (Haiku) instead. See [`docs/DELEGATION-RULE.md`](DELEGATION-RULE.md) for the contract and the four delegation alternatives the hook will list when it blocks an edit.
+6. **The main agent edits directly when appropriate** (v2.7+). Claude's native judgment decides delegate-vs-edit. The PreToolUse hook (`hooks/delegation-guard.sh`) only blocks **kill-switch paths** (`.claude/settings*.json`, `.claude/hooks/*`, `.claude/agents/*`, `.env`, `secrets/*`). The audit chain (test → review → security) is the post-edit safeguard for all other paths. See [ADR-0006](adr/0006-trust-native-delegation.md) for the v2.7 realignment with Anthropic's platform pattern.
 7. **For domain expertise the base agents don't cover** (Google OAuth, payment-processor webhooks, Colombian e-invoicing parsers, etc.), invoke `agent-architect` to create or reuse a project-local specialist before delegating.
-8. **Across sessions**, follow the session-handoff protocol in [`CLAUDE.md`](../CLAUDE.md): one active plan in `docs/plans/active/`, session journal in `docs/sessions/`, the `Next:` line in the journal is the next session's entry point.
+8. **For architecture / refactor / onboarding questions**, the `code-graph` skill (v2.8+) auto-triggers and consults a persisted graph instead of re-reading the repo. Two engines (graphify multimodal + codebase-memory-mcp code-only). One-time bootstrap per machine: `bash ~/.claude/plugins/marketplaces/batuta-agent-skills/tools/setup-code-graph.sh`. Operator recipe: [`usage/code-graph.md`](usage/code-graph.md).
+9. **Across sessions**, follow the session-handoff protocol in [`CLAUDE.md`](../CLAUDE.md): one active plan in `docs/plans/active/`, session journal in `docs/sessions/`, the `Next:` line in the journal is the next session's entry point.
+10. **Upgrading the plugin** when a new version ships: `claude plugin update batuta-agent-skills` + restart. Cache staleness is the most common cause of "skill not auto-triggering" — see [`usage/upgrading.md`](usage/upgrading.md).

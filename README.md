@@ -1,21 +1,22 @@
 # Batuta Agent Skills
 
-**A Claude Code plugin that turns the main agent into a delegation-only architectural seat.** Forked from [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) and extended with runtime enforcement, a Haiku tier, and a project-wide doc graph.
+**A Claude Code plugin: native-delegation main + post-edit audit chain + dual-engine code-graph + supply-chain hardening + runtime CI.** Forked from [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) and extended across 10 layers (see [`docs/SPEC.md`](docs/SPEC.md)).
 
 Read these in order to understand the project:
 
 1. [`docs/PRD.md`](docs/PRD.md) — vision, problem, success metrics
-2. [`docs/SPEC.md`](docs/SPEC.md) — architecture overview (5 base agents + agent-architect, hook layer, audit chain, doc graph)
-3. [`docs/DELEGATION-RULE.md`](docs/DELEGATION-RULE.md) — Rule #0 contract (the main agent never edits code; mandatory audit chain)
+2. [`docs/SPEC.md`](docs/SPEC.md) — architecture overview (10 layers — agents, specialists, hook, audit chain, doc graph, rules, validators, code-graph, supply-chain, runtime CI)
+3. [`docs/DELEGATION-RULE.md`](docs/DELEGATION-RULE.md) — native delegation + post-edit audit chain; kill-switch enforcement (v2.7+)
 4. [`docs/DELEGATION-RULE-SPECIALISTS.md`](docs/DELEGATION-RULE-SPECIALISTS.md) — when and how `agent-architect` creates project-local domain specialists
-5. [`docs/adr/`](docs/adr/) — decision records (Rule #0, Haiku tier, hook vs permissions, sequential audit chain)
-6. [`CLAUDE.md`](CLAUDE.md) — project conventions and session-handoff protocol
+5. [`docs/usage/`](docs/usage/) — operator recipes (upgrade, code-graph, consumer-projects, ci) — start here if you want to USE the plugin
+6. [`docs/adr/`](docs/adr/) — decision records (9 ADRs covering Rule #0, Haiku tier, hook scope, audit chain shape, plan persistence, native delegation, code-graph dual-engine, audit × code-graph integration, E2E methodology)
+7. [`CLAUDE.md`](CLAUDE.md) — project conventions and session-handoff protocol
 
 If you're switching from Claude Code to another tool mid-feature (token budget, pair programming, etc.), read [`docs/PORTABILITY.md`](docs/PORTABILITY.md).
 
 ## Architecture in one paragraph
 
-The plugin ships **six agents** — five base (`implementer` Sonnet, `implementer-haiku` Haiku, `code-reviewer` Sonnet, `test-engineer` Sonnet, `security-auditor` Sonnet) and one meta-agent (`agent-architect` Sonnet) — all with explicit `model:` declarations to prevent silent Opus inheritance. A **plugin-level PreToolUse hook** (`hooks/delegation-guard.sh`) blocks the main agent from editing source code unless the target path falls under a narrow whitelist (`specs/`, `docs/`, `.claude/commands/`, `CLAUDE.md`, etc.). Subagents bypass the hook via `agent_id` verification; their tool scope is enforced by their own frontmatter. After implementation, a **sequential audit chain** runs `test-engineer` → `code-reviewer` → `security-auditor` with a literal `AUDIT RESULT: APPROVED|BLOCKED` contract. The main does not close a task without three APPROVED verdicts. When a slice needs domain expertise the base agents don't cover, `agent-architect` creates a project-local specialist at `<project>/.claude/agents/<name>.md` with discovery-first to avoid duplicates.
+The plugin ships **six agents** — five base (`implementer` Sonnet, `implementer-haiku` Haiku, `code-reviewer` Sonnet, `test-engineer` Sonnet, `security-auditor` Sonnet) and one meta-agent (`agent-architect` Sonnet) — all with explicit `model:` declarations. A **plugin-level PreToolUse hook** (`hooks/delegation-guard.sh`, kill-switch-only since v2.7) blocks the main agent only on **plugin self-disable surfaces** (`.claude/settings*.json`, `.claude/hooks/*`, `.claude/agents/*`, `.env`, `secrets/*`). For everything else, Claude's native judgment decides delegate-vs-edit, aligned with Anthropic's platform pattern. After implementation, a **sequential audit chain** runs `test-engineer` → `code-reviewer` → `security-auditor` with a literal `AUDIT RESULT: APPROVED|BLOCKED|NOT APPLICABLE` contract on the staged `git diff` regardless of authorship. From v3.0, both `code-reviewer` and `security-auditor` execute a **Step 0.5 blast-radius / attack-surface enumeration** via the **dual-engine code-graph** (`graphify` multimodal + `codebase-memory-mcp` code-only fallback), with graceful-degrade when no engine is available. The codebase-memory-mcp install path is hardened by **3 supply-chain gates** (release pin + SHA-256 verify + `gh attestation verify`). A **runtime CI workflow** (`.github/workflows/ci.yml`) runs `actionlint` + 9 static validators + 4 sonnet-driven E2E scenarios on every PR. When a slice needs domain expertise the base agents don't cover, `agent-architect` creates a project-local specialist at `<project>/.claude/agents/<name>.md` with discovery-first to avoid duplicates.
 
 ## Install
 
@@ -31,7 +32,15 @@ git clone https://github.com/jota-batuta/batuta-agent-skills.git
 claude --plugin-dir /path/to/batuta-agent-skills
 ```
 
-After installing, the plugin's PreToolUse hook is active in every session where the plugin is enabled. The main agent's first attempt to edit a path outside the whitelist will be blocked with an actionable message pointing at the four delegation alternatives.
+After installing, the plugin's PreToolUse hook is active in every session where the plugin is enabled. It blocks **only** the kill-switch paths listed above; for all other paths Claude uses its native delegation judgment. The post-edit audit chain (test → review → security) runs on every staged diff regardless of authorship. See [`docs/DELEGATION-RULE.md`](docs/DELEGATION-RULE.md) for the full contract.
+
+For the dual-engine code-graph (architecture / onboarding / refactor questions), run the one-time-per-machine bootstrap:
+
+```bash
+bash ~/.claude/plugins/marketplaces/batuta-agent-skills/tools/setup-code-graph.sh
+```
+
+Operator recipes for upgrade, retrofit, code-graph use, and CI are in [`docs/usage/`](docs/usage/).
 
 Optional dependency used internally by `batuta-skill-authoring`:
 

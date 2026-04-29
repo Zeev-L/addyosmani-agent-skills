@@ -4,7 +4,41 @@ Versions of the `batuta-agent-skills` plugin (fork of `addyosmani/agent-skills`)
 
 The roadmap with rationale per slice lives in [`docs/PRD.md`](docs/PRD.md) § Roadmap (rolling). Architectural decisions live in [`docs/adr/`](docs/adr/). This file is the chronological summary.
 
-## [3.4.0] — 2026-04-29 (this PR)
+## [3.5.0] — 2026-04-29 (this PR)
+
+Documentation refresh. The plugin shipped 8 release slices in one day (v2.7 through v3.4); the docs lagged. v3.5 catches up: the README + `docs/SPEC.md` + `docs/getting-started.md` now describe the v3.4 reality, and a new `docs/usage/` directory holds 4 operator-recipe guides for the most common workflows.
+
+- **`docs/usage/` (new directory)** — brief, action-oriented guides with copy-pasteable commands:
+  - `README.md` — index + conventions across all guides.
+  - `upgrading.md` — when a new plugin version ships, how to refresh the local cache (`claude plugin update batuta-agent-skills` + restart). Covers the cache-staleness diagnostics, the `--plugin-dir` development workflow, and rollback.
+  - `code-graph.md` — what code-graph does, why there's no per-repo retrofit (engines are operator-side, not project-side), the 1-time-per-machine bootstrap, NDA-strict project opt-out, and common pitfalls.
+  - `consumer-projects.md` — decision tree for new project (`mode=project-init`) vs existing project missing skeleton (`mode=project-retrofit`) vs selective imports (`setup-rules.sh`). Cross-tool portability and per-feature scaffolding (`mode=feature-init <name>`).
+  - `ci.md` — wiring the actionlint + static-validators + e2e CI pattern into a consumer repo, including the operator setup of `ANTHROPIC_API_KEY` and four cost-control options if token spend matters.
+
+- **`docs/SPEC.md`** — Last reviewed bumped to 2026-04-29. **3 new layers added**:
+  - Layer 8 — Code knowledge graph (v2.8+): graphify primary, codebase-memory-mcp fallback, skill + slash + rule + bootstrap, audit chain Step 0.5 integration.
+  - Layer 9 — Supply-chain hardening (v2.9 + v3.1 + v3.4): 3-gate verification (release pin + SHA-256 + attestation), asymmetric trust posture vs PyPI, GitHub Actions surface SHA-pinned.
+  - Layer 10 — Runtime CI (v3.3+): `.github/workflows/ci.yml` with 3 gated jobs, fork-CI green via probe step, `pull_request_target` avoidance.
+  - Layer 7 (validators) updated: 6 cases → 9 cases listed by name; v2.9-candidate runtime E2E note removed (now Layer 10).
+
+- **`docs/getting-started.md`**:
+  - Removed Tip #6 (the pre-v2.7 "PreToolUse hook will block you" instruction). Replaced with the v2.7 native-delegation reality + kill-switch surface list + ADR-0006 link.
+  - Added Tip #8 (code-graph one-time bootstrap) and Tip #10 (upgrading the plugin).
+  - Read-first list now points at the 10-layer SPEC + the new `docs/usage/` recipes directory.
+
+- **`README.md`** root:
+  - Replaced the pre-v2.7 "blocks the main from editing source code unless under a narrow whitelist" wording with the v2.7+ kill-switch-only model.
+  - Added the dual-engine code-graph + supply-chain trifecta + runtime CI to the one-paragraph architecture summary.
+  - Added pointers to `docs/usage/` and the code-graph one-time bootstrap.
+  - Updated the read-first list (5 entries → 7 entries) and the SPEC layer count (4 layers → 10 layers).
+
+- **`docs/PRD.md`** roadmap — v3.5 added as shipping; v3.6+ candidates trimmed to the actually-pending items.
+
+- **`plugin.json`** 3.4.0 → 3.5.0.
+
+This slice is documentation-only. No skills, agents, rules, hooks, or runtime code touched. All 9 static validators continue to PASS unchanged. CI workflow not modified.
+
+## [3.4.0] — 2026-04-29 (PR [#23](https://github.com/jota-batuta/batuta-agent-skills/pull/23), commit `4c95a87`)
 
 Supply-chain hardening bundle. Closes the 5 informational follow-ups from the v3.3 audit chain in a single coherent slice.
 
@@ -151,6 +185,7 @@ Rule #0 enforcement, 5 base agents (`implementer`, `implementer-haiku`, `code-re
 
 ---
 
+[3.5.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.4.0...v3.5.0
 [3.4.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.3.0...v3.4.0
 [3.3.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.2.0...v3.3.0
 [3.2.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.1.0...v3.2.0
