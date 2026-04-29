@@ -261,7 +261,7 @@ Do NOT trigger:
 4b. **Engineering invariants bootstrap (auto-prompted, opt-out)** — for projects with a manifest (`package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`), prompt the operator: *"Bootstrap engineering invariants from batuta-agent-skills (research-first, secrets-and-pii, code-style)? (Y/n)"*. Default Y. Skip on `n` or on pure-docs repos with no manifest markers.
 
    **On Y:**
-   - Run `bash ~/.claude/plugins/marketplaces/batuta-agent-skills/tools/setup-rules.sh --all` (deterministic path matching the install layout enforced by the plugin's own setup script; do not introduce a `find`-based lookup here)
+   - Run `bash ~/.claude/plugins/marketplaces/batuta-agent-skills/tools/setup-rules.sh --all` (deterministic path matching the install layout enforced by the plugin's own setup script; do not introduce a `find`-based lookup here). This script also chains into `setup-code-graph.sh` to install the dual code-graph engines (graphify + codebase-memory-mcp); a non-zero exit from the chain is reported but does NOT abort hygiene — the project still completes init/retrofit even if engines are unavailable on this OS.
    - Append to project's `CLAUDE.md` immediately after the section header `## Mandatory Skills for Batuta Projects` block, a new section:
 
      ```markdown
@@ -313,7 +313,7 @@ Do NOT trigger:
 2. **For each missing item, run only the corresponding sub-step from `Mode: project-init`**:
    - Missing `docs/{PRD,SPEC}.md` or `docs/adr/0001-template-decision.md` → run step 4 (Create project documentation skeleton) for those files only. NEVER overwrite existing files.
    - Missing `docs/plans/active|archive/` or `docs/sessions/` → create directories with `.gitkeep`.
-   - Missing `.claude/rules/` symlinks → run step 4a (Cross-tool bootstrap) for rules only (call `bash ~/.claude/plugins/marketplaces/batuta-agent-skills/tools/setup-rules.sh --all` if operator opts in).
+   - Missing `.claude/rules/` symlinks → run step 4a (Cross-tool bootstrap) for rules only (call `bash ~/.claude/plugins/marketplaces/batuta-agent-skills/tools/setup-rules.sh --all` if operator opts in). Note: `--all` also bootstraps the code-graph engines (graphify + codebase-memory-mcp) automatically, so the retrofit covers them too without a separate step.
    - Missing `## Engineering invariants` section in CLAUDE.md → append the section with the @ imports (per step 4b on project-init), preserving everything that's already in CLAUDE.md.
 3. **Preserve everything that already exists.** This mode is purely additive. If the operator has customized any of the existing files, those customizations stay.
 4. **Report what was added vs preserved.** Output format:

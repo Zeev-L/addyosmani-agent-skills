@@ -18,6 +18,7 @@ cases=(
   "04-architect-bakes-research-first.sh"
   "05-batuta-agent-authoring-rules.sh"
   "06-delegation-guard-killswitch.sh"
+  "07-code-graph-skill-shape.sh"
 )
 
 pass=0

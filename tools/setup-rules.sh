@@ -96,3 +96,15 @@ echo ""
 echo "setup-rules.sh complete  |  plugin: $PLUGIN_PATH  |  dest: $RULES_DST"
 [[ ${#CREATED[@]} -gt 0 ]] && printf "  created : %s\n" "${CREATED[@]}"
 [[ ${#SKIPPED[@]} -gt 0 ]] && printf "  skipped : %s\n" "${SKIPPED[@]}"
+
+# Chain to code-graph engine bootstrap (graphify + codebase-memory-mcp).
+# Only on --all (the catch-all bootstrap mode); single/interactive imports a specific
+# rule and should not pull in unrelated infrastructure. Operators wanting just the
+# code-graph engines can invoke setup-code-graph.sh directly.
+if [[ "$MODE" == "all" ]]; then
+  echo ""
+  echo "Chaining to setup-code-graph.sh ..."
+  bash "$(dirname "$0")/setup-code-graph.sh" || {
+    echo "  setup-code-graph.sh exited non-zero — engines may be partial. Re-run that script directly to debug." >&2
+  }
+fi

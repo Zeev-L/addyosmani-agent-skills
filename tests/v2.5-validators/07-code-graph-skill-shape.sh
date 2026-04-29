@@ -1,0 +1,142 @@
+#!/usr/bin/env bash
+# 07-code-graph-skill-shape.sh
+# Validates the code-graph dual-engine integration shipped in v2.8:
+#   (a) SKILL.md frontmatter (name, description) and required sections present.
+#   (b) SKILL.md does NOT contain `graphify claude install` as a positive instruction.
+#       It MAY appear inside Anti-Rationalizations / Red Flags / Process step text only
+#       as a prohibition. We allow occurrences only on lines that also mention
+#       'forbidden', 'never', 'do not', 'block', 'kill-switch', or 'red flag' (case-
+#       insensitive) — anywhere else is a positive use and fails.
+#   (c) SKILL.md documents engine selection (Step 0) and a fallback path.
+#   (d) The integrations rule exists and contains the mandatory Anti-patterns section.
+#   (e) ADR-0007 exists.
+#   (f) Bootstrap scripts exist, are executable, and do NOT write to .claude/settings*.
+#   (g) Slash command exists with frontmatter description.
+# Contract introduced in v2.8.
+
+set -uo pipefail
+
+REPO_ROOT="${REPO_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+
+case_name="07-code-graph-skill-shape"
+echo "[${case_name}] starting"
+
+SKILL="${REPO_ROOT}/skills/code-graph/SKILL.md"
+RULE="${REPO_ROOT}/rules/integrations/code-graph-usage.md"
+ADR="${REPO_ROOT}/docs/adr/0007-code-graph-dual-engine.md"
+SETUP="${REPO_ROOT}/tools/setup-code-graph.sh"
+CHECK="${REPO_ROOT}/tools/check-code-graph-engines.sh"
+SLASH="${REPO_ROOT}/.claude/commands/code-graph.md"
+
+failed=0
+
+ok()   { echo "  OK   $1"; }
+miss() { echo "  MISS $1"; failed=1; }
+drift(){ echo "  DRIFT $1"; failed=1; }
+
+# --- (a) SKILL.md frontmatter and sections ---
+if [[ ! -f "$SKILL" ]]; then
+  miss "skills/code-graph/SKILL.md missing"
+else
+  grep -qE '^name: code-graph$'                "$SKILL" && ok "SKILL.md frontmatter name: code-graph" || miss "SKILL.md frontmatter name: code-graph"
+  grep -qE '^description: '                    "$SKILL" && ok "SKILL.md frontmatter description present"   || miss "SKILL.md frontmatter description present"
+  grep -qE '^## Overview$'                     "$SKILL" && ok "SKILL.md ## Overview"                       || miss "SKILL.md ## Overview"
+  grep -qE '^## When to Use$'                  "$SKILL" && ok "SKILL.md ## When to Use"                    || miss "SKILL.md ## When to Use"
+  grep -qE '^## Process$'                      "$SKILL" && ok "SKILL.md ## Process"                        || miss "SKILL.md ## Process"
+  grep -qE '^## Anti-Rationalizations$'        "$SKILL" && ok "SKILL.md ## Anti-Rationalizations"          || miss "SKILL.md ## Anti-Rationalizations"
+  grep -qE '^## Red Flags$'                    "$SKILL" && ok "SKILL.md ## Red Flags"                      || miss "SKILL.md ## Red Flags"
+  grep -qE '^## Verification$'                 "$SKILL" && ok "SKILL.md ## Verification"                   || miss "SKILL.md ## Verification"
+
+  # --- (b) graphify claude install must only appear in negative/prohibitive context ---
+  # Find every line mentioning 'graphify claude install' and assert each is on a line
+  # that ALSO contains a prohibition keyword.
+  bad_lines=$(grep -nE 'graphify claude install' "$SKILL" \
+              | grep -ivE 'forbidden|never|do not|don.t|block|kill[- ]?switch|red flag|prohibit|refuse|MUST NOT' \
+              || true)
+  if [[ -z "$bad_lines" ]]; then
+    ok "SKILL.md mentions of 'graphify claude install' are all in prohibitive context"
+  else
+    drift "SKILL.md contains 'graphify claude install' as a positive instruction:"
+    echo "$bad_lines" | sed 's/^/        /'
+  fi
+
+  # --- (c) engine selection (Step 0) and fallback path documented ---
+  grep -qiE 'step 0.*engine selection|engine selection.*always first' "$SKILL" \
+    && ok "SKILL.md documents Step 0 engine selection" \
+    || miss "SKILL.md documents Step 0 engine selection"
+  grep -qE 'codebase-memory(-mcp)?' "$SKILL" \
+    && ok "SKILL.md references the fallback engine codebase-memory-mcp" \
+    || miss "SKILL.md references the fallback engine codebase-memory-mcp"
+  grep -qE 'graphify' "$SKILL" \
+    && ok "SKILL.md references the primary engine graphify" \
+    || miss "SKILL.md references the primary engine graphify"
+fi
+
+# --- (d) integrations rule ---
+if [[ ! -f "$RULE" ]]; then
+  miss "rules/integrations/code-graph-usage.md missing"
+else
+  grep -qE '^title: '                  "$RULE" && ok "rule frontmatter title"          || miss "rule frontmatter title"
+  grep -qE '^applies-to: '             "$RULE" && ok "rule frontmatter applies-to"     || miss "rule frontmatter applies-to"
+  grep -qE '^last-reviewed: '          "$RULE" && ok "rule frontmatter last-reviewed"  || miss "rule frontmatter last-reviewed"
+  grep -qE '^## Inviolable rules$'     "$RULE" && ok "rule ## Inviolable rules"        || miss "rule ## Inviolable rules"
+  grep -qE '^## Anti-patterns$'        "$RULE" && ok "rule ## Anti-patterns"           || miss "rule ## Anti-patterns (mandatory per §A.4)"
+  # The rule must explicitly forbid graphify claude install (rule 4 in the file).
+  grep -qE 'graphify claude install' "$RULE" \
+    && ok "rule names 'graphify claude install' (as forbidden)" \
+    || miss "rule must name 'graphify claude install' to make the prohibition searchable"
+fi
+
+# --- (e) ADR-0007 ---
+[[ -f "$ADR" ]] && ok "docs/adr/0007-code-graph-dual-engine.md exists" || miss "docs/adr/0007-code-graph-dual-engine.md missing"
+
+# --- (f) bootstrap scripts ---
+if [[ ! -f "$SETUP" ]]; then
+  miss "tools/setup-code-graph.sh missing"
+else
+  [[ -x "$SETUP" ]] && ok "setup-code-graph.sh is executable" || miss "setup-code-graph.sh not executable (chmod +x)"
+  # Must NOT write to .claude/settings*.json — that path is on the kill-switch.
+  if grep -qE '\.claude/settings[^"]*\.json' "$SETUP" \
+      && ! grep -qiE '#.*settings\*\.json|MUST NOT|never|kill-switch' "$SETUP"; then
+    drift "setup-code-graph.sh references .claude/settings.json without a comment marking it as forbidden"
+  else
+    ok "setup-code-graph.sh does not write to .claude/settings*.json"
+  fi
+  # Must NOT invoke 'graphify claude install'
+  if grep -qE 'graphify[[:space:]]+claude[[:space:]]+install' "$SETUP"; then
+    drift "setup-code-graph.sh invokes 'graphify claude install' (forbidden)"
+  else
+    ok "setup-code-graph.sh does not invoke 'graphify claude install'"
+  fi
+  # Must use --skip-config when invoking the codebase-memory-mcp installer
+  grep -qE 'skip-config' "$SETUP" \
+    && ok "setup-code-graph.sh passes --skip-config to codebase-memory-mcp installer" \
+    || miss "setup-code-graph.sh must pass --skip-config to upstream installer"
+fi
+
+if [[ ! -f "$CHECK" ]]; then
+  miss "tools/check-code-graph-engines.sh missing"
+else
+  [[ -x "$CHECK" ]] && ok "check-code-graph-engines.sh is executable" || miss "check-code-graph-engines.sh not executable"
+fi
+
+# --- (g) slash command ---
+if [[ ! -f "$SLASH" ]]; then
+  miss ".claude/commands/code-graph.md missing"
+else
+  grep -qE '^description: ' "$SLASH" && ok "slash frontmatter description present" || miss "slash frontmatter description"
+  # Slash must also NOT positively reference graphify claude install
+  bad_slash=$(grep -nE 'graphify claude install' "$SLASH" \
+              | grep -ivE 'forbidden|never|do not|don.t|block|kill[- ]?switch|red flag|prohibit|refuse|MUST NOT' \
+              || true)
+  [[ -z "$bad_slash" ]] && ok "slash mentions of 'graphify claude install' are prohibitive only" \
+    || { drift "slash contains 'graphify claude install' positively:"; echo "$bad_slash" | sed 's/^/        /'; }
+fi
+
+if [[ ${failed} -eq 0 ]]; then
+  echo "[${case_name}] PASS"
+  exit 0
+else
+  echo "[${case_name}] FAIL"
+  exit 1
+fi

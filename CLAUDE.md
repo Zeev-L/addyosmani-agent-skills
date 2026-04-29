@@ -60,6 +60,20 @@ Rationale: prevents low-quality rule sprawl. Forces validation of §A.4 (canonic
 **MUST trigger** before writing code that imports or calls any external library/API not yet cited in this session.
 Rationale: most bugs come from assuming outdated APIs. Context7 lookup is cheap, rework is expensive. Evidence lives in a `// Source:` citation comment.
 
+### code-graph (auto + manual, dual-engine)
+**MUST trigger** ante cualquiera de:
+- Operador pregunta sobre arquitectura, dependencias, acoplamiento, refactor de scope amplio.
+- Inicio de sesión en repo > 5k LOC sin índice (`graphify-out/` ni cache `~/.cache/codebase-memory-mcp/`).
+- `code-reviewer` o `security-auditor` necesitan mapa de llamadas para auditar el diff.
+
+Skill: [`skills/code-graph/`](skills/code-graph/SKILL.md). Slash manual: [`/code-graph`](.claude/commands/code-graph.md).
+**Dual-engine**: graphify (multimodal, primario) + codebase-memory-mcp (solo código, fallback). El skill detecta cuál está disponible vía `~/.claude/code-graph-engines.json` y elige según la pregunta.
+Bootstrap: [`tools/setup-code-graph.sh`](tools/setup-code-graph.sh) instala ambos motores. Lo dispara automáticamente `tools/setup-rules.sh --all`, así que `batuta-project-hygiene mode=project-init|project-retrofit` lo cubre sin pasos extra.
+Política: multimodal habilitado por default cuando graphify está activo — proveedor LLM autorizado por contrato cliente. Excepción: proyectos NDA estricto declaran `code-graph-engine: codebase-memory` en su CLAUDE.md proyecto para forzar fallback solo-código.
+**NEVER** ejecutar `graphify claude install` (modifica `.claude/settings.json` → kill-switch v2.7). El registro del MCP server pasa por `claude mcp add --scope user` (escribe a `~/.claude.json`, fuera del kill-switch).
+
+Rationale: re-leer el repo cada vez que aparece una pregunta de arquitectura quema tokens y produce respuestas peores que un grafo persistido. Dual engine porque graphify tiene 3 issues bloqueantes en Windows ([safishamsi/graphify#378](https://github.com/safishamsi/graphify/issues/378), [#244](https://github.com/safishamsi/graphify/issues/244), [#501](https://github.com/safishamsi/graphify/issues/501)) y bus factor 1; codebase-memory-mcp es estable en Win11 pero no procesa docs/imágenes.
+
 ### notion-kb-workflow
 **MUST trigger** at three session boundaries:
 - `--read` at the start of a session on an existing project

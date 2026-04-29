@@ -48,6 +48,7 @@ rules/
 │       └── CLAUDE.md.template          # consumer CLAUDE.md scaffolding
 ├── core/                               # universal invariants (apply to every project)
 ├── stack/                              # patterns specific to a stack component (Temporal, n8n, FastAPI, etc.)
+├── integrations/                       # contracts for using plugin-coordinated external tools (code-graph engines, etc.)
 ├── domain-co/                          # Colombia-specific business and regulatory conventions
 └── delivery/                           # delivery and handoff patterns to clients
 ```
@@ -73,6 +74,10 @@ Conventions:
 ### `stack/` — Stack-specific patterns
 
 *(populated as new rules pass the §A.6 admission gate; see [`rules/README.md`](README.md) for the current index)*
+
+### `integrations/` — Contracts for plugin-coordinated external tools
+
+- [`code-graph-usage.md`](integrations/code-graph-usage.md) — when and how to use the dual-engine code knowledge graph (graphify + codebase-memory-mcp)
 
 ### `domain-co/` — Colombia-specific conventions
 

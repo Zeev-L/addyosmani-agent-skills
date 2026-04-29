@@ -1,0 +1,4 @@
+# Force LF for shell scripts so they run correctly when checked out on Windows
+# (without this, core.autocrlf=true converts \n to \r\n and bash refuses to exec).
+*.sh        text eol=lf
+*.bash      text eol=lf
