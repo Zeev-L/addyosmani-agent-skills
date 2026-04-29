@@ -4,7 +4,21 @@ Versions of the `batuta-agent-skills` plugin (fork of `addyosmani/agent-skills`)
 
 The roadmap with rationale per slice lives in [`docs/PRD.md`](docs/PRD.md) § Roadmap (rolling). Architectural decisions live in [`docs/adr/`](docs/adr/). This file is the chronological summary.
 
-## [3.3.0] — 2026-04-29 (this PR)
+## [3.4.0] — 2026-04-29 (this PR)
+
+Supply-chain hardening bundle. Closes the 5 informational follow-ups from the v3.3 audit chain in a single coherent slice.
+
+- **Pin third-party actions by full commit SHA** (was: `@v6`, `@v4` mutable tags). Both workflows (`ci.yml`, `test-plugin-install.yml`) now use `actions/checkout@de0fac2e... # v6` and `actions/setup-node@49933ea5... # v4`. SHAs are immutable; tags can be re-tagged. Comment preserves human-readable version. Reference: [GitHub Actions security hardening guide](https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions).
+- **Pin Claude Code CLI to `@anthropic-ai/claude-code@2.1.123`** (was: latest). The version verified during v3.2 + v3.3 work. Bump deliberately via a fix-up PR after re-running E2E locally. Aligns with the supply-chain posture of `codebase-memory-mcp` (release-pinned + SHA-256) and `graphifyy` (PyPI version-pinned).
+- **New `actionlint` job** (using `raven-actions/actionlint@205b530c... # v2.1.2`) lints every `.github/workflows/*.yml` file. Catches malformed `if:` expressions, undeclared inputs, and references to actions that no longer exist. Runs alongside `static-validators`; ~seconds; no secrets.
+- **API-free scenario 01 added to the `static-validators` job.** The engines-state roundtrip scenario does not need the API key, so it now runs on every PR — including fork PRs without `ANTHROPIC_API_KEY`. Closes the v3.3 fork-CI coverage gap (fork PRs previously got contract-level signal only; now they get behavioral signal on at least one scenario too).
+- **Comment in `ci.yml`** documents the intentional avoidance of `pull_request_target` (which would expose maintainer secrets to fork code) — preserves the design intent for future maintainers.
+- **Legacy `test-plugin-install.yml` updated**: plugin identifier corrected from upstream `agent-skills@addy-agent-skills` to fork-correct `batuta-agent-skills@batuta-agent-skills`. Same pinning treatment (action SHAs + CLI version + `permissions: contents: read`). Was a pre-existing red CI checkbox before v3.4; now consistent with `ci.yml`'s posture.
+- **Plugin version 3.3.0 → 3.4.0.**
+
+This slice is workflow-only — no agent prompts, skills, rules, or runtime code touched. The static validator suite (9/9 PASS) and E2E harness (4/4 PASS) are unchanged.
+
+## [3.3.0] — 2026-04-29 (PR [#21](https://github.com/jota-batuta/batuta-agent-skills/pull/21), commit `caf628e`)
 
 Runtime E2E in GitHub Actions CI. The harness is now stable green per v3.2 (4/4 PASS), so this slice consumes that closure: every PR runs static validators, and (when the operator has set the `ANTHROPIC_API_KEY` repository secret) drives the E2E harness against `claude --print --model sonnet`.
 
@@ -137,6 +151,7 @@ Rule #0 enforcement, 5 base agents (`implementer`, `implementer-haiku`, `code-re
 
 ---
 
+[3.4.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.3.0...v3.4.0
 [3.3.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.2.0...v3.3.0
 [3.2.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.0.0...v3.1.0
