@@ -32,6 +32,32 @@ This audit applies whether the diff was produced by the main agent or by another
 
 Do NOT invent findings. Do NOT review files at HEAD speculatively. The pre-flight defends against the main accidentally firing the chain mid-exploration.
 
+If at least one of the diffs reports changes, continue to Step 0.5 below.
+
+## Step 0.5 — Blast-radius enumeration via code-graph (v3.0+, non-blocking)
+
+If the project has a working code-graph engine (graphify or codebase-memory-mcp), use it to enumerate the blast radius of the diff before reading files. This catches cross-file impacts that file-by-file review would miss.
+
+```bash
+# Cheap availability check — exit code 0 means at least one engine is OK.
+bash ~/.claude/plugins/marketplaces/batuta-agent-skills/tools/check-code-graph-engines.sh >/dev/null 2>&1
+```
+
+If exit code is non-zero (no engine functional), log "code-graph unavailable; falling back to diff-only review" and proceed straight to the Review Framework. Do not attempt to install. Do not block. Step 0.5 is **strictly additive** — its absence never produces a worse review than v2.9 had.
+
+If exit code is 0:
+
+1. List modified files: `git diff --name-only HEAD` and `git diff --name-only --staged`.
+2. For each modified file, query the code-graph engine for:
+   - Direct callers and callees of any modified function
+   - Symbol references (uses) of modified definitions
+   - Files in the same community / cluster (graphify) or with shared call paths (codebase-memory-mcp `trace_call_path`)
+3. Build the **blast-radius set**: union of modified files + all transitively-related files surfaced by the queries (cap at ~30 files; if the radius exceeds that, log it and trim to the 30 highest-coupling).
+4. Read each file in the blast-radius set, not just the diff hunks. The 5-axis review below now considers cross-file coupling, not only the changed lines.
+5. Cite the engine in the final review summary: `[blast radius via <engine>: N files]`.
+
+This step is **non-blocking** — it never returns BLOCKED on its own. Findings still funnel through the 5-axis Review Framework.
+
 If at least one of the diffs reports changes, continue to the Review Framework below.
 
 ## Review Framework

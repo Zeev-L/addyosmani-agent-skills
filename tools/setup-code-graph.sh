@@ -299,16 +299,31 @@ install_cbm() {
     install_dir="$HOME/.local/bin"
     mkdir -p "$install_dir"
     log "Extracting to $install_dir ..."
+    # Both branches now extract into a dedicated $download_dir/extracted/ subdir
+    # for symmetry — the find that locates the binary cannot accidentally pick
+    # up the original archive even if a future release ships a flat tarball.
+    mkdir -p "$download_dir/extracted"
     if [[ "$arch_tag" == "windows-amd64" ]]; then
       if ! unzip -q -o "$download_dir/$asset_name" -d "$download_dir/extracted"; then
         err "unzip failed"; CBM_STATUS="BROKEN"; return
       fi
       extracted_bin="$(find "$download_dir/extracted" -type f -name 'codebase-memory-mcp*.exe' | head -n1)"
     else
-      if ! tar -xzf "$download_dir/$asset_name" -C "$download_dir" 2>&1 | sed 's/^/    /'; then
+      # tar flags rationale:
+      #   --no-same-owner       — extract files as the current user, not the
+      #                           uid/gid stored in the archive (defense vs
+      #                           archives crafted to drop priv).
+      #   --no-same-permissions — strip setuid/setgid/sticky bits.
+      # Together these cap the worst case if a future release (or upstream
+      # compromise) ships a tarball with weird ownership/perms.
+      # GNU tar 1.32+ refuses '..' path traversal by default; older systems
+      # (rare today) still extract relative paths. The dedicated extracted/
+      # subdir bounds the blast radius to that subdir.
+      if ! tar -xzf "$download_dir/$asset_name" -C "$download_dir/extracted" \
+           --no-same-owner --no-same-permissions 2>&1 | sed 's/^/    /'; then
         err "tar extract failed"; CBM_STATUS="BROKEN"; return
       fi
-      extracted_bin="$(find "$download_dir" -type f -name 'codebase-memory-mcp' -not -path "*$asset_name*" | head -n1)"
+      extracted_bin="$(find "$download_dir/extracted" -type f -name 'codebase-memory-mcp' | head -n1)"
     fi
     if [[ -z "$extracted_bin" || ! -f "$extracted_bin" ]]; then
       err "extracted archive but did not find the binary"
@@ -380,6 +395,14 @@ EOF
 }
 
 # ---------- run ----------
+
+# Test sourcing guard: when the file is sourced from a unit-test (with
+# SOURCING_FOR_TESTS=1 in the environment), exit early with the helper
+# functions defined but without running the install or writing state.
+if [[ "${SOURCING_FOR_TESTS:-}" == "1" ]]; then
+  return 0 2>/dev/null || exit 0
+fi
+
 echo "setup-code-graph.sh — dual engine bootstrap"
 echo "platform: $OS  |  upgrade: $UPGRADE"
 
