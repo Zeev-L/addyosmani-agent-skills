@@ -1,6 +1,6 @@
 # ADR 0007 — Code knowledge graph as a dual-engine layer (graphify + codebase-memory-mcp)
 
-**Status:** Accepted
+**Status:** Accepted (amended 2026-04-29 with M1 closure)
 **Date:** 2026-04-29
 **Deciders:** jota-batuta
 
@@ -81,6 +81,51 @@ Concrete components delivered in this slice (v2.8):
 - We do **not** invoke `graphify claude install` from any script (operator-side or otherwise). The kill-switch motivation is to keep `.claude/settings.json` immutable from any plugin's auto-config flow, not just from Claude tool calls.
 - We do **not** ship a wrapper that translates queries into engine-specific tool calls inside the plugin code. That dispatch lives in the skill and slash command (declarative); rewriting it as code would create another layer to maintain.
 - We do **not** auto-update the engines on a schedule. Upgrades are operator-triggered via `setup-code-graph.sh --upgrade`. Open question in the plan: candidate for SessionStart auto-check in a future slice.
+
+## Update 2026-04-29 — M1 closure: supply-chain hardening
+
+GATE 3 of v2.8's audit chain flagged one MEDIUM finding: the bootstrap fetched `install.sh` from `raw.githubusercontent.com/.../main/` without integrity pinning. This amendment documents the v2.9 fix.
+
+### What changed
+
+- **codebase-memory-mcp**: instead of fetching `install.sh` from a mutable branch and executing it, [`tools/setup-code-graph.sh`](../../tools/setup-code-graph.sh) now downloads the platform-specific binary tarball directly from the pinned GitHub Release (`v0.6.0`) and verifies it against the release's `checksums.txt`. `install.sh` is no longer a trust surface for this engine. The release is immutable, attached SHA-256 manifests are signed via GitHub Actions provenance attestation, and the binary is extracted in-process to `~/.local/bin/`. MCP registration via `claude mcp add --scope user` is unchanged.
+- **graphify**: pinned to PyPI version `==0.5.4` in the install command. Hash-pinning at the PyPI layer is intentionally not done — `uv tool` and `pipx` do not expose `--require-hashes` ergonomically, and adding a separate `requirements.txt` is more surface than the value warrants. PyPI's TLS + signed-distribution chain is the implicit trust anchor.
+
+### Asymmetric trust posture (intentional)
+
+The two engines now have different trust models:
+
+| Engine | Pinning | Verification | Trust anchor |
+|---|---|---|---|
+| codebase-memory-mcp | release tag `v0.6.0` | SHA-256 against signed `checksums.txt` from same release | GitHub Releases immutability + signed checksums.txt |
+| graphifyy | PyPI version `==0.5.4` | none beyond TLS | PyPI signed-distribution chain |
+
+The asymmetry is acceptable because:
+
+1. The two engines have different distribution channels (GitHub Releases vs PyPI) that already differ in their threat models. Forcing identical rigor would mean either (a) running our own PyPI mirror with checksums (out of scope), or (b) downgrading the GitHub side to match PyPI's lower bar (regression).
+2. graphify is the **secondary** engine (multimodal, but not the fallback path). On Windows where graphify is currently broken anyway, codebase-memory-mcp — the engine with stronger pinning — carries the load.
+3. PyPI compromises and version-yanks are visible (PEP 458 / PEP 480 in progress). A graphifyy version-pin still defeats accidental upgrade-to-malicious-X.0; pin-by-hash adds friction without strongly defending against the same attacks.
+
+### What this does NOT change
+
+- The dual-engine selection logic in the skill is unchanged.
+- The kill-switch contract is unchanged: nothing writes to `.claude/settings*.json`.
+- The MCP registration flow is unchanged — still `claude mcp add --scope user --transport stdio codebase-memory -- "$CBM_BINARY"` against `~/.claude.json`.
+- Graphify install behavior on the operator's machine is unchanged except for the version pin.
+
+### Update on the "alternatives considered"
+
+The original ADR's Alt ε ("run `graphify claude install` from a setup script") still stands as rejected — but a new Alt was tested and dropped during M1 closure:
+
+**Alt ζ — pin install.sh by commit SHA on raw.githubusercontent.com.**
+
+**Rejected.** Research-first dispatch revealed `install.sh` and `install.ps1` are NOT published as release assets — they live only on the `main` branch. Pinning them by commit SHA would technically work (`raw.githubusercontent.com/.../<SHA>/install.sh`) but inherits the install script's full surface (~hundreds of lines of bash that operate on the operator's PATH, `~/.local/bin`, and various configs). Skipping the install script entirely and downloading the release-asset binary directly cuts that surface. Same security posture, less code we did not write.
+
+### Future hardening (not in v2.9)
+
+- Verify `checksums.txt.bundle` (the `.bundle` files in the release are the GitHub Actions attestations). Would require `gh attestation verify` and an authenticated GitHub CLI; deferred until the operator's main workflows route through `gh` reliably.
+- Verify `sbom.json` against a known-good SBOM. Lower priority — the SBOM helps audit but does not directly prevent supply-chain attacks the SHA pin already covers.
+- Pin graphifyy by hash via a generated `requirements.txt`. Reconsider if PyPI's threat model changes or if a specific incident prompts it.
 
 ## References
 

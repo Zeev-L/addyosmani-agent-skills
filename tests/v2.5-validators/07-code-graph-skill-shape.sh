@@ -108,10 +108,48 @@ else
   else
     ok "setup-code-graph.sh does not invoke 'graphify claude install'"
   fi
-  # Must use --skip-config when invoking the codebase-memory-mcp installer
-  grep -qE 'skip-config' "$SETUP" \
-    && ok "setup-code-graph.sh passes --skip-config to codebase-memory-mcp installer" \
-    || miss "setup-code-graph.sh must pass --skip-config to upstream installer"
+
+  # v2.9 supply-chain hardening (M1 from GATE 3 audit closure):
+  # codebase-memory-mcp must be release-pinned and SHA-256-verified.
+  # graphify must be PyPI-version-pinned.
+
+  # Pin variables present
+  grep -qE '^GRAPHIFY_PIN=' "$SETUP" \
+    && ok "setup-code-graph.sh declares GRAPHIFY_PIN" \
+    || miss "setup-code-graph.sh must declare GRAPHIFY_PIN (graphifyy version pin)"
+  grep -qE '^CBM_PIN_TAG=' "$SETUP" \
+    && ok "setup-code-graph.sh declares CBM_PIN_TAG" \
+    || miss "setup-code-graph.sh must declare CBM_PIN_TAG (codebase-memory-mcp release tag)"
+
+  # graphify install must use the version pin (graphifyy==$GRAPHIFY_PIN)
+  grep -qE 'graphifyy==\$GRAPHIFY_PIN|graphifyy==[0-9]' "$SETUP" \
+    && ok "setup-code-graph.sh installs graphifyy with version pin" \
+    || miss "setup-code-graph.sh must pin graphifyy version (e.g. graphifyy==\$GRAPHIFY_PIN)"
+
+  # codebase-memory-mcp must download release asset, NOT main-branch install.sh
+  if grep -qE 'raw\.githubusercontent\.com/DeusData/codebase-memory-mcp/main/' "$SETUP"; then
+    drift "setup-code-graph.sh fetches codebase-memory-mcp from raw.githubusercontent main branch (must use release-pinned URL)"
+  else
+    ok "setup-code-graph.sh does not fetch codebase-memory-mcp from main branch"
+  fi
+  grep -qE 'github\.com/DeusData/codebase-memory-mcp/releases/download' "$SETUP" \
+    && ok "setup-code-graph.sh uses GitHub Release download URL for codebase-memory-mcp" \
+    || miss "setup-code-graph.sh must download codebase-memory-mcp from /releases/download/"
+
+  # SHA-256 verification block
+  grep -qE 'checksums\.txt' "$SETUP" \
+    && ok "setup-code-graph.sh references checksums.txt" \
+    || miss "setup-code-graph.sh must download and use checksums.txt"
+  grep -qE 'sha256_of|sha256sum|SHA-?256' "$SETUP" \
+    && ok "setup-code-graph.sh has SHA-256 verification logic" \
+    || miss "setup-code-graph.sh must verify SHA-256 of downloaded asset"
+  # The verify must abort on mismatch (BROKEN status). Allow up to 6 lines after
+  # the mismatch message for additional err() lines before the status set.
+  if grep -A6 'SHA-256 mismatch' "$SETUP" | grep -qE 'CBM_STATUS="BROKEN"'; then
+    ok "SHA-256 mismatch correctly aborts install with BROKEN status"
+  else
+    miss "SHA-256 mismatch must mark CBM_STATUS=BROKEN and return"
+  fi
 fi
 
 if [[ ! -f "$CHECK" ]]; then

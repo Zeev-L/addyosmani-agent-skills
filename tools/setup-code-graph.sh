@@ -52,6 +52,20 @@ for arg in "$@"; do
   esac
 done
 
+# ---------- pinned versions (v2.9 hardening, M1 from GATE 3 audit) ----------
+# graphify: PyPI version pin only — uv/pipx do not expose hash-pinning
+# ergonomically; we trust PyPI's TLS + signed-distribution chain. See ADR-0007
+# § Asymmetric trust posture for the rationale.
+# Source: https://pypi.org/project/graphifyy/0.5.4/ (verified 2026-04-29)
+GRAPHIFY_PIN="0.5.4"
+
+# codebase-memory-mcp: full release-asset pin + SHA-256 verification against
+# the release's checksums.txt. The release tag below points at an immutable
+# GitHub Release; the binary is downloaded directly (skipping install.sh, which
+# is not a release asset and lives on a mutable branch).
+# Source: https://github.com/DeusData/codebase-memory-mcp/releases/tag/v0.6.0 (verified 2026-04-29)
+CBM_PIN_TAG="v0.6.0"
+
 # ---------- state ----------
 STATE_DIR="$HOME/.claude"
 STATE_FILE="$STATE_DIR/code-graph-engines.json"
@@ -77,6 +91,38 @@ semver_ge() {
   a="${1#v}"; b="${2#v}"
   a="${a%%[!0-9.]*}"; b="${b%%[!0-9.]*}"
   printf '%s\n%s\n' "$b" "$a" | sort -V -C
+}
+
+# Map (uname -s, uname -m) to the codebase-memory-mcp release-asset platform
+# tag. Returns empty string on unsupported platforms.
+detect_platform_tag() {
+  local os arch
+  case "$(uname -s 2>/dev/null)" in
+    Linux*)                 os="linux" ;;
+    Darwin*)                os="darwin" ;;
+    MINGW*|MSYS*|CYGWIN*)   os="windows" ;;
+    *) return ;;
+  esac
+  case "$(uname -m 2>/dev/null)" in
+    x86_64|amd64)           arch="amd64" ;;
+    aarch64|arm64)          arch="arm64" ;;
+    *) return ;;
+  esac
+  # Windows release ships only amd64.
+  if [[ "$os" == "windows" && "$arch" != "amd64" ]]; then
+    return
+  fi
+  echo "${os}-${arch}"
+}
+
+# Compute SHA-256 of a file using whichever tool is available. Returns the hex
+# digest on stdout. Empty stdout on failure.
+sha256_of() {
+  local f="$1"
+  if   have sha256sum;  then sha256sum "$f" | awk '{print $1}'
+  elif have shasum;     then shasum -a 256 "$f" | awk '{print $1}'
+  elif have certutil;   then certutil -hashfile "$f" SHA256 | awk 'NR==2 {print $1}' | tr -d '\r '
+  fi
 }
 
 # ---------- block 1: graphify ----------
@@ -118,18 +164,23 @@ install_graphify() {
 
   local action="install"
   $UPGRADE && have graphify && action="upgrade"
-  log "Using: $installer (action: $action)"
+  log "Using: $installer (action: $action; pinned to graphifyy==$GRAPHIFY_PIN)"
 
+  # Version-pinned install. Hash-pinning at the PyPI layer is intentionally NOT
+  # done here (uv tool / pipx do not expose --require-hashes ergonomically and
+  # adding a separate requirements.txt is more surface than the value warrants).
+  # PyPI's TLS + signed-distribution chain is the implicit trust anchor for this
+  # engine. See ADR-0007 § Asymmetric trust posture.
   # uv tool uses different verb for upgrade
   if [[ "$installer" == "uv tool install" && "$action" == "upgrade" ]]; then
-    if ! uv tool upgrade graphifyy; then
+    if ! uv tool upgrade "graphifyy==$GRAPHIFY_PIN"; then
       err "graphify upgrade failed"
       GRAPHIFY_STATUS="BROKEN"
       return
     fi
   else
     # shellcheck disable=SC2086
-    if ! $installer graphifyy 2>&1 | sed 's/^/    /'; then
+    if ! $installer "graphifyy==$GRAPHIFY_PIN" 2>&1 | sed 's/^/    /'; then
       err "graphify install failed"
       GRAPHIFY_STATUS="BROKEN"
       return
@@ -184,72 +235,103 @@ install_cbm() {
   fi
 
   if [[ "$CBM_STATUS" != "OK" ]]; then
-    log "Downloading official installer (with --skip-config to avoid touching agent configs)..."
+    # v2.9 hardening (M1 from GATE 3 audit, v2.8): instead of fetching install.sh
+    # from a mutable branch and executing it, we download the platform-specific
+    # binary tarball directly from the pinned GitHub Release and verify it against
+    # the release's signed checksums.txt. This eliminates install.sh as a trust
+    # surface entirely. Source: https://github.com/DeusData/codebase-memory-mcp/releases/tag/v0.6.0
+    # (verified 2026-04-29, codebase-memory-mcp@0.6.0).
     local rc=0
-    if $IS_WINDOWS; then
-      # Windows uses install.ps1; download to tmp and execute via powershell.exe.
-      local tmp_ps1
-      tmp_ps1="$(mktemp -t cbm-install-XXXXXX.ps1)"
-      if ! curl -fsSL \
-        "https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.ps1" \
-        -o "$tmp_ps1"; then
-        err "failed to download install.ps1"
-        rm -f "$tmp_ps1"
-        CBM_STATUS="MISSING"
-        return
-      fi
-      if ! powershell.exe -ExecutionPolicy Bypass -File "$tmp_ps1" -SkipConfig; then
-        rc=$?
-      fi
-      rm -f "$tmp_ps1"
+    local arch_tag asset_name install_dir extracted_bin
+    arch_tag="$(detect_platform_tag)"
+    if [[ -z "$arch_tag" ]]; then
+      err "could not detect a supported platform (uname -s = $(uname -s), uname -m = $(uname -m))"
+      err "supported: darwin-amd64, darwin-arm64, linux-amd64, linux-arm64, windows-amd64"
+      CBM_STATUS="MISSING"
+      return
+    fi
+    if [[ "$arch_tag" == "windows-amd64" ]]; then
+      asset_name="codebase-memory-mcp-${arch_tag}.zip"
     else
-      # Download to temp file first, then execute. Avoids piping a streamed remote
-      # script directly into bash (which leaves no audit trail and is harder to
-      # interrupt mid-stream if the operator's network blips). Mirrors the Windows
-      # path above. The file is deleted in all cases via trap.
-      local tmp_sh
-      tmp_sh="$(mktemp 2>/dev/null || mktemp -t cbm-install)"
-      trap 'rm -f "$tmp_sh"' RETURN
-      if ! curl -fsSL \
-        "https://raw.githubusercontent.com/DeusData/codebase-memory-mcp/main/install.sh" \
-        -o "$tmp_sh"; then
-        err "failed to download install.sh"
-        rm -f "$tmp_sh"
-        CBM_STATUS="MISSING"
-        return
-      fi
-      if ! bash "$tmp_sh" --skip-config; then
-        rc=$?
-      fi
-      rm -f "$tmp_sh"
+      asset_name="codebase-memory-mcp-${arch_tag}.tar.gz"
+    fi
+    log "Platform: $arch_tag → asset: $asset_name"
+
+    local download_dir
+    download_dir="$(mktemp -d 2>/dev/null || mktemp -d -t cbm-dl)"
+    trap 'rm -rf "$download_dir"' RETURN
+
+    log "Downloading release asset (pinned to $CBM_PIN_TAG)..."
+    if ! curl -fsSL \
+      "https://github.com/DeusData/codebase-memory-mcp/releases/download/${CBM_PIN_TAG}/${asset_name}" \
+      -o "$download_dir/$asset_name"; then
+      err "failed to download $asset_name"
+      CBM_STATUS="MISSING"
+      return
+    fi
+    if ! curl -fsSL \
+      "https://github.com/DeusData/codebase-memory-mcp/releases/download/${CBM_PIN_TAG}/checksums.txt" \
+      -o "$download_dir/checksums.txt"; then
+      err "failed to download checksums.txt"
+      CBM_STATUS="MISSING"
+      return
     fi
 
-    if (( rc != 0 )); then
-      err "codebase-memory-mcp installer exited $rc"
+    log "Verifying SHA-256 against release checksums.txt..."
+    local actual expected
+    actual="$(sha256_of "$download_dir/$asset_name")"
+    expected="$(awk -v name="$asset_name" '$2 == name {print $1}' "$download_dir/checksums.txt")"
+    if [[ -z "$expected" ]]; then
+      err "checksums.txt does not list $asset_name"
+      CBM_STATUS="BROKEN"
+      return
+    fi
+    if [[ "$actual" != "$expected" ]]; then
+      err "SHA-256 mismatch for $asset_name"
+      err "  expected: $expected"
+      err "  actual:   $actual"
+      err "Refusing to install. The asset may have been tampered with or the download was corrupted."
+      CBM_STATUS="BROKEN"
+      return
+    fi
+    log "✓ SHA-256 match: $actual"
+
+    install_dir="$HOME/.local/bin"
+    mkdir -p "$install_dir"
+    log "Extracting to $install_dir ..."
+    if [[ "$arch_tag" == "windows-amd64" ]]; then
+      if ! unzip -q -o "$download_dir/$asset_name" -d "$download_dir/extracted"; then
+        err "unzip failed"; CBM_STATUS="BROKEN"; return
+      fi
+      extracted_bin="$(find "$download_dir/extracted" -type f -name 'codebase-memory-mcp*.exe' | head -n1)"
+    else
+      if ! tar -xzf "$download_dir/$asset_name" -C "$download_dir" 2>&1 | sed 's/^/    /'; then
+        err "tar extract failed"; CBM_STATUS="BROKEN"; return
+      fi
+      extracted_bin="$(find "$download_dir" -type f -name 'codebase-memory-mcp' -not -path "*$asset_name*" | head -n1)"
+    fi
+    if [[ -z "$extracted_bin" || ! -f "$extracted_bin" ]]; then
+      err "extracted archive but did not find the binary"
       CBM_STATUS="BROKEN"
       return
     fi
 
-    # Re-detect after install (PATH may need a hint).
-    if ! have codebase-memory-mcp; then
-      # Common install locations to probe.
-      for candidate in \
-          "$HOME/.local/bin/codebase-memory-mcp" \
-          "$HOME/.local/bin/codebase-memory-mcp.exe" \
-          "$HOME/AppData/Local/codebase-memory-mcp/codebase-memory-mcp.exe" \
-          "$HOME/bin/codebase-memory-mcp"; do
-        if [[ -x "$candidate" ]]; then CBM_BINARY="$candidate"; break; fi
-      done
-      [[ -z "$CBM_BINARY" ]] && {
-        err "installer succeeded but binary not found in PATH or known locations"
-        err "Add the install dir to PATH and re-run, or pass --skip-cbm to skip"
-        CBM_STATUS="BROKEN"
-        return
-      }
+    if [[ "$arch_tag" == "windows-amd64" ]]; then
+      CBM_BINARY="$install_dir/codebase-memory-mcp.exe"
     else
-      CBM_BINARY="$(command -v codebase-memory-mcp)"
+      CBM_BINARY="$install_dir/codebase-memory-mcp"
     fi
+    cp "$extracted_bin" "$CBM_BINARY"
+    chmod +x "$CBM_BINARY" 2>/dev/null || true
+
+    log "✓ codebase-memory-mcp installed at $CBM_BINARY"
     CBM_VERSION="$("$CBM_BINARY" --version 2>/dev/null | head -n1 | awk '{print $NF}')"
+
+    # Reachable from PATH? Warn but do not abort — operator may need to add
+    # ~/.local/bin to PATH manually. The MCP registration uses absolute path.
+    if ! have codebase-memory-mcp; then
+      warn "$install_dir is not on PATH; binary is at $CBM_BINARY (absolute path used for MCP registration)"
+    fi
   fi
 
   # Register as MCP server (idempotent).
