@@ -218,21 +218,21 @@ Quick-reference material that skills pull in when needed:
 Every skill follows a consistent anatomy:
 
 ```
-┌─────────────────────────────────────────────┐
-│  SKILL.md                                   │
-│                                             │
-│  ┌─ Frontmatter ─────────────────────────┐  │
-│  │ name: lowercase-hyphen-name           │  │
-│  │ description: Use when [trigger]       │  │
-│  └───────────────────────────────────────┘  │
-│                                             │
-│  Overview         → What this skill does    │
-│  When to Use      → Triggering conditions   │
-│  Process          → Step-by-step workflow   │
-│  Rationalizations → Excuses + rebuttals     │
-│  Red Flags        → Signs something's wrong │
-│  Verification     → Evidence requirements   │
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│  SKILL.md                                       │
+│                                                 │
+│  ┌─ Frontmatter ─────────────────────────────┐  │
+│  │ name: lowercase-hyphen-name               │  │
+│  │ description: Guides agents through [task].│  │
+│  │              Use when…                    │  │
+│  └───────────────────────────────────────────┘  │                                                                                                
+│  Overview         → What this skill does        │
+│  When to Use      → Triggering conditions       │
+│  Process          → Step-by-step workflow       │
+│  Rationalizations → Excuses + rebuttals         │
+│  Red Flags        → Signs something's wrong     │
+│  Verification     → Evidence requirements       │
+└─────────────────────────────────────────────────┘
 ```
 
 **Key design choices:**
@@ -274,7 +274,8 @@ agent-skills/
 ├── agents/                            # 3 specialist personas
 ├── references/                        # 4 supplementary checklists
 ├── hooks/                             # Session lifecycle hooks
-├── .claude/commands/                  # 7 slash commands
+├── .claude/commands/                  # 7 slash commands (Claude Code)
+├── .gemini/commands/                  # 7 slash commands (Gemini CLI)
 └── docs/                              # Setup guides per tool
 ```
 
