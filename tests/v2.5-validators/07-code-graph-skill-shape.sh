@@ -150,6 +150,32 @@ else
   else
     miss "SHA-256 mismatch must mark CBM_STATUS=BROKEN and return"
   fi
+
+  # v3.1 hardening — gh attestation verify + graceful degrade
+  grep -qE 'gh attestation verify' "$SETUP" \
+    && ok "setup-code-graph.sh invokes 'gh attestation verify'" \
+    || miss "setup-code-graph.sh must invoke 'gh attestation verify' (v3.1)"
+  grep -qE 'gh auth status' "$SETUP" \
+    && ok "setup-code-graph.sh probes 'gh auth status' before attestation verify" \
+    || miss "setup-code-graph.sh must probe 'gh auth status' (graceful degrade)"
+  # Attestation verify must hard-abort on failure (CBM_STATUS=BROKEN within 6 lines).
+  if grep -A6 'attestation verification failed' "$SETUP" | grep -qE 'CBM_STATUS="BROKEN"'; then
+    ok "attestation verify failure aborts install with BROKEN status"
+  else
+    miss "attestation verify failure must mark CBM_STATUS=BROKEN and return"
+  fi
+  # When gh is missing, the script must warn (not abort) so the SHA-256 alone
+  # gate still ships the binary. This is the graceful-degrade contract.
+  if grep -qE 'gh CLI not installed; skipping attestation' "$SETUP"; then
+    ok "setup-code-graph.sh warns + continues when gh CLI is missing (graceful)"
+  else
+    miss "setup-code-graph.sh must warn + continue when gh CLI is missing (graceful degrade)"
+  fi
+  if grep -qE 'gh CLI present but not authenticated' "$SETUP"; then
+    ok "setup-code-graph.sh warns + continues when gh is unauthenticated (graceful)"
+  else
+    miss "setup-code-graph.sh must warn + continue when gh is not authenticated"
+  fi
 fi
 
 if [[ ! -f "$CHECK" ]]; then

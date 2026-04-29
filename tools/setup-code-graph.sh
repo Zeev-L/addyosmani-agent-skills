@@ -296,6 +296,41 @@ install_cbm() {
     fi
     log "✓ SHA-256 match: $actual"
 
+    # v3.1 hardening — gh attestation verify against the release's
+    # provenance bundle. Gate 3 of 3 (release pin → SHA-256 → attestation).
+    # SHA-256 verification (above) proves the asset matches the value listed
+    # in checksums.txt of the same release; attestation verify proves both
+    # the asset AND checksums.txt were produced by the expected GitHub Actions
+    # workflow in the expected repo (defense in depth against a maintainer-
+    # account compromise that re-publishes both the asset and its hash with
+    # new content).
+    # Source: https://docs.github.com/en/actions/security-guides/using-artifact-attestations-to-establish-provenance-for-builds (verified 2026-04-29)
+    # Source: gh attestation verify --help (gh 2.87.3, verified 2026-04-29)
+    if have gh; then
+      if gh auth status >/dev/null 2>&1; then
+        log "Verifying GitHub Actions attestation (gh attestation verify)..."
+        if gh attestation verify "$download_dir/$asset_name" \
+             --repo DeusData/codebase-memory-mcp 2>&1 | sed 's/^/    /'; then
+          log "✓ attestation verified"
+        else
+          err "attestation verification failed for $asset_name"
+          err "Refusing to install. The asset may have been re-uploaded by a"
+          err "compromised account, or the GitHub Actions workflow that produced"
+          err "it does not match the expected SourceRepository."
+          CBM_STATUS="BROKEN"
+          return
+        fi
+      else
+        warn "gh CLI present but not authenticated; skipping attestation verify"
+        warn "  (SHA-256 already verified — attestation is defense in depth)"
+        warn "  Authenticate with 'gh auth login' to enable attestation verification"
+      fi
+    else
+      warn "gh CLI not installed; skipping attestation verify"
+      warn "  (SHA-256 already verified — attestation is defense in depth)"
+      warn "  Install gh: https://cli.github.com/  then re-run for stronger guarantee"
+    fi
+
     install_dir="$HOME/.local/bin"
     mkdir -p "$install_dir"
     log "Extracting to $install_dir ..."

@@ -1,6 +1,6 @@
 # ADR 0007 — Code knowledge graph as a dual-engine layer (graphify + codebase-memory-mcp)
 
-**Status:** Accepted (amended 2026-04-29 with M1 closure)
+**Status:** Accepted (amended 2026-04-29 with M1 closure; amended 2026-04-29 with v3.1 attestation closure)
 **Date:** 2026-04-29
 **Deciders:** jota-batuta
 
@@ -126,6 +126,74 @@ The original ADR's Alt ε ("run `graphify claude install` from a setup script") 
 - Verify `checksums.txt.bundle` (the `.bundle` files in the release are the GitHub Actions attestations). Would require `gh attestation verify` and an authenticated GitHub CLI; deferred until the operator's main workflows route through `gh` reliably.
 - Verify `sbom.json` against a known-good SBOM. Lower priority — the SBOM helps audit but does not directly prevent supply-chain attacks the SHA pin already covers.
 - Pin graphifyy by hash via a generated `requirements.txt`. Reconsider if PyPI's threat model changes or if a specific incident prompts it.
+
+## Update 2026-04-29 — v3.1 attestation closure: cryptographic provenance verification
+
+The M1 closure (above) shipped SHA-256 verification against the release's `checksums.txt`. That defends against a network MITM and against a release-asset re-upload by the maintainer that did NOT also re-upload `checksums.txt`. It does NOT defend against a coordinated re-upload of BOTH the asset and `checksums.txt` from a compromised maintainer account.
+
+This v3.1 amendment closes that residual risk by adding a third gate: **GitHub Actions provenance attestation verification** via `gh attestation verify`.
+
+### What changed
+
+In [`tools/setup-code-graph.sh`](../../tools/setup-code-graph.sh), immediately after the SHA-256 verify and before the extraction:
+
+```bash
+if have gh; then
+  if gh auth status >/dev/null 2>&1; then
+    if gh attestation verify "$asset" --repo DeusData/codebase-memory-mcp; then
+      log "✓ attestation verified"
+    else
+      err "attestation verification failed"
+      CBM_STATUS="BROKEN"
+      return
+    fi
+  else
+    warn "gh CLI present but not authenticated; skipping attestation verify"
+  fi
+else
+  warn "gh CLI not installed; skipping attestation verify"
+fi
+```
+
+The verification is **online** by default — `gh attestation verify` consults Sigstore + GitHub's certificate transparency log to validate that the asset's signature chains back to a workflow run on `DeusData/codebase-memory-mcp`. The `.bundle` files in the release (`*.tar.gz.bundle`) carry the attestations; `gh attestation verify` finds them automatically when `--repo` is provided.
+
+Validator 07 enforces:
+
+- The string `gh attestation verify` is present.
+- The script probes `gh auth status` before invoking verify (graceful degrade).
+- The failure path sets `CBM_STATUS=BROKEN` and returns within 6 lines.
+- The two graceful-degrade paths (gh missing / gh unauthenticated) emit warnings and continue rather than aborting.
+
+### Asymmetric trust posture (refined)
+
+| Gate | codebase-memory-mcp | graphifyy |
+|---|---|---|
+| Version pin | release tag `v0.6.0` | PyPI `==0.5.4` |
+| Hash verification | SHA-256 from signed `checksums.txt` | none (uv tool / pipx don't expose --require-hashes) |
+| Provenance attestation | `gh attestation verify` (graceful — warn if gh missing) | none |
+
+The asymmetry is intentional. graphifyy is the secondary engine; PyPI's threat model is different (signed-distribution + yank + version registry); upgrading graphifyy to attestation parity is **postponed** indefinitely. See [PRD § Roadmap](../PRD.md) "v3.2+ candidates" — PyPI hash-pinning is gated on either an upstream `uv tool --require-hashes` flag or a real PyPI incident motivating the migration.
+
+### Graceful-degrade contract
+
+The skill, slash, and rule treat the engines as opt-in (NDA projects can force `code-graph-engine: codebase-memory`). The bootstrap treats the verifications as **layered**: each layer is added if the tool is available, and missing tools downgrade rather than abort.
+
+Specifically for v3.1:
+
+1. **`gh` CLI not installed** — bootstrap warns, continues with SHA-256-only. The operator sees a downgrade banner. Suggested remediation in the warning: install `gh` from `https://cli.github.com/`.
+2. **`gh` installed but not authenticated** — bootstrap warns, continues with SHA-256-only. Suggested remediation: `gh auth login`.
+3. **`gh attestation verify` returns non-zero** — bootstrap **hard-aborts**. This is NOT a graceful-degrade case — a failed attestation is positive evidence of tampering, not absence of evidence. CBM_STATUS=BROKEN, no install.
+
+### Transient-error policy (intentional, security-relevant)
+
+`gh attestation verify` non-zero is treated as a hard-abort regardless of cause. Network blips, Sigstore rate-limits, GitHub API outages, DNS resolution failures — all funnel into `CBM_STATUS=BROKEN`. This is intentional: any graceful path on verify-failure would be the exact bypass an attacker would force (e.g., DNS-poisoning Sigstore endpoints to error-out, then exploiting the fallback). The two graceful-degrade cases (gh missing, gh unauthenticated) are categorically different — they are *absence of evidence*, not failed evidence. Operators encountering transient errors retry the bootstrap; that friction is acceptable in exchange for closing the bypass.
+
+### Future hardening (still open)
+
+- **Offline-bundle verification** for air-gapped operator workstations. `gh attestation verify --bundle <path>` accepts a pre-downloaded `.bundle` file and verifies without contacting Sigstore at run time. Deferred — none of Batuta's current operators run air-gapped; revisit if a regulated client requires it.
+- Pin the verification to a specific signer workflow (`--signer-workflow .github/workflows/release.yml@refs/tags/v0.6.0`) for paranoid binding to a specific release path. Deferred — requires inspecting upstream's release workflow to confirm the path is stable.
+- SBOM verification against `sbom.json` (the release ships one). The attestation verify already covers integrity; SBOM gives audit-trail value but does not directly close additional attack surface. Deferred unless an audit requirement (client) motivates it.
+- PyPI hash-pinning for graphifyy. See PRD; postponed.
 
 ## References
 

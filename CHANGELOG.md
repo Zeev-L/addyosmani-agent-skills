@@ -4,7 +4,20 @@ Versions of the `batuta-agent-skills` plugin (fork of `addyosmani/agent-skills`)
 
 The roadmap with rationale per slice lives in [`docs/PRD.md`](docs/PRD.md) § Roadmap (rolling). Architectural decisions live in [`docs/adr/`](docs/adr/). This file is the chronological summary.
 
-## [3.0.0] — 2026-04-29 (this PR)
+## [3.1.0] — 2026-04-29 (this PR)
+
+Cryptographic provenance verification on top of v2.9's SHA-256 + v2.8's release pinning. The third gate of the codebase-memory-mcp install pipeline. PRD candidates list pruned (Colombian specialists removed per operator decision; PyPI hash-pinning and runtime CI postponed with documented rationale).
+
+- **`gh attestation verify`** added to `tools/setup-code-graph.sh` immediately after the SHA-256 check. Verifies that the binary's GitHub Actions provenance attestation chains back to a workflow run on `DeusData/codebase-memory-mcp`. Defense in depth against a maintainer-account compromise that re-uploads BOTH the asset and `checksums.txt` (the case SHA-256-alone cannot detect).
+- **Graceful-degrade**: if `gh` CLI is missing or `gh auth status` fails, bootstrap warns and continues with SHA-256-only. A failed attestation (non-zero exit) is hard-abort — `CBM_STATUS=BROKEN`. The first two are absence-of-evidence; the third is positive evidence of tampering.
+- **Asymmetric trust posture refined** in ADR-0007 (third amendment). codebase-memory-mcp now has 3 gates (release pin + SHA-256 + attestation); graphifyy still has 1 (version pin only). The asymmetry remains intentional.
+- **Validator 07 extended**: enforces presence of `gh attestation verify`, `gh auth status` probe, hard-abort path with `CBM_STATUS=BROKEN`, and both graceful-degrade warnings (gh missing / gh unauthenticated).
+- **PRD roadmap pruned**: Colombian specialists candidate removed (operator decision). PyPI hash-pinning postponed with reference to upstream `uv` issue. Runtime E2E in CI postponed pending `claude --print` plugin-loading investigation. New candidate added: investigate `claude --print` plugin loading (the methodology question E2E scenarios 02 and 04 surfaced in v3.0).
+- **Plugin version 3.0.0 → 3.1.0.**
+
+ADR amended: [0007 § Update 2026-04-29 — v3.1 attestation closure](docs/adr/0007-code-graph-dual-engine.md). Validators: 07 extended.
+
+## [3.0.0] — 2026-04-29 (PR [#15](https://github.com/jota-batuta/batuta-agent-skills/pull/15), commit `812a580`)
 
 Closes the v2.8 open question (audit chain consults the code-graph), the v2.9 audit follow-ups, and adds an end-to-end test harness that drives `claude --model sonnet` against sandbox repositories. Plugin version catches up after v2.7→v2.8→v2.9 shipped without bumps.
 
@@ -94,6 +107,7 @@ Rule #0 enforcement, 5 base agents (`implementer`, `implementer-haiku`, `code-re
 
 ---
 
+[3.1.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v2.7.0...v3.0.0
 [2.7.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v2.6.0...v2.7.0
 [2.6.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v2.5.0...v2.6.0
