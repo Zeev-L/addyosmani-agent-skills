@@ -4,7 +4,21 @@ Versions of the `batuta-agent-skills` plugin (fork of `addyosmani/agent-skills`)
 
 The roadmap with rationale per slice lives in [`docs/PRD.md`](docs/PRD.md) § Roadmap (rolling). Architectural decisions live in [`docs/adr/`](docs/adr/). This file is the chronological summary.
 
-## [3.2.0] — 2026-04-29 (this PR)
+## [3.3.0] — 2026-04-29 (this PR)
+
+Runtime E2E in GitHub Actions CI. The harness is now stable green per v3.2 (4/4 PASS), so this slice consumes that closure: every PR runs static validators, and (when the operator has set the `ANTHROPIC_API_KEY` repository secret) drives the E2E harness against `claude --print --model sonnet`.
+
+- New `.github/workflows/ci.yml` with two jobs:
+  - `static-validators` — runs `bash tests/v2.5-validators/run.sh` (9 cases). Always runs. ~seconds, no API tokens.
+  - `e2e` — runs `bash tests/e2e/run.sh` after `static-validators` passes. Gated on the `ANTHROPIC_API_KEY` repository secret via a probe step that emits a `::warning::` and exits clean if the secret is missing. Fresh forks of the plugin do NOT see a red CI before the maintainer wires up the key.
+- Concurrency configured so a new commit on the same branch cancels in-flight runs (saves tokens during fast iteration).
+- `permissions: contents: read` set explicitly (least-privilege; the workflow does not need write access to anything).
+- `tests/e2e/README.md` § "Running the harness in CI (v3.3+)" — documents the workflow, operator setup (one-time secret addition), cost per PR (~3 sonnet rounds), and three throttling options if cost becomes a concern.
+- `plugin.json` 3.2.0 → 3.3.0.
+
+The candidate list in PRD § Roadmap (rolling) shifts: runtime-CI moves from "Unblocked" to shipped; `--signer-workflow` binding stays as the next paranoid hardening; interactive-session harness deferred per ADR-0009 § Alt δ.
+
+## [3.2.0] — 2026-04-29 (PR [#19](https://github.com/jota-batuta/agent-skills/pull/19), commit `63fd520`)
 
 Closes the v3.0 E2E methodology question that scenarios 02 and 04 surfaced. Both scenarios now PASS against `HEAD` of the repo (4/4 instead of 2/4).
 
@@ -123,6 +137,7 @@ Rule #0 enforcement, 5 base agents (`implementer`, `implementer-haiku`, `code-re
 
 ---
 
+[3.3.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.2.0...v3.3.0
 [3.2.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v2.7.0...v3.0.0

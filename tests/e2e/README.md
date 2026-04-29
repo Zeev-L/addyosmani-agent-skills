@@ -107,6 +107,28 @@ The operator's day-to-day runs use the medium model for cost. The plugin must be
 | Scenario 04 FAILs on missing NOT APPLICABLE | code-reviewer Step 0 contract regressed | Re-run static validator `01-auditor-not-applicable.sh` |
 | Scenario 01 FAILs on JSON parse | `setup-code-graph.sh` state writer changed shape | Compare against the schema documented in `tools/setup-code-graph.sh` `write_state()` |
 
+## Running the harness in CI (v3.3+)
+
+`tests/e2e/run.sh` runs in GitHub Actions on every PR via [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml). The CI workflow has two jobs:
+
+1. **`static-validators`** — runs `bash tests/v2.5-validators/run.sh` (9 cases, deterministic, no API tokens). Fails the PR if any contract regresses. Always runs.
+2. **`e2e`** — runs this harness with `claude --model sonnet`. Gated on the `ANTHROPIC_API_KEY` repository secret (Settings → Secrets and variables → Actions). When the secret is not set, the job emits a one-time warning and exits clean — fresh forks of the plugin do NOT see a red CI before the maintainer wires up the key.
+
+Concurrency is set so a new commit on the same branch cancels the in-flight runs. Saves tokens during fast iteration on a slice.
+
+**Operator setup (one-time per fork)**:
+
+1. Go to repo Settings → Secrets and variables → Actions.
+2. Click "New repository secret".
+3. Name: `ANTHROPIC_API_KEY`. Value: your Anthropic API key.
+4. Save. Next CI run on a PR includes the e2e job.
+
+**Cost per PR (when secret is set)**: ~3 sonnet rounds across scenarios 02–04 (scenario 01 is API-free). Token spend per scenario varies with model verbosity; budget ~few thousand tokens total per PR. If cost matters, options:
+
+- Move `e2e` to `on: workflow_dispatch` only (operator triggers manually before merge).
+- Gate on a `ci-e2e` PR label so only opt-in PRs spend tokens.
+- Reduce the scenario count.
+
 ## Boundary with the static validator suite
 
 | | Static validators (`tests/v2.5-validators/`) | E2E harness (`tests/e2e/`) |
