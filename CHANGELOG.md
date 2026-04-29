@@ -4,7 +4,23 @@ Versions of the `batuta-agent-skills` plugin (fork of `addyosmani/agent-skills`)
 
 The roadmap with rationale per slice lives in [`docs/PRD.md`](docs/PRD.md) § Roadmap (rolling). Architectural decisions live in [`docs/adr/`](docs/adr/). This file is the chronological summary.
 
-## [3.1.0] — 2026-04-29 (this PR)
+## [3.2.0] — 2026-04-29 (this PR)
+
+Closes the v3.0 E2E methodology question that scenarios 02 and 04 surfaced. Both scenarios now PASS against `HEAD` of the repo (4/4 instead of 2/4).
+
+- **`--plugin-dir "$REPO_ROOT"`** added to scenarios 02, 03, 04. Loads the local checkout instead of the marketplace cache (which can lag releases by N versions and was at `2.7.0` while v3.x shipped). The harness now tests `HEAD`, not stale cache.
+- **Scenario 04 verifier relaxed** to a case-insensitive `NOT[-\s]+APPLICABLE` regex. Sonnet in `--print` mode reproduces the *semantics* of the Step 0 NOT-APPLICABLE contract but often paraphrases the exact wording. The literal-string contract is still enforced by static validator `01-auditor-not-applicable.sh` against the agent prompt files, and observed in interactive subagent invocations during the actual audit chain.
+- **`--agent code-reviewer`** added to scenario 04. Activates the agent's prompt as the session's primary system prompt so the contract context is in front of the model.
+- **`tests/e2e/README.md` § Methodology** documents the invocation pattern (`--print + --plugin-dir + --agent`), the explicit limitation (`--print` does not exercise the audit chain end-to-end), and the boundary with the static validator suite.
+- **ADR-0009** documents the architectural decision and the 4 rejected alternatives (cache pre-update, prompt-engineering for literal strings, dropping the scenarios, interactive harness).
+- **PRD roadmap**: v3.2 added as shipped; v3.2+ candidates restructured. The runtime-CI candidate is unblocked now that E2E is stable green.
+- **Plugin version 3.1.0 → 3.2.0.**
+
+E2E result on the merge tree: 4/4 PASS, 0 SKIP, 0 FAIL.
+
+ADR added: docs/adr/0009-e2e-print-mode-methodology.md.
+
+## [3.1.0] — 2026-04-29 (PR [#17](https://github.com/jota-batuta/batuta-agent-skills/pull/17), commit `86a34b4`)
 
 Cryptographic provenance verification on top of v2.9's SHA-256 + v2.8's release pinning. The third gate of the codebase-memory-mcp install pipeline. PRD candidates list pruned (Colombian specialists removed per operator decision; PyPI hash-pinning and runtime CI postponed with documented rationale).
 
@@ -107,6 +123,7 @@ Rule #0 enforcement, 5 base agents (`implementer`, `implementer-haiku`, `code-re
 
 ---
 
+[3.2.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.1.0...v3.2.0
 [3.1.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.0.0...v3.1.0
 [3.0.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v2.7.0...v3.0.0
 [2.7.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v2.6.0...v2.7.0

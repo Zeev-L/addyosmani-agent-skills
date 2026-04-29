@@ -47,7 +47,10 @@ echo "# placeholder" > "$sandbox/src/__init__.py"
 prompt="List the names (just the names, comma-separated, lowercase) of any Batuta plugin skills you have access to that start with 'batuta-' or are named 'code-graph', 'research-first-dev', or 'notion-kb-workflow'. Output ONLY the comma-separated list, nothing else."
 
 cd "$sandbox" || exit 1
-out="$(timeout 60 claude --print --model sonnet "$prompt" 2>&1 || true)"
+# v3.2: --plugin-dir "$REPO_ROOT" forces the local checkout to load instead of
+# the marketplace-cached version (which can be stale; see tests/e2e/README.md
+# § Methodology — plugin loading in --print mode).
+out="$(timeout 60 claude --print --model sonnet --plugin-dir "$REPO_ROOT" "$prompt" 2>&1 || true)"
 cd - >/dev/null || true
 
 # Check that at least 2 of the expected skill names appear in the output.

@@ -46,7 +46,8 @@ EOF
 prompt="In src/api.py, add a FastAPI 'hello world' GET endpoint at /. Use the research-first-dev skill: include a # Source: citation comment above the FastAPI import line, with the URL of FastAPI's official docs and 'verified $(date +%Y-%m-%d), fastapi==0.115.0'. Write the file and tell me when done. Be brief in your final reply."
 
 cd "$sandbox" || exit 1
-out="$(timeout 180 claude --print --model sonnet "$prompt" 2>&1 || true)"
+# v3.2: --plugin-dir loads the local checkout (see tests/e2e/README.md).
+out="$(timeout 180 claude --print --model sonnet --plugin-dir "$REPO_ROOT" "$prompt" 2>&1 || true)"
 cd - >/dev/null || true
 
 if [[ ! -f "$sandbox/src/api.py" ]]; then
