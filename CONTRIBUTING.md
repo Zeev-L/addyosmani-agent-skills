@@ -7,11 +7,7 @@ Thanks for your interest in contributing! This project is a collection of produc
 1. Create a directory under `skills/` with a kebab-case name
 2. Add a `SKILL.md` following the format in [docs/skill-anatomy.md](docs/skill-anatomy.md)
 3. Include YAML frontmatter with `name` and `description` fields
-4. Write the `description` as one sentence stating what the skill does (third person), followed by `Use when` trigger conditions. Maximum 1024 characters. Example:
-
-   ```yaml
-   description: Drives development with tests. Use when implementing any logic, fixing any bug, or changing any behavior.
-   ```
+4. Ensure the `description` briefly says what the skill does (third person), then includes `Use when` trigger conditions
 
 ### Skill Quality Bar
 
@@ -24,12 +20,12 @@ Skills should be:
 
 ### Structure
 
-Every new skill **must** have:
+Every new skill must have:
 
 - `SKILL.md` in the skill directory
 - YAML frontmatter with valid `name` and `description`
 
-New skills **should** include these sections (recommended, not required):
+New skills should generally follow the standard anatomy:
 
 - **Overview** — What this skill does and why it matters
 - **When to Use** — Triggering conditions
