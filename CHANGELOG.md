@@ -4,7 +4,22 @@ Versions of the `batuta-agent-skills` plugin (fork of `addyosmani/agent-skills`)
 
 The roadmap with rationale per slice lives in [`docs/PRD.md`](docs/PRD.md) § Roadmap (rolling). Architectural decisions live in [`docs/adr/`](docs/adr/). This file is the chronological summary.
 
-## [3.5.0] — 2026-04-29 (this PR)
+## [3.6.0] — 2026-04-29 (this PR)
+
+`gh pr merge` blocking hook with operator-side env-var opt-in. Backstop for the "Claude never merges PRs" rule, installed preemptively after the v2.7 → v3.5 session showed 14 merge-as-exception authorizations — a drift surface that warranted a hook before it became routine.
+
+- **`hooks/pr-merge-guard.sh`** (new): blocks any tool call where `tool_name == "Bash"` and the command matches `gh\s+pr\s+merge` (whitespace-tolerant). Override via `BATUTA_ALLOW_PR_MERGE=1` set on the shell launching Claude — operator-side, not bypassable from inside an agent. Block message teaches the override; allow path logs to stderr for transcript audit.
+- **`hooks/hooks.json`**: registers `pr-merge-guard.sh` under matcher `Bash`. The existing `delegation-guard.sh` registration under matcher `Write|Edit|MultiEdit|NotebookEdit` is unchanged. Two hooks with separate concerns: file-path blocking vs command-pattern blocking.
+- **`tests/v2.5-validators/10-pr-merge-guard.sh`** (new): 10 static checks validating hook presence, regex shape, env-var support, fail-soft on missing jq, registration in `hooks.json`, educational block message, exit codes. Validator suite total: 10/10 cases.
+- **ADR-0010** (new): documents the env-var opt-in design and 5 rejected alternatives (sentinel file, chat authorization, slash command, pre-commit hook, `permissions.deny`).
+- **`docs/usage/upgrading.md`**: new section "When you need to authorize Claude to merge PRs" — points operators at the `BATUTA_ALLOW_PR_MERGE=1` flag with the rationale.
+- **Plugin version 3.5.0 → 3.6.0.**
+
+What this hook does NOT block: `gh pr view`, `gh pr list`, `gh pr review`, `gh pr checkout`, `gh pr diff`, `gh pr edit`, `gh pr create`, `git merge`, or any unrelated Bash command. Only `gh pr merge` matches.
+
+What it does NOT do: enforce the rule on operator-side `gh pr merge` outside Claude (out of tool-call surface); accept "merge authorized" in chat as override (input-not-instructions principle from ADR-0006); bypass for subagents (no auditor or specialist legitimately merges).
+
+## [3.5.0] — 2026-04-29 (PR [#25](https://github.com/jota-batuta/batuta-agent-skills/pull/25), commit `5e506c6`)
 
 Documentation refresh. The plugin shipped 8 release slices in one day (v2.7 through v3.4); the docs lagged. v3.5 catches up: the README + `docs/SPEC.md` + `docs/getting-started.md` now describe the v3.4 reality, and a new `docs/usage/` directory holds 4 operator-recipe guides for the most common workflows.
 
@@ -185,6 +200,7 @@ Rule #0 enforcement, 5 base agents (`implementer`, `implementer-haiku`, `code-re
 
 ---
 
+[3.6.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.5.0...v3.6.0
 [3.5.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.4.0...v3.5.0
 [3.4.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.3.0...v3.4.0
 [3.3.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.2.0...v3.3.0

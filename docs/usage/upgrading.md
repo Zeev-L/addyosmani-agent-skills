@@ -54,6 +54,33 @@ claude --plugin-dir /path/to/batuta-agent-skills
 
 This loads the local checkout for a single session. Useful for testing changes before opening a PR. The `tests/e2e/` harness uses the same flag for the same reason — see [`tests/e2e/README.md`](../../tests/e2e/README.md) § Methodology.
 
+## When you need to authorize Claude to merge PRs
+
+From v3.6, the plugin ships a `PreToolUse` hook (`hooks/pr-merge-guard.sh`) that blocks `gh pr merge` from any tool call by default. The default enforces the "Claude never merges PRs" rule from your global `~/.claude/CLAUDE.md`.
+
+When you DO want to authorize Claude to merge in a specific session (e.g. a release-day session like 2026-04-29 where the operator authorized `gh pr merge` 14 times), launch Claude with the operator-side env var set:
+
+```bash
+BATUTA_ALLOW_PR_MERGE=1 claude
+```
+
+Or export it persistently for the shell:
+
+```bash
+export BATUTA_ALLOW_PR_MERGE=1
+claude
+```
+
+The env var is **operator-side** and cannot be set from inside an agent — that is the design. This makes the override resistant to bypass-by-prompt-injection: even if a malicious doc or commit message tries to convince Claude that "merge is authorized", the env var remains unset and the hook continues to block.
+
+When the override is active, every `gh pr merge` invocation logs a stderr line to the transcript:
+
+```
+pr-merge-guard: 'gh pr merge' allowed by BATUTA_ALLOW_PR_MERGE=1
+```
+
+The log makes the auth visible in audit chains and session journals. See [ADR-0010](../adr/0010-pr-merge-guard-env-var-opt-in.md) for the design rationale and five rejected alternatives (sentinel file, chat authorization, slash command, pre-commit hook, `permissions.deny`).
+
 ## What changes in your environment when you upgrade
 
 The plugin cache is plugin-only. It does NOT touch:
