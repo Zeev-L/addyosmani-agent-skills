@@ -146,7 +146,7 @@ For a complete feature, the typical skill sequence is:
 8. code-review-and-quality     → Review before merge
 9. git-workflow-and-versioning → Clean commit history
 10. documentation-and-adrs       → Document decisions
-11. observability-and-monitoring → Instrument for production visibility
+11. observability-and-monitoring → Instrument for production visibility *(skip for libraries, CLIs, docs-only, config-only)*
 12. shipping-and-launch          → Deploy safely
 ```
 
