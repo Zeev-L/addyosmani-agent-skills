@@ -75,6 +75,23 @@ Body sections:
 | Tools list | Read-only by default. Write/Edit/Bash require a one-line justification in the Role section. |
 | Name collision | Must not collide with any existing agent in `agents/` or in any vendored skill. |
 
+### Step 5: Write the authoring marker (MANDATORY, last step)
+
+Once Steps 1–4 pass and **before** any `Write` to a new `agents/<name>.md`, run this exact command:
+
+```bash
+mkdir -p "${CLAUDE_PLUGIN_ROOT}/.claude" && \
+  touch "${CLAUDE_PLUGIN_ROOT}/.claude/.authoring-marker-agent-$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+```
+
+This drops a marker file consumed by the runtime hook `pre-write-agent-gate.sh`. Without a marker less than 60 minutes old, the hook blocks creation of any new agent file in the plugin repository — that is the enforcement gate from rule `rules/authoring/agent-authoring-required.md`.
+
+The marker file is gitignored. Re-running this command refreshes the timestamp.
+
+**Do not skip this step.** If you skip it, the next `Write` to a new `agents/<name>.md` will fail at the hook with `"Invocá batuta-agent-authoring primero. Marker faltante o expirado."`.
+
+For project-local specialists at `<project>/.claude/agents/<name>.md`: `agent-architect` writes the marker as part of its Phase 5 — you do NOT need to invoke `batuta-agent-authoring` separately.
+
 ## Anti-Rationalizations
 
 | Excuse | Reality |

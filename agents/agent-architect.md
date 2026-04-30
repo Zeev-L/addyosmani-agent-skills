@@ -89,6 +89,19 @@ Reject the file if any of these apply: single-use case (recommend `Task` to `imp
 
 ### Phase 5 — Materialize
 
+**Phase 5.0 — Write the authoring marker (MANDATORY, before file creation).**
+
+Before the `Write` that creates the specialist file, drop the runtime marker so the `pre-write-agent-gate.sh` hook permits the creation. Run from any working directory:
+
+```bash
+mkdir -p "${CLAUDE_PLUGIN_ROOT}/.claude" && \
+  touch "${CLAUDE_PLUGIN_ROOT}/.claude/.authoring-marker-agent-$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+```
+
+This is the documented exception in `rules/authoring/agent-authoring-required.md`: `agent-architect` is the runtime authoring gate for project-local specialists, and writing this marker is part of its workflow contract. Without the marker, the next `Write` to the agent file blocks at the hook.
+
+The marker satisfies the same gate that `batuta-agent-authoring` satisfies for plugin-shipped agents. There is no separate marker for project-local vs plugin-shipped — the same file at `${CLAUDE_PLUGIN_ROOT}/.claude/.authoring-marker-agent-<ISO>` covers both surfaces because the hook resolves the marker location from the plugin root.
+
 1. Path: `<project-root>/.claude/agents/<name>.md` by default (project-local). Promote to `~/.claude/agents/<name>.md` only on explicit request from the main agent.
 2. **File structure follows `batuta-agent-authoring`'s template** (frontmatter + Role / When to invoke / When NOT to invoke / Output format / Examples). On top of that template, every specialist this agent creates MUST also include:
    - A `## Domain knowledge` section with the 5–10 bullets synthesized in Phase 2
