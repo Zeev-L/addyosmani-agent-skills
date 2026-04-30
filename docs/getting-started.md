@@ -59,7 +59,7 @@ For comprehensive coverage, load skills by phase:
 Starting a project:  spec-driven-development → planning-and-task-breakdown
 During development:  incremental-implementation + test-driven-development
 Before merge:        code-review-and-quality + security-and-hardening
-Before deploy:       shipping-and-launch
+Before deploy:       observability-and-monitoring (skip for libraries/CLIs/docs), then shipping-and-launch
 ```
 
 ### Context-Aware Loading
