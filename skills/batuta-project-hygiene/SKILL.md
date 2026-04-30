@@ -285,6 +285,26 @@ Do NOT trigger:
 
    **Verification:** `test -L .claude/rules/research-first-citations.md` (a symlink exists) and `grep -q "@.claude/rules/" CLAUDE.md`.
 
+4c. **KB capture hook installation (auto-prompted, opt-out)** — for projects with a `.git/` directory (or after step 5 has run `git init`), prompt the operator: *"Install git post-commit hook to capture each commit into docs/sessions/ and mirror to the Obsidian vault? (Y/n)"*. Default Y. Skip on `n` or on pure-docs repos with no manifest markers.
+
+   **On Y:**
+   - Create `.claude/kb-config.json` with operator-provided `client` and `project` slugs (kebab-case, ≤ 41 chars). Default `vault_root` to `${VAULT_ROOT:-~/batuta-kb}` — the operator overrides via env or by editing the JSON afterward:
+     ```json
+     {
+       "enabled": true,
+       "client": "<detected-or-prompted>",
+       "project": "<detected-or-prompted>",
+       "vault_root": "<absolute-path-or-tilde>",
+       "session_slug_strategy": "branch-or-plan-or-daily"
+     }
+     ```
+   - Install the hook: copy `${CLAUDE_PLUGIN_ROOT}/hooks/post-commit-kb.sh` to `.git/hooks/post-commit`. If `.git/hooks/post-commit` already exists with non-Batuta content, append the line `bash "${CLAUDE_PLUGIN_ROOT}/hooks/post-commit-kb.sh"` instead of overwriting (preserve existing logic). On Windows (Git Bash), `chmod +x` the file.
+   - Append `.claude/kb-config.json` to `.gitignore` if it contains operator-machine-specific paths; otherwise commit it (operator's choice).
+
+   **On `n`:** skip silently. The operator can install later by re-running this skill or copying the hook manually.
+
+   **Verification:** `test -f .git/hooks/post-commit && grep -q "post-commit-kb" .git/hooks/post-commit && test -f .claude/kb-config.json`. After the next `git commit`, verify a new bullet appears in `docs/sessions/<today>-<slug>.md` and (if `vault_root` reachable) in `<vault_root>/clients/<client>/projects/<project>/sessions/<today>.md`.
+
 5. **GitHub boilerplate** (per user-level CLAUDE.md rule "New project = GitHub repo on day 0"):
    - If no `.git/` exists: `git init && git add CLAUDE.md && git commit -m "chore: initial project hygiene"`
    - If no remote: ask operator `"Crear repo GitHub <jota-batuta/<detected-name>>? (y/n)"`. On `y`: `gh repo create jota-batuta/<name> --private --source=. --remote=origin --push`.
@@ -315,6 +335,7 @@ Do NOT trigger:
    - Missing `docs/plans/active|archive/` or `docs/sessions/` → create directories with `.gitkeep`.
    - Missing `.claude/rules/` symlinks → run step 4a (Cross-tool bootstrap) for rules only (call `bash ~/.claude/plugins/marketplaces/batuta-agent-skills/tools/setup-rules.sh --all` if operator opts in). Note: `--all` also bootstraps the code-graph engines (graphify + codebase-memory-mcp) automatically, so the retrofit covers them too without a separate step.
    - Missing `## Engineering invariants` section in CLAUDE.md → append the section with the @ imports (per step 4b on project-init), preserving everything that's already in CLAUDE.md.
+   - Missing `.claude/kb-config.json` AND missing `.git/hooks/post-commit` containing `post-commit-kb` → run step 4c (KB capture hook). Repo must have `.git/` already (retrofit does not run `git init`). NEVER overwrite an existing `post-commit` hook — append the Batuta line instead.
 3. **Preserve everything that already exists.** This mode is purely additive. If the operator has customized any of the existing files, those customizations stay.
 4. **Report what was added vs preserved.** Output format:
    ```

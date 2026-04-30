@@ -1,9 +1,10 @@
 # ADR 0005 — Plan-mode persistence is a slash command, not a runtime hook
 
-**Status:** Accepted
+**Status:** Accepted (superseded in part by ADR-0011 — see scope split below)
 **Date:** 2026-04-27
 **Deciders:** jota-batuta
 **Supersedes:** none
+**Superseded in part by:** [ADR-0011](0011-automatic-persistence-and-curation.md) — scope split: 0005 remains authoritative for **plan-mode** persistence (`/save-plan` slash command). 0011 covers **session-journal** persistence at `git commit` time. The two ADRs cover different events with different semantics; 0005 is not fully obsolete.
 
 ## Context
 

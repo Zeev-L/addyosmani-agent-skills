@@ -22,6 +22,7 @@ cases=(
   "08-code-graph-helpers-behavior.sh"
   "09-audit-chain-graph-integration.sh"
   "10-pr-merge-guard.sh"
+  "11-post-commit-kb-shape.sh"
 )
 
 pass=0

@@ -4,3 +4,7 @@ node_modules/
 .env.*
 *.log
 .claude/.simplify-ignore-cache/
+.claude/.authoring-marker-*
+.claude/kb-debug.log
+.claude/settings.json
+.vscode/
