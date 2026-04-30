@@ -30,8 +30,9 @@ escape_glob() {
   printf '%s' "$s"
 }
 
-# Extract filter_file from the hook script (line 59 "filter_file()" to line 142 closing brace)
-eval "$(sed -n '/^filter_file()/,/^}/p' hooks/simplify-ignore.sh)"
+# Source the hook script to load filter_file and its helpers
+# shellcheck source=hooks/simplify-ignore.sh
+. hooks/simplify-ignore.sh
 
 assert_eq() {
   local label="$1" expected="$2" actual="$3"

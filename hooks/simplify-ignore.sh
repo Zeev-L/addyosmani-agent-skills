@@ -10,30 +10,14 @@
 # The real content (with model's changes applied) lives in the backup.
 #
 # Dependencies: jq, shasum or sha1sum (auto-detected)
+#
+# This file is safe to source: sourcing loads only the helper functions and
+# filter_file. Callers may export CACHE before sourcing to override the default.
 
 set -euo pipefail
 
-if ! command -v jq >/dev/null 2>&1; then
-  printf '%s\n' "error: missing jq" >&2; exit 1
-fi
-
-CACHE="${CLAUDE_PROJECT_DIR:-.}/.claude/.simplify-ignore-cache"
-if [ -t 0 ]; then INPUT="{}"; else INPUT=$(cat); fi
-
-# Parse hook input — trap errors explicitly so set -e doesn't cause
-# a silent exit on malformed JSON, and surface a useful diagnostic.
-parse_error=""
-TOOL_NAME=$(printf '%s' "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null) || {
-  parse_error="failed to parse .tool_name from hook input"
-  TOOL_NAME=""
-}
-FILE_PATH=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null) || {
-  parse_error="failed to parse .tool_input.file_path from hook input"
-  FILE_PATH=""
-}
-if [ -n "$parse_error" ]; then
-  printf 'Warning: %s (input: %.120s)\n' "$parse_error" "$INPUT" >&2
-fi
+# CACHE may be overridden by callers (e.g. tests) via an exported variable
+CACHE="${CACHE:-${CLAUDE_PROJECT_DIR:-.}/.claude/.simplify-ignore-cache}"
 
 hash_cmd() {
   if command -v shasum >/dev/null 2>&1; then shasum
@@ -140,6 +124,32 @@ ${line}"
 
   [ $count -gt 0 ] && return 0 || return 1
 }
+
+# ── Guard: sourcing this file loads only the functions above ──────────────────
+# jq dependency check and stdin reading are skipped when sourced.
+[ "${BASH_SOURCE[0]}" = "$0" ] || return 0
+
+# ── Hook execution (only when run directly) ───────────────────────────────────
+if ! command -v jq >/dev/null 2>&1; then
+  printf '%s\n' "error: missing jq" >&2; exit 1
+fi
+
+if [ -t 0 ]; then INPUT="{}"; else INPUT=$(cat); fi
+
+# Parse hook input — trap errors explicitly so set -e doesn't cause
+# a silent exit on malformed JSON, and surface a useful diagnostic.
+parse_error=""
+TOOL_NAME=$(printf '%s' "$INPUT" | jq -r '.tool_name // empty' 2>/dev/null) || {
+  parse_error="failed to parse .tool_name from hook input"
+  TOOL_NAME=""
+}
+FILE_PATH=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // empty' 2>/dev/null) || {
+  parse_error="failed to parse .tool_input.file_path from hook input"
+  FILE_PATH=""
+}
+if [ -n "$parse_error" ]; then
+  printf 'Warning: %s (input: %.120s)\n' "$parse_error" "$INPUT" >&2
+fi
 
 # ── Stop: restore all files from backup ───────────────────────────────────────
 if [ -z "$TOOL_NAME" ]; then
