@@ -43,12 +43,9 @@ Three reusable agent personas live in `agents/`. Load them when a skill calls fo
 
 **How to invoke a persona (harnesses with subagent support — Claude Code, Cursor, Copilot):**
 
-```
-You are the [persona name] (read agents/[persona-file].md for your full role and rules).
-[Task description]
-```
+Use the harness's subagent tooling with `subagent_type` set to the persona's `name` field (e.g. `code-reviewer`, `security-auditor`, `test-engineer`). This spawns an isolated context with the persona's frontmatter, output rules, and severity classifications applied. See `agents/README.md` for the full invocation pattern and composition decision matrix.
 
-**OpenCode fallback (no subagent primitive):** OpenCode's execution model is driven by the `skill` tool only — there is no mechanism to spawn a persona as a separate agent. In OpenCode, skip persona loading and run the underlying skill directly (`code-review-and-quality`, `security-and-hardening`, `test-driven-development`). The skill workflow provides the same structured output without a subagent harness.
+**OpenCode fallback (no subagent primitive):** OpenCode's execution model is driven by the `skill` tool only. In OpenCode, skip persona loading and invoke the underlying skill directly (`code-review-and-quality`, `security-and-hardening`, `test-driven-development`). The skill workflow runs without the persona's specialized report format and severity classifications — output structure will differ from persona-backed runs.
 
 Personas are not skills — they define *who the agent is* for a task, not *what process to follow*. Skills and personas are used together when the harness supports it.
 
