@@ -342,13 +342,7 @@ then verifies the test passes.
 
 This separation ensures the test is written without knowledge of the fix, making it more robust.
 
-**Use the `test-engineer` agent persona** for the subagent (available in the plugin's `agents/` directory when installed via the full plugin). It covers test strategy, the Prove-It pattern for bugs, the right level of test (unit/integration/E2E), scenario coverage (happy path, boundaries, error paths), and output format for coverage analysis.
-
-```
-Main agent: "You are the test-engineer agent (agents/test-engineer.md).
-Write a test that demonstrates this bug: [bug description].
-The test must FAIL with the current code. Do not look at the fix."
-```
+**Optional — use the `test-engineer` agent persona** for the subagent if you installed the full plugin (the persona lives in the plugin's `agents/` directory). It covers test strategy, the Prove-It pattern, test level selection, scenario coverage, and output format. If you installed only this skill, follow the Prove-It steps in the current context without a separate subagent.
 
 ## See Also
 

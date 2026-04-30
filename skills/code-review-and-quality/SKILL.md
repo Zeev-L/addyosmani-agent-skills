@@ -197,14 +197,7 @@ Human makes the final call
 
 This catches issues that a single model might miss — different models have different blind spots.
 
-**Use the `code-reviewer` agent persona** for the review model (available in the plugin's `agents/` directory when installed via the full plugin). It applies the five-axis framework (correctness, readability, architecture, security, performance) with structured output — Critical / Important / Suggestion — and rules for when to approve vs. request changes.
-
-**Example prompt for a review agent:**
-```
-You are the code-reviewer agent (agents/code-reviewer.md).
-Review this change for correctness, security, and adherence to
-our project conventions. The spec says [X]. The change should [Y].
-```
+**Optional — use the `code-reviewer` agent persona** for the review model if you installed the full plugin (the persona lives in the plugin's `agents/` directory). It applies the five-axis framework with structured Critical / Important / Suggestion output and approval rules. If you installed only this skill, apply the five-axis framework directly in the current context without a separate subagent.
 
 ## Dead Code Hygiene
 
