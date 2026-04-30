@@ -48,6 +48,18 @@ project=$(jq -r '.project // ""' "$config_file" 2>/dev/null)
 vault_root=$(jq -r '.vault_root // ""' "$config_file" 2>/dev/null)
 slug_strategy=$(jq -r '.session_slug_strategy // "branch-or-plan-or-daily"' "$config_file" 2>/dev/null)
 
+# Global vault override: ~/.claude/kb-vault.json is the machine-level source of truth.
+# If vault_root in the project config is empty, a shell template, or the default placeholder,
+# fall back to the global config. This prevents auto-provisioned projects from silently writing
+# to a non-existent path.
+global_vault_file="${HOME}/.claude/kb-vault.json"
+vault_root_is_template=false
+[[ "$vault_root" == *'${'* || "$vault_root" == "~/batuta-kb" || -z "$vault_root" ]] && vault_root_is_template=true
+if $vault_root_is_template && [[ -f "$global_vault_file" ]] && command -v jq >/dev/null 2>&1; then
+  global_vault=$(jq -r '.vault_root // ""' "$global_vault_file" 2>/dev/null)
+  [[ -n "$global_vault" ]] && vault_root="$global_vault"
+fi
+
 if [[ -z "$client" || -z "$project" ]]; then
   echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) WARN post-commit-kb: client or project empty in $config_file" >> "$debug_log" 2>/dev/null
   exit 0

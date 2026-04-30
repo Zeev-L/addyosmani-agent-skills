@@ -298,13 +298,18 @@ Do NOT trigger:
    - Infer `project` from: current directory name (basename of `$(pwd)`), kebab-cased.
    - **Ask the operator ONLY if** both inference paths produce `"default"` or ambiguous results (e.g. the directory is named `src` or `tmp`). Ask in one question: *"¿Client slug y project slug para el KB hook (ej: bato-cajas bato-cajas)?"*. Accept space-separated answer. Do NOT ask Y/n — proceed regardless.
 
-   - Create `.claude/kb-config.json` with inferred or operator-supplied `client` and `project` slugs (kebab-case, ≤ 41 chars). Default `vault_root` to `${VAULT_ROOT:-~/batuta-kb}` — the operator overrides via env or by editing the JSON afterward:
+   **Vault path resolution (in order, stop at first hit):**
+   1. Read `~/.claude/kb-vault.json` → `.vault_root` field. This is the machine-level source of truth, set once per machine.
+   2. If that file doesn't exist: ask the operator *"¿Dónde está tu vault de Obsidian? (ruta absoluta, ej: /e/Gdrive.../OBSIDIAN/BATUTA/BATUTA)"*. Save the answer to `~/.claude/kb-vault.json` so future projects never ask again.
+   3. Never write a shell template (`${VAULT_ROOT:-…}`) or tilde path into `kb-config.json` — the hook doesn't eval shell expressions.
+
+   - Create `.claude/kb-config.json` with the resolved vault path:
      ```json
      {
        "enabled": true,
        "client": "<detected-or-prompted>",
        "project": "<detected-or-prompted>",
-       "vault_root": "<absolute-path-or-tilde>",
+       "vault_root": "<absolute-path-from-global-config>",
        "session_slug_strategy": "branch-or-plan-or-daily"
      }
      ```
