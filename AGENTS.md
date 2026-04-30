@@ -24,9 +24,9 @@ The agent should automatically map user intent to skills:
 - Feature / new functionality → `spec-driven-development`, then `incremental-implementation`, `test-driven-development`
 - Planning / breakdown → `planning-and-task-breakdown`
 - Bug / failure / unexpected behavior → `debugging-and-error-recovery`
-- Code review → `code-review-and-quality` + load `agents/code-reviewer.md` persona for the review subagent
-- Security review / hardening → `security-and-hardening` + load `agents/security-auditor.md` persona
-- Test strategy / writing tests → `test-driven-development` + load `agents/test-engineer.md` persona for bug reproduction subagents
+- Code review → `code-review-and-quality` (+ `agents/code-reviewer.md` persona if harness supports subagents)
+- Security review / hardening → `security-and-hardening` (+ `agents/security-auditor.md` persona if harness supports subagents)
+- Test strategy / writing tests → `test-driven-development` (+ `agents/test-engineer.md` persona if harness supports subagents)
 - Refactoring / simplification → `code-simplification`
 - API or interface design → `api-and-interface-design`
 - UI work → `frontend-ui-engineering`
@@ -41,14 +41,16 @@ Three reusable agent personas live in `agents/`. Load them when a skill calls fo
 | Security Auditor | `agents/security-auditor.md` | Running security review via `security-and-hardening` |
 | Test Engineer | `agents/test-engineer.md` | Writing tests or reproducing bugs via `test-driven-development` |
 
-**How to invoke a persona:**
+**How to invoke a persona (harnesses with subagent support — Claude Code, Cursor, Copilot):**
 
 ```
 You are the [persona name] (read agents/[persona-file].md for your full role and rules).
 [Task description]
 ```
 
-Personas are not skills — they define *who the agent is* for a task, not *what process to follow*. Skills and personas are used together.
+**OpenCode fallback (no subagent primitive):** OpenCode's execution model is driven by the `skill` tool only — there is no mechanism to spawn a persona as a separate agent. In OpenCode, skip persona loading and run the underlying skill directly (`code-review-and-quality`, `security-and-hardening`, `test-driven-development`). The skill workflow provides the same structured output without a subagent harness.
+
+Personas are not skills — they define *who the agent is* for a task, not *what process to follow*. Skills and personas are used together when the harness supports it.
 
 ### Lifecycle Mapping (Implicit Commands)
 
@@ -60,7 +62,7 @@ Instead, the agent must internally follow this lifecycle:
 - PLAN → `planning-and-task-breakdown`
 - BUILD → `incremental-implementation` + `test-driven-development`
 - VERIFY → `debugging-and-error-recovery`
-- REVIEW → `code-review-and-quality` (+ `code-reviewer` persona)
+- REVIEW → `code-review-and-quality` (+ `code-reviewer` persona if subagents supported)
 - SHIP → `shipping-and-launch`
 
 ### Execution Model
