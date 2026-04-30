@@ -75,6 +75,21 @@ After writing-skills produces the draft, enforce these conventions before mergin
 | Verification | Must contain grep-able or command-runnable evidence, not "make sure X". |
 | Attribution | If derived from a vendored skill, add `Attribution:` line in frontmatter. |
 
+### Step 4: Write the authoring marker (MANDATORY, last step)
+
+Once Steps 1–3 pass and **before** any `Write` to a new `skills/<name>/SKILL.md`, run this exact command from any working directory:
+
+```bash
+mkdir -p "${CLAUDE_PLUGIN_ROOT}/.claude" && \
+  touch "${CLAUDE_PLUGIN_ROOT}/.claude/.authoring-marker-skill-$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+```
+
+This drops a marker file consumed by the runtime hook `pre-write-skill-gate.sh`. Without a marker less than 60 minutes old, the hook blocks creation of any new SKILL.md in the plugin repository — that is the enforcement gate from rule `rules/authoring/skill-authoring-required.md`.
+
+The marker file is gitignored (covered by `.claude/` patterns); it is operator-machine local. Re-running this command refreshes the timestamp.
+
+**Do not skip this step.** If you skip it, the next `Write` to a new SKILL.md will fail at the hook with `"Invocá batuta-skill-authoring primero. Marker faltante o expirado."` — and you will have wasted Steps 1–3 because the file did not get created.
+
 ## Anti-Rationalizations
 
 | Excuse | Reality |

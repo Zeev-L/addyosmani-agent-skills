@@ -48,9 +48,13 @@ Rationale: CLAUDE.md creation and feature scoping must not depend on the operato
 **MUST trigger** before adding any new SKILL.md to this plugin.
 Rationale: prevents skill sprawl. Forces `npx skills find` against skills.sh's 91k+ skills before authoring.
 
+**Enforcement (v3.8)**: this MUST is no longer exhortation — it is enforced at runtime by `hooks/pre-write-skill-gate.sh` (registered in `hooks/hooks.json` as `PreToolUse` for `Write`/`Edit` on `**/skills/**/SKILL.md`). The hook blocks the Write unless a marker file `.claude/.authoring-marker-skill-<ISO>` (less than 60 minutes old) is present, written by `batuta-skill-authoring` at the end of its workflow. Bypass: `BATUTA_SKILL_AUTHORING_BYPASS=1` (operator-side env var). Full rule: [`rules/authoring/skill-authoring-required.md`](rules/authoring/skill-authoring-required.md).
+
 ### batuta-agent-authoring
 **MUST trigger** before adding any new agent definition to `agents/`.
 Rationale: prevents agent overlap. Forces distinctness check against existing agents.
+
+**Enforcement (v3.8)**: enforced at runtime by `hooks/pre-write-agent-gate.sh` (registered in `hooks/hooks.json` as `PreToolUse` for `Write`/`Edit` on `**/agents/**.md`). The hook blocks the Write unless a marker file `.claude/.authoring-marker-agent-<ISO>` (less than 60 minutes old) is present, written either by `batuta-agent-authoring` (plugin-shipped agents) or by `agent-architect`'s Phase 5 (project-local specialists). Bypass: `BATUTA_AGENT_AUTHORING_BYPASS=1`. Full rule: [`rules/authoring/agent-authoring-required.md`](rules/authoring/agent-authoring-required.md).
 
 ### batuta-rule-authoring
 **MUST trigger** before adding any new file under `rules/`.
