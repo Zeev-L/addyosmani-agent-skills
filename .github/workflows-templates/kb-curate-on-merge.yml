@@ -1,0 +1,53 @@
+# kb-curate-on-merge.yml — TEMPLATE (not active in this repo)
+#
+# Copy this file to `<consumer-project>/.github/workflows/kb-curate-on-merge.yml`
+# in any project that adopts the v3.8 KB pipeline. The action does NOT invoke
+# Claude Code (that requires interactive auth); instead it labels the merged
+# PR with `kb-curate-pending` and notifies the operator. The operator then runs
+# `/kb-curate --feature <branch>` locally on the project.
+#
+# This is the documented compromise from ADR-0011 D2 — full automation would
+# need Claude Code in CI, which is not available as of 2026-04-29. Until then
+# the action is a notifier, not an executor.
+#
+# Source: https://docs.github.com/en/actions/writing-workflows/workflow-syntax-for-github-actions (verified 2026-04-29)
+
+name: kb-curate-on-merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main, master]
+
+jobs:
+  notify:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add kb-curate-pending label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branch = context.payload.pull_request.head.ref;
+            const prNumber = context.payload.pull_request.number;
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              labels: ['kb-curate-pending']
+            });
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+              body: `Merged. Operator: run \`/kb-curate --feature ${branch}\` locally to promote journal bullets to L2.`
+            });
+
+# Notes for adopters:
+# - Add the `kb-curate-pending` label to the repo first: `gh label create kb-curate-pending --color FBCA04`.
+# - The label lets the operator filter `gh pr list --label kb-curate-pending` to see what is waiting.
+# - When `/kb-curate --feature <branch>` completes locally, the operator removes the label manually:
+#   `gh pr edit <N> --remove-label kb-curate-pending`.
+#
+# Future enhancement: when Claude Code becomes available in CI, replace this notifier with a real
+# `claude --print` invocation that runs `/kb-curate --feature <branch>` non-interactively.

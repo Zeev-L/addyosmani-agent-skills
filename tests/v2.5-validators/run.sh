@@ -23,6 +23,8 @@ cases=(
   "09-audit-chain-graph-integration.sh"
   "10-pr-merge-guard.sh"
   "11-post-commit-kb-shape.sh"
+  "12-kb-curate-shape.sh"
+  "13-research-first-step-1-5.sh"
 )
 
 pass=0

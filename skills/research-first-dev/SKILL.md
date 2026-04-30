@@ -40,6 +40,38 @@ Before anything else, read the project's dependency manifest:
 
 Record the exact version string. If the project has no pinned version yet, state that in the citation as `version: unpinned`.
 
+### Step 1.5: Local KB lookup (added v3.8)
+
+Before going external, check whether the operator has already researched this library/API in a previous session. The operator's Obsidian vault at `${VAULT_ROOT}` (configured in `.claude/kb-config.json` or `~/batuta-kb` default) may contain a curated `decisions/`, `gotchas/`, or `playbooks/` entry that resolves the question without spending Context7 tokens or web requests.
+
+**Lookup order (priority L2 > L3 > L1)**:
+
+1. **L2 (curated, source-of-truth)** — `<vault_root>/decisions/`, `<vault_root>/gotchas/`, `<vault_root>/playbooks/`, `<vault_root>/clients/<this-client>/projects/<this-project>/{decisions,gotchas}/`. Grep for the library name + topic. Read frontmatter `last_verified`.
+2. **L3 (glossary)** — `<vault_root>/glossary/products/`, `<vault_root>/glossary/domains/`. Useful when the library is part of a product the operator integrates frequently (`Prophet`, `ICG`, `SAP`).
+3. **L1 (journals, fallback only)** — `<vault_root>/clients/<c>/projects/<p>/sessions/`. Hits here are uncurated raw captures — surface them with disclaimer "no curado, verificá" and **always proceed to Step 2 anyway**.
+
+**Staleness policy by `last_verified` age (L2 / L3 only)**:
+
+| Edad | Acción |
+|---|---|
+| < 4 meses | Hit local gana. Cite local source. **Skip Step 2.** |
+| 4–12 meses | Hit local is signal. **Run Step 2.** Cite both sources (dual cite). |
+| > 12 meses | Hit local solo informa contexto. Run Step 2. Cite only Step-2 source. **Update `last_verified` in the vault file as side-effect.** |
+
+**Always run Step 2** for: introducing a new library to the project, bumping a major version, anything `decision-new` per the `kb-curate` 7-category contract. Local hits cannot substitute Context7 for structural decisions.
+
+**If `vault_root` is unreachable** (Drive offline, no `kb-config.json`): skip Step 1.5 entirely. Proceed to Step 2.
+
+**Citation format for local hits** (one-line comment at the import site):
+
+```ts
+// Source: ~/batuta-kb/clients/bato-cajas/gotchas/prophet-tax-calc.md (verified 2026-03-15)
+// Cross-checked: https://prophet-docs.example.com/v8/tax (verified 2026-04-29, prophet@8.2.1)
+import { calcTax } from "@bato/prophet-adapter";
+```
+
+The presence of `Cross-checked:` indicates a 4–12-month dual cite. A bare `Source: ~/batuta-kb/...` line with no Cross-checked means a < 4-month local-only cite (per staleness policy).
+
 ### Step 2: Context7 lookup (primary)
 
 Follow `skills/_vendored/context7/SKILL.md`:
