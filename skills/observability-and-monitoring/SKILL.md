@@ -75,7 +75,7 @@ Logs are only useful if they're searchable and correlatable. Raw string logs are
 - Include a `trace_id` on every log line so you can reconstruct a request's path
 - Log at decision points, not every function call
 - Never log PII (passwords, tokens, credit card numbers, SSNs)
-- Log the inputs and outputs of external service calls (redacted where necessary)
+- Log **metadata only** for external service calls: endpoint name, status code, latency, retry count, and sanitized identifiers (e.g. order ID) — never request/response bodies, auth headers, or tokens. Enable body logging only through an explicit, narrowly scoped debug flag that is off by default
 
 ## Step 2: Metrics
 

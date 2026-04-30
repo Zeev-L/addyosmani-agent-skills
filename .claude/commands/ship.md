@@ -34,7 +34,7 @@ Once all three reports are back, the main agent (not a sub-persona) synthesizes 
 3. **Performance** — Pull from `code-reviewer`'s performance axis; cross-check Core Web Vitals if applicable.
 4. **Accessibility** — Verify keyboard nav, screen reader support, contrast (not covered by the three personas — handle directly here, or invoke the accessibility checklist).
 5. **Infrastructure** — Env vars, migrations, monitoring, feature flags. Verify directly.
-6. **Observability** — Invoke the `agent-skills:observability-and-monitoring` skill to verify structured logging, four golden signals metrics, SLOs, and alerting are in place.
+6. **Observability** *(N/A for libraries, CLIs, docs-only, and config-only changes)* — For changes that ship or modify a production service/runtime path: invoke the `agent-skills:observability-and-monitoring` skill to verify structured logging, four golden signals metrics, SLOs, and alerting are in place.
 7. **Documentation** — README, ADRs, changelog. Verify directly.
 
 ## Phase C — Decision and rollback

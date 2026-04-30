@@ -8,7 +8,7 @@ Use this checklist when instrumenting a service for production or auditing an ex
 - [ ] Every log line includes a `trace_id` or correlation identifier
 - [ ] Log levels are correct: `error` = needs human attention, `warn` = degraded but non-fatal, `info` = key business events, `debug` = disabled in production
 - [ ] No PII in logs (passwords, tokens, credit card numbers, SSNs, email addresses)
-- [ ] External service calls are logged with inputs (redacted where needed) and outcomes
+- [ ] External service calls are logged with **metadata only**: endpoint, status, latency, retry count, sanitized identifiers — no request/response bodies, no auth headers, no tokens
 - [ ] Log output has been reviewed — nothing that would expose internals to an attacker
 
 ## Metrics
