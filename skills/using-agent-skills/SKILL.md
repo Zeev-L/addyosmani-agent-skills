@@ -34,7 +34,7 @@ Task arrives
     ├── CI/CD pipeline work? ──────────→ ci-cd-and-automation
     ├── Writing docs/ADRs? ───────────→ documentation-and-adrs
     ├── Instrumenting a service / setting up monitoring? → observability-and-monitoring
-    └── Deploying/launching? ─────────→ shipping-and-launch
+    └── Deploying/launching? ─────────→ observability-and-monitoring (skip for libraries/CLIs/docs), then shipping-and-launch
 ```
 
 ## Core Operating Behaviors
