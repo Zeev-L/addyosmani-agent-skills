@@ -25,6 +25,7 @@ cases=(
   "11-post-commit-kb-shape.sh"
   "12-kb-curate-shape.sh"
   "13-research-first-step-1-5.sh"
+  "14-kb-backfill-shape.sh"
 )
 
 pass=0
