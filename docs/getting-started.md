@@ -62,6 +62,12 @@ Before merge:        code-review-and-quality + security-and-hardening
 Before deploy:       shipping-and-launch
 ```
 
+If uncertainty is high at project start, prepend discovery:
+
+```
+Discovery first:     design-sprint → spec-driven-development → planning-and-task-breakdown
+```
+
 ### Context-Aware Loading
 
 Don't load all skills at once — it wastes context. Load skills relevant to the current task:
@@ -101,7 +107,7 @@ Load an agent definition when you need specialized review. For example, ask your
 
 ## Using Commands
 
-The `.claude/commands/` directory contains slash commands for Claude Code:
+The `.claude/commands/` directory contains slash commands for Claude Code. These are convenience wrappers; skills remain the source of truth.
 
 | Command | Skill Invoked |
 |---------|---------------|
@@ -111,6 +117,9 @@ The `.claude/commands/` directory contains slash commands for Claude Code:
 | `/test` | test-driven-development |
 | `/review` | code-review-and-quality |
 | `/ship` | shipping-and-launch |
+| `/discover` *(planned)* | design-sprint |
+
+`/discover` (and optional alias `/sprint`) is planned as a future wrapper. Until it exists, invoke discovery in natural language and let intent mapping select `design-sprint`.
 
 ## Using References
 

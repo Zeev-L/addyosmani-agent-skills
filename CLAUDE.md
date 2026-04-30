@@ -15,6 +15,7 @@ docs/         → Setup guides for different tools
 
 ## Skills by Phase
 
+**Discover:** design-sprint
 **Define:** spec-driven-development
 **Plan:** planning-and-task-breakdown
 **Build:** incremental-implementation, test-driven-development, context-engineering, source-driven-development, frontend-ui-engineering, api-and-interface-design
@@ -35,6 +36,7 @@ docs/         → Setup guides for different tools
 
 - `npm test` — Not applicable (this is a documentation project)
 - Validate: Check that all SKILL.md files have valid YAML frontmatter with name and description
+- Planned wrapper (not implemented yet): `/discover` (optional alias `/sprint`) as a convenience entry point to `design-sprint`. Until then, rely on intent mapping in `AGENTS.md`.
 
 ## Boundaries
 
