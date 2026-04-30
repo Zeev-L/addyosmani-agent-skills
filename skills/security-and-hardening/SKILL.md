@@ -314,7 +314,7 @@ git diff --cached | grep -i "password\|secret\|api_key\|token"
 ```
 ## See Also
 
-- For a dedicated security review agent (threat modeling, severity classification, OWASP Top 10, exploitation scenarios), use the `security-auditor` persona from `agents/security-auditor.md` if available in your installation. Invoke it when a change touches auth, input handling, data storage, or third-party integrations.
+- For a dedicated security review agent (threat modeling, severity classification, OWASP Top 10, exploitation scenarios), use the `security-auditor` persona (available in the plugin's `agents/` directory when installed via the full plugin). Invoke it when a change touches auth, input handling, data storage, or third-party integrations.
 - For detailed security checklists and pre-commit verification steps, see `references/security-checklist.md`.
 
 ## Common Rationalizations

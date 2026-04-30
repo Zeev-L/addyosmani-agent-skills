@@ -43,7 +43,8 @@ Three reusable agent personas live in `agents/`. Load them when a skill calls fo
 
 **How to invoke a persona:**
 
-- **Claude Code / Cursor** — use subagent tooling with `subagent_type` set to the persona's `name` field (e.g. `code-reviewer`, `security-auditor`, `test-engineer`). This spawns an isolated context with the persona's frontmatter, output rules, and severity classifications applied. See `agents/README.md` for the full invocation pattern.
+- **Claude Code** — use subagent tooling with `subagent_type` set to the persona's `name` field (e.g. `code-reviewer`, `security-auditor`, `test-engineer`). This spawns an isolated context with the persona's frontmatter, output rules, and severity classifications applied. See `agents/README.md` for the full invocation pattern.
+- **Cursor** — load persona content via rules or notepads as documented in `docs/cursor-setup.md`, then instruct Cursor to apply that persona framework for review or testing tasks.
 - **Copilot** — place persona files in `.github/agents/` and reference them with `@code-reviewer` / `@security-auditor` / `@test-engineer` in prompts. See `docs/copilot-setup.md`.
 
 **OpenCode fallback (no subagent primitive):** OpenCode's execution model is driven by the `skill` tool only. In OpenCode, skip persona loading and invoke the underlying skill directly (`code-review-and-quality`, `security-and-hardening`, `test-driven-development`). The skill workflow runs without the persona's specialized report format and severity classifications — output structure will differ from persona-backed runs.

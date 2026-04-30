@@ -130,10 +130,10 @@ These are the subtle errors that look like productivity but create problems:
 
 4. **When in doubt, start with a spec.** If the task is non-trivial and there's no spec, begin with `spec-driven-development`.
 
-5. **Agent personas are available for specialized roles** (when the harness supports subagents and `agents/` is present). When a skill calls for a review or testing subagent and your harness supports it, load the matching persona:
-   - `agents/code-reviewer.md` — five-axis code review, invoked from `code-review-and-quality`
-   - `agents/security-auditor.md` — vulnerability detection, invoked from `security-and-hardening`
-   - `agents/test-engineer.md` — test strategy and bug reproduction, invoked from `test-driven-development`
+5. **Agent personas are available for specialized roles** (when the harness supports subagents and the plugin was installed in full — personas live in the plugin's `agents/` directory). When a skill calls for a review or testing subagent and your setup supports it, load the matching persona:
+   - `code-reviewer` — five-axis code review, invoked from `code-review-and-quality`
+   - `security-auditor` — vulnerability detection, invoked from `security-and-hardening`
+   - `test-engineer` — test strategy and bug reproduction, invoked from `test-driven-development`
    In harnesses without subagent support (e.g. OpenCode), run the underlying skill directly — skip persona loading.
 
 ## Lifecycle Sequence
