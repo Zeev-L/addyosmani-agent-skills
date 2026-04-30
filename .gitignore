@@ -8,3 +8,6 @@ node_modules/
 .claude/kb-debug.log
 .claude/settings.json
 .vscode/
+.claude/rules/
+.aider.conf.yml
+.claude/kb-config.json

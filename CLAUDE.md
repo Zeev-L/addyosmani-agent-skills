@@ -147,3 +147,11 @@ This is how today's session should have started. The `notion-kb-workflow` skill 
 ## Vendored Skills
 
 The `skills/_vendored/` directory contains upstream skills this fork depends on. They are copied with their original LICENSE files and must not be modified in this fork. See `ATTRIBUTION.md` for authors and licenses.
+
+---
+
+## Engineering invariants (imported from batuta-agent-skills)
+
+@.claude/rules/research-first-citations.md
+@.claude/rules/secrets-and-pii.md
+@.claude/rules/code-style.md
