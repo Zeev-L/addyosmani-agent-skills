@@ -41,9 +41,10 @@ Three reusable agent personas live in `agents/`. Load them when a skill calls fo
 | Security Auditor | `agents/security-auditor.md` | Running security review via `security-and-hardening` |
 | Test Engineer | `agents/test-engineer.md` | Writing tests or reproducing bugs via `test-driven-development` |
 
-**How to invoke a persona (harnesses with subagent support — Claude Code, Cursor, Copilot):**
+**How to invoke a persona:**
 
-Use the harness's subagent tooling with `subagent_type` set to the persona's `name` field (e.g. `code-reviewer`, `security-auditor`, `test-engineer`). This spawns an isolated context with the persona's frontmatter, output rules, and severity classifications applied. See `agents/README.md` for the full invocation pattern and composition decision matrix.
+- **Claude Code / Cursor** — use subagent tooling with `subagent_type` set to the persona's `name` field (e.g. `code-reviewer`, `security-auditor`, `test-engineer`). This spawns an isolated context with the persona's frontmatter, output rules, and severity classifications applied. See `agents/README.md` for the full invocation pattern.
+- **Copilot** — place persona files in `.github/agents/` and reference them with `@code-reviewer` / `@security-auditor` / `@test-engineer` in prompts. See `docs/copilot-setup.md`.
 
 **OpenCode fallback (no subagent primitive):** OpenCode's execution model is driven by the `skill` tool only. In OpenCode, skip persona loading and invoke the underlying skill directly (`code-review-and-quality`, `security-and-hardening`, `test-driven-development`). The skill workflow runs without the persona's specialized report format and severity classifications — output structure will differ from persona-backed runs.
 

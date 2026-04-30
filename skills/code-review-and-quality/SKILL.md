@@ -197,7 +197,7 @@ Human makes the final call
 
 This catches issues that a single model might miss — different models have different blind spots.
 
-**Use the `code-reviewer` agent persona** for the review model. It applies the five-axis framework (correctness, readability, architecture, security, performance) with structured output — Critical / Important / Suggestion — and rules for when to approve vs. request changes. Load it from `agents/code-reviewer.md`.
+**Use the `code-reviewer` agent persona** for the review model (if `agents/code-reviewer.md` is available in your installation). It applies the five-axis framework (correctness, readability, architecture, security, performance) with structured output — Critical / Important / Suggestion — and rules for when to approve vs. request changes.
 
 **Example prompt for a review agent:**
 ```
