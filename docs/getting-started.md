@@ -110,7 +110,7 @@ The `.claude/commands/` directory contains slash commands for Claude Code:
 | `/build` | incremental-implementation + test-driven-development |
 | `/test` | test-driven-development |
 | `/review` | code-review-and-quality |
-| `/ship` | shipping-and-launch |
+| `/ship` | observability-and-monitoring, then shipping-and-launch |
 
 ## Using References
 

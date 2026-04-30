@@ -127,7 +127,7 @@ These are the subtle errors that look like productivity but create problems:
 
 2. **Skills are workflows, not suggestions.** Follow the steps in order. Don't skip verification steps.
 
-3. **Multiple skills can apply.** A feature implementation might involve `idea-refine` → `spec-driven-development` → `planning-and-task-breakdown` → `incremental-implementation` → `test-driven-development` → `code-review-and-quality` → `shipping-and-launch` in sequence.
+3. **Multiple skills can apply.** A feature implementation might involve `idea-refine` → `spec-driven-development` → `planning-and-task-breakdown` → `incremental-implementation` → `test-driven-development` → `code-review-and-quality` → `observability-and-monitoring` → `shipping-and-launch` in sequence.
 
 4. **When in doubt, start with a spec.** If the task is non-trivial and there's no spec, begin with `spec-driven-development`.
 
