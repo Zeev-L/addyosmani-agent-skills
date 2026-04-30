@@ -56,8 +56,8 @@ done
 # graphify: PyPI version pin only — uv/pipx do not expose hash-pinning
 # ergonomically; we trust PyPI's TLS + signed-distribution chain. See ADR-0007
 # § Asymmetric trust posture for the rationale.
-# Source: https://pypi.org/project/graphifyy/0.5.4/ (verified 2026-04-29)
-GRAPHIFY_PIN="0.5.4"
+# Source: https://pypi.org/project/graphifyy/0.4.23/ (verified 2026-04-30, latest on PyPI)
+GRAPHIFY_PIN="0.4.23"
 
 # codebase-memory-mcp: full release-asset pin + SHA-256 verification against
 # the release's checksums.txt. The release tag below points at an immutable
@@ -135,8 +135,9 @@ install_graphify() {
   echo "[1/2] graphify (multimodal code knowledge graph, primary engine)"
 
   if have graphify && ! $UPGRADE; then
-    GRAPHIFY_VERSION="$(graphify --version 2>/dev/null | head -n1 | awk '{print $NF}')"
-    if [[ -n "$GRAPHIFY_VERSION" ]] && semver_ge "$GRAPHIFY_VERSION" "0.5.4"; then
+    # graphify CLI has no --version flag; use pip show as authoritative source.
+    GRAPHIFY_VERSION="$(pip show graphifyy 2>/dev/null | grep -i '^Version:' | awk '{print $2}')"
+    if [[ -n "$GRAPHIFY_VERSION" ]] && semver_ge "$GRAPHIFY_VERSION" "$GRAPHIFY_PIN"; then
       GRAPHIFY_STATUS="OK"
       log "✓ graphify $GRAPHIFY_VERSION already installed"
       return
