@@ -61,7 +61,7 @@ Slice 4: Delete a task (delete + API + UI + confirmation)
     → Tests pass, full CRUD complete
 ```
 
-Each slice delivers working end-to-end functionality. When defining a slice, also define what you'll measure: which log lines, metrics, or trace spans will confirm it's working correctly in production. See `observability-and-monitoring` for the instrumentation workflow.
+Each slice delivers working end-to-end functionality. For slices that ship to a production runtime path, also define what you'll measure: which log lines, metrics, or trace spans will confirm it's working correctly in production. See `observability-and-monitoring` for the instrumentation workflow.
 
 ### Contract-First Slicing
 
