@@ -78,6 +78,15 @@ Do NOT trigger:
 - If `CLAUDE.md` already exists, even if empty — respect the operator's choice.
 - Inside `node_modules/`, `.git/`, `target/`, `dist/`, `vendor/`, or other generated directories.
 
+### Mode `project-retrofit` (auto-trigger at session start)
+
+Auto-trigger when **all** of these are true:
+
+- `./CLAUDE.md` EXISTS, AND
+- ANY of the following is missing: `docs/PRD.md`, `docs/SPEC.md`, `docs/plans/active/`, `docs/sessions/`, `.claude/kb-config.json`.
+
+Run silently — no announcement, no confirmation. Just add what is missing and report a one-line summary at the end. This prevents every session start from requiring a manual hygiene invocation on projects that have CLAUDE.md but were bootstrapped against an older plugin version.
+
 ### Mode `feature-init`
 
 Auto-trigger when the operator describes a new feature with phrases like:
@@ -211,7 +220,7 @@ Do NOT trigger:
    Negative: …
    ```
 
-4a. **Cross-tool bootstrap (auto-prompted, opt-out)** — for projects with a manifest (`package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`), prompt the operator: *"Bootstrap cross-tool files (AGENTS.md + .aider.conf.yml) so a future tool switch survives without losing the doc graph? (Y/n)"*. Default Y. Skip on `n` or on pure-docs repos with no manifest markers.
+4a. **Cross-tool bootstrap (auto-apply, no prompt)** — for projects with a manifest (`package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`), create these files automatically. Skip only on pure-docs repos with no manifest markers. Do NOT ask the operator — just proceed.
 
    **Skip each file if it already exists (idempotent).**
 
@@ -258,9 +267,8 @@ Do NOT trigger:
 
    **Do NOT create** `.cursor/rules/`, `GEMINI.md`, or `.windsurfrules` — the operator opts into those per-tool. `AGENTS.md` and `.aider.conf.yml` are the only auto-bootstrapped cross-tool files.
 
-4b. **Engineering invariants bootstrap (auto-prompted, opt-out)** — for projects with a manifest (`package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`), prompt the operator: *"Bootstrap engineering invariants from batuta-agent-skills (research-first, secrets-and-pii, code-style)? (Y/n)"*. Default Y. Skip on `n` or on pure-docs repos with no manifest markers.
+4b. **Engineering invariants bootstrap (auto-apply, no prompt)** — for projects with a manifest (`package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`), run the following automatically. Skip only on pure-docs repos with no manifest markers. Do NOT ask the operator.
 
-   **On Y:**
    - Run `bash ~/.claude/plugins/marketplaces/batuta-agent-skills/tools/setup-rules.sh --all` (deterministic path matching the install layout enforced by the plugin's own setup script; do not introduce a `find`-based lookup here). This script also chains into `setup-code-graph.sh` to install the dual code-graph engines (graphify + codebase-memory-mcp); a non-zero exit from the chain is reported but does NOT abort hygiene — the project still completes init/retrofit even if engines are unavailable on this OS.
    - Append to project's `CLAUDE.md` immediately after the section header `## Mandatory Skills for Batuta Projects` block, a new section:
 
@@ -281,14 +289,16 @@ Do NOT trigger:
      ```
      (Creates the file if missing; ensures a newline before append if existing file lacks one; never duplicates the entry on re-runs.) Symlinks are per-machine.
 
-   **On `n`:** skip silently. Operator can run `bash <plugin>/tools/setup-rules.sh --all` later if they change their mind.
-
    **Verification:** `test -L .claude/rules/research-first-citations.md` (a symlink exists) and `grep -q "@.claude/rules/" CLAUDE.md`.
 
-4c. **KB capture hook installation (auto-prompted, opt-out)** — for projects with a `.git/` directory (or after step 5 has run `git init`), prompt the operator: *"Install git post-commit hook to capture each commit into docs/sessions/ and mirror to the Obsidian vault? (Y/n)"*. Default Y. Skip on `n` or on pure-docs repos with no manifest markers.
+4c. **KB capture hook installation (auto-apply, no prompt)** — for projects with a `.git/` directory (or after step 5 has run `git init`), install the hook automatically. Skip only on pure-docs repos with no manifest markers.
 
-   **On Y:**
-   - Create `.claude/kb-config.json` with operator-provided `client` and `project` slugs (kebab-case, ≤ 41 chars). Default `vault_root` to `${VAULT_ROOT:-~/batuta-kb}` — the operator overrides via env or by editing the JSON afterward:
+   **Slug inference (run before creating `.claude/kb-config.json`):**
+   - Infer `client` from: `git remote get-url origin` → extract the GitHub org (e.g. `jota-batuta/bato-cajas` → `jota-batuta`), OR fall back to the parent directory name, OR fall back to `"default"`.
+   - Infer `project` from: current directory name (basename of `$(pwd)`), kebab-cased.
+   - **Ask the operator ONLY if** both inference paths produce `"default"` or ambiguous results (e.g. the directory is named `src` or `tmp`). Ask in one question: *"¿Client slug y project slug para el KB hook (ej: bato-cajas bato-cajas)?"*. Accept space-separated answer. Do NOT ask Y/n — proceed regardless.
+
+   - Create `.claude/kb-config.json` with inferred or operator-supplied `client` and `project` slugs (kebab-case, ≤ 41 chars). Default `vault_root` to `${VAULT_ROOT:-~/batuta-kb}` — the operator overrides via env or by editing the JSON afterward:
      ```json
      {
        "enabled": true,
@@ -298,10 +308,8 @@ Do NOT trigger:
        "session_slug_strategy": "branch-or-plan-or-daily"
      }
      ```
-   - Install the hook: copy `${CLAUDE_PLUGIN_ROOT}/hooks/post-commit-kb.sh` to `.git/hooks/post-commit`. If `.git/hooks/post-commit` already exists with non-Batuta content, append the line `bash "${CLAUDE_PLUGIN_ROOT}/hooks/post-commit-kb.sh"` instead of overwriting (preserve existing logic). On Windows (Git Bash), `chmod +x` the file.
-   - Append `.claude/kb-config.json` to `.gitignore` if it contains operator-machine-specific paths; otherwise commit it (operator's choice).
-
-   **On `n`:** skip silently. The operator can install later by re-running this skill or copying the hook manually.
+   - Install the hook: copy `~/.claude/plugins/marketplaces/batuta-agent-skills/hooks/post-commit-kb.sh` to `.git/hooks/post-commit`. If `.git/hooks/post-commit` already exists with non-Batuta content, append the line `bash "${CLAUDE_PLUGIN_ROOT}/hooks/post-commit-kb.sh"` instead of overwriting (preserve existing logic). On Windows (Git Bash), `chmod +x` the file.
+   - Append `.claude/kb-config.json` to `.gitignore` (contains machine-specific vault path; not committed by default).
 
    **Verification:** `test -f .git/hooks/post-commit && grep -q "post-commit-kb" .git/hooks/post-commit && test -f .claude/kb-config.json`. After the next `git commit`, verify a new bullet appears in `docs/sessions/<today>-<slug>.md` and (if `vault_root` reachable) in `<vault_root>/clients/<client>/projects/<project>/sessions/<today>.md`.
 
