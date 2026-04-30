@@ -1,6 +1,6 @@
 # ADR 0010 — `gh pr merge` blocking hook with operator-side env-var opt-in
 
-**Status:** Accepted
+**Status:** Accepted (amended 2026-04-29 with v3.7 self-disable closure + eval-bypass acknowledgment)
 **Date:** 2026-04-29
 **Deciders:** jota-batuta
 
@@ -102,6 +102,46 @@ When `BATUTA_ALLOW_PR_MERGE=1` is set in the shell environment that launched Cla
 - **No `gh release create` or `gh repo delete` blocking.** Those are separate rules with separate threat models. Add them in future slices if drift is observed.
 - **No alerting beyond stderr.** The hook is silent on success and verbose on block. No telemetry, no Slack webhook, no email. The operator notices via the block message during routine work; the audit chain on every PR is the systemic check.
 - **No automatic logging of every bypass to a persistent file.** The transcript itself is the log; if the operator needs forensics, they grep the transcript.
+
+## Update 2026-04-29 — v3.7 closure: self-disable surface + eval-bypass acknowledgment
+
+The v3.6 GATE 3 audit identified two findings that were not addressed before merge (the operator authorized "aprovved" while the async sub-agent was still running). v3.7 closes the HIGH and acknowledges the MEDIUM as a known limitation.
+
+### HIGH (closed in v3.7)
+
+`hooks/pr-merge-guard.sh` was NOT in `delegation-guard.sh`'s kill-switch list when v3.6 shipped. The kill-switch enumerated `hooks/delegation-guard.sh` specifically; `pr-merge-guard.sh` (and any future hook) was unprotected. The main agent could `Edit hooks/pr-merge-guard.sh` to disable the new hook before invoking `gh pr merge` — a self-disable surface that contradicts the slice's own design intent.
+
+**Fix in v3.7**: extended the kill-switch case statement in `hooks/delegation-guard.sh` from `hooks/delegation-guard.sh` (specific) to `hooks/*.sh` (broadened). All current and future hook scripts in `hooks/` are now kill-switched against main-agent edits. Validator 06 updated to enforce the broader pattern.
+
+### MEDIUM acknowledged (not closed — known limitation)
+
+The `gh\s+pr\s+merge` regex performs literal substring matching on the outer command string. It does NOT lex sub-shells, expand variables, or follow indirection. Therefore the following inputs **slip past the hook**:
+
+| Input | Why it slips |
+|---|---|
+| `eval "gh pr merge"` | The literal string IS in the command — but quoting can be stripped/varied |
+| `bash -c "gh pr merge"` | Same indirection through a sub-shell flag |
+| `sh -c gh\\ pr\\ merge` | Backslash-escaped whitespace breaks the regex |
+| `x="gh pr merge"; eval $x` | Variable expansion happens at shell runtime, after hook |
+| `GH=gh; $GH pr merge` | Same |
+
+**Why this is acceptable as a known limitation**:
+
+1. The threat model for this hook is **drift backstop, not active adversary**. ADR-0010 § Context: "the rule has no observed runtime violations to date; this hook exists as a backstop against drift." An agent obfuscating its own merge call to evade the hook is a security-relevant adversary, not a drift case.
+2. **Obfuscation is highly visible in transcripts.** A `gh pr merge` in plain text is one thing; an `eval $cmd` where `$cmd` resolves to a merge command is a glaring red flag the operator catches in normal PR review.
+3. **The operator's PR review on every change is the systemic backstop**, not the hook. The hook is one of multiple defenses; bypass via shell indirection still leaves the operator's review intact.
+4. Closing this MEDIUM would require parsing every Bash command through a real shell lexer (e.g. `bash -n` + AST), which is out of scope for a backstop hook and introduces its own attack surface.
+
+If future evidence shows obfuscated bypass actually happens (rather than this being a theoretical concern), revisit with a Bash-AST-aware lexer or a `permissions.deny` rule at the Claude Code level.
+
+### LOW noted (not closed — design choice)
+
+The block message echoes `Command attempted: ${command}` to stderr → transcript. If an operator pastes a command containing a token (e.g. hypothetically `gh pr merge --some-secret-flag ghp_xxx`), the token would surface in the transcript. Two reasons this is acceptable:
+
+1. `gh` reads tokens from `GH_TOKEN` env or `gh auth login`, NOT from CLI flags. There is no realistic command shape where a token sits in the literal command string.
+2. The transcript echo aids debugging — the operator (and audit chain) can see *what* was blocked, which speeds resolution.
+
+If a future tool adds token-in-flag patterns, add a redaction regex (`s/ghp_[A-Za-z0-9]+/ghp_REDACTED/`) to the echo. Not done preemptively.
 
 ## Verification
 

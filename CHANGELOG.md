@@ -4,7 +4,23 @@ Versions of the `batuta-agent-skills` plugin (fork of `addyosmani/agent-skills`)
 
 The roadmap with rationale per slice lives in [`docs/PRD.md`](docs/PRD.md) § Roadmap (rolling). Architectural decisions live in [`docs/adr/`](docs/adr/). This file is the chronological summary.
 
-## [3.6.0] — 2026-04-29 (this PR)
+## [3.7.0] — 2026-04-29 (this PR)
+
+Closes the v3.6 GATE 3 HIGH finding that landed AFTER the v3.6 merge (the async sub-agent returned its verdict post-merge). Single-line fix in `hooks/delegation-guard.sh` plus a substantial ADR-0010 amendment that documents why two related-but-different findings (MEDIUM eval-bypass, LOW token-echo) are acknowledged as known limitations rather than closed.
+
+- **`hooks/delegation-guard.sh`** — kill-switch case statement broadened from `hooks/delegation-guard.sh` (specific) to `hooks/*.sh` (any hook script). The narrow form left `hooks/pr-merge-guard.sh` (added in v3.6) unprotected against main-agent edits — a self-disable surface that contradicted the v3.6 slice's own design intent. The broadened form covers all current hooks and any future hook scripts in `hooks/`.
+- **`tests/v2.5-validators/06-delegation-guard-killswitch.sh`** — updated to enforce the new `hooks/*.sh` pattern instead of the narrow `hooks/delegation-guard.sh`. Comment explains the v3.6 GATE 3 HIGH origin so future maintainers don't narrow it back.
+- **`docs/adr/0010-pr-merge-guard-env-var-opt-in.md`** — amended (3rd amendment to an ADR-0007/0010 chain in this session). New section "Update 2026-04-29 — v3.7 closure" documents:
+  - The HIGH closure (broadened kill-switch).
+  - The MEDIUM acknowledgment (regex bypass via `eval`, `bash -c`, variable indirection) with explicit threat-model rationale: hook is a "drift backstop, not active adversary"; obfuscation is highly visible in transcripts; closing would require Bash-AST lexing out of scope for a backstop hook.
+  - The LOW note on `Command attempted: ${command}` echo — `gh` doesn't accept tokens via CLI flags, so realistic exposure is narrow; redaction regex deferred until a real risk surface appears.
+- **Plugin version 3.6.0 → 3.7.0.**
+
+This slice is hook-and-validator-only — no skills, agents, rules, or runtime code touched. 10/10 validators PASS on the resulting tree.
+
+**Lessons learned (from the v3.6 sequencing)**: do not merge while the async audit chain is still running, even when the operator has authorized "aprovved" verbally. The verbal approval is conditional on the async returning APPROVED. If the operator wants to fast-merge during async, document that as "pending GATE 3" in the merge commit message and prepare a fix-up branch immediately.
+
+## [3.6.0] — 2026-04-29 (PR [#27](https://github.com/jota-batuta/batuta-agent-skills/pull/27), commit `352567b`)
 
 `gh pr merge` blocking hook with operator-side env-var opt-in. Backstop for the "Claude never merges PRs" rule, installed preemptively after the v2.7 → v3.5 session showed 14 merge-as-exception authorizations — a drift surface that warranted a hook before it became routine.
 
@@ -200,6 +216,7 @@ Rule #0 enforcement, 5 base agents (`implementer`, `implementer-haiku`, `code-re
 
 ---
 
+[3.7.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.6.0...v3.7.0
 [3.6.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.5.0...v3.6.0
 [3.5.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.4.0...v3.5.0
 [3.4.0]: https://github.com/jota-batuta/batuta-agent-skills/compare/v3.3.0...v3.4.0

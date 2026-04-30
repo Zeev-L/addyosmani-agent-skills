@@ -90,7 +90,7 @@ case "$file_path" in
   */.claude/settings*.json|.claude/settings*.json|\
   */.claude/hooks/*|.claude/hooks/*|\
   */hooks/*.json|hooks/*.json|\
-  */hooks/delegation-guard.sh|hooks/delegation-guard.sh|\
+  */hooks/*.sh|hooks/*.sh|\
   */.claude/agents/*|.claude/agents/*|\
   */.env|.env|\
   */.env.*|.env.*|\

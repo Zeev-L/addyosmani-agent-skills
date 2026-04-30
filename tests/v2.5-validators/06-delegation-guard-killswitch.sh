@@ -45,7 +45,11 @@ check_absent() {
 check_present '\.claude/settings\*\.json|settings\*\.json' "kill-switch: .claude/settings*.json"
 check_present '\.claude/hooks/\*|\.claude/hooks/' "kill-switch: .claude/hooks/*"
 check_present 'hooks/\*\.json' "kill-switch: hooks/*.json (plugin hook manifest)"
-check_present 'hooks/delegation-guard\.sh' "kill-switch: hooks/delegation-guard.sh (the hook itself)"
+# v3.7+: broadened from /hooks/delegation-guard.sh specifically to /hooks/*.sh
+# so any hook script (current pr-merge-guard.sh + future hooks) is kill-switched.
+# The narrow form was a v3.6 GATE 3 HIGH finding — pr-merge-guard.sh was added
+# without extending the kill-switch, leaving a self-disable surface.
+check_present 'hooks/\*\.sh' "kill-switch: hooks/*.sh (any hook script, broadened in v3.7)"
 check_present '\.claude/agents/\*|\.claude/agents/' "kill-switch: .claude/agents/*"
 check_present '\.env\b|/\.env\b' "kill-switch: .env"
 check_present '\.envrc|\.envrc' "kill-switch: .envrc"
