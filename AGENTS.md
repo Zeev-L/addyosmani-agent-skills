@@ -28,6 +28,7 @@ The agent should automatically map user intent to skills:
 - Refactoring / simplification → `code-simplification`
 - API or interface design → `api-and-interface-design`
 - UI work → `frontend-ui-engineering`
+- Production visibility / logging / alerting → `observability-and-monitoring`
 
 ### Lifecycle Mapping (Implicit Commands)
 
@@ -40,7 +41,7 @@ Instead, the agent must internally follow this lifecycle:
 - BUILD → `incremental-implementation` + `test-driven-development`
 - VERIFY → `debugging-and-error-recovery`
 - REVIEW → `code-review-and-quality`
-- SHIP → `shipping-and-launch`
+- SHIP → `observability-and-monitoring`, then `shipping-and-launch`
 
 ### Execution Model
 
