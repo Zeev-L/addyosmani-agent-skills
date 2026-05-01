@@ -293,15 +293,58 @@ Do NOT trigger:
 
 4c. **KB capture hook installation (auto-apply, no prompt)** — for projects with a `.git/` directory (or after step 5 has run `git init`), install the hook automatically. Skip only on pure-docs repos with no manifest markers.
 
-   **Slug inference (run before creating `.claude/kb-config.json`):**
-   - Infer `client` from: `git remote get-url origin` → extract the GitHub org (e.g. `jota-batuta/bato-cajas` → `jota-batuta`), OR fall back to the parent directory name, OR fall back to `"default"`.
-   - Infer `project` from: current directory name (basename of `$(pwd)`), kebab-cased.
-   - **Ask the operator ONLY if** both inference paths produce `"default"` or ambiguous results (e.g. the directory is named `src` or `tmp`). Ask in one question: *"¿Client slug y project slug para el KB hook (ej: bato-cajas bato-cajas)?"*. Accept space-separated answer. Do NOT ask Y/n — proceed regardless.
-
-   **Vault path resolution (in order, stop at first hit):**
+   **Vault path resolution (run FIRST — needed by client discovery below):**
    1. Read `~/.claude/kb-vault.json` → `.vault_root` field. This is the machine-level source of truth, set once per machine.
    2. If that file doesn't exist: ask the operator *"¿Dónde está tu vault de Obsidian? (ruta absoluta, ej: /e/Gdrive.../OBSIDIAN/BATUTA/BATUTA)"*. Save the answer to `~/.claude/kb-vault.json` so future projects never ask again.
    3. Never write a shell template (`${VAULT_ROOT:-…}`) or tilde path into `kb-config.json` — the hook doesn't eval shell expressions.
+
+   **Client discovery (vault scan — runs BEFORE asking for client slug):**
+   - List `<vault_root>/clients/*/` directories. For each, read `_metadata.md` frontmatter to extract `name` (full client name) and `industry`.
+   - Build a numbered menu:
+     ```
+     Detecté estos clientes en tu vault:
+       1. jota-batuta — Batuta self
+       2. kiosco — El Kiosco Golosinas SAS (Alimentos/Distribución)
+       3. kiro — Kiro Group
+       N. <cliente nuevo>
+
+     ¿A cuál pertenece este proyecto? (número o slug nuevo)
+     ```
+   - If operator picks an existing client by number or slug → use that as `client`. Skip the slug inference below.
+   - If operator types a new slug or `N`, follow up:
+     ```
+     Cliente nuevo. Decime:
+       - Nombre completo (ej: Grupo Empresarial Chesco):
+       - Industria (ej: Conglomerado / Manufactura / Servicios):
+       - País (ej: Colombia):
+       - Slug definitivo (kebab-case, ej: chesco):
+     ```
+     Then create `<vault_root>/clients/<slug>/_metadata.md` with frontmatter:
+     ```yaml
+     ---
+     type: client
+     name: <full name>
+     slug: <slug>
+     status: active
+     industry: <industry>
+     country: <country>
+     created_at: <YYYY-MM-DD>
+     last_verified: <YYYY-MM-DD>
+     tags: [client/<slug>]
+     ---
+     ```
+     plus a one-line body describing the engagement context.
+   - **Skip the menu** if `vault_root` is unreachable (offline machine, Drive not synced) — fall back to slug inference below and log a warning to `.claude/kb-debug.log`.
+   - **Read-only vault fallback**: when the vault is reachable for reads but a write fails (Drive sync conflict, permission error, Drive quota), do NOT abort. Log `WARN hygiene: vault read-only — created kb-config.json with client=$slug but did NOT create vault entry` and proceed. The next successful run with a writable vault will create the missing folders idempotently.
+
+   **Slug inference (fallback when client was not picked from the vault menu, or vault was unreachable):**
+   - Infer `client` from: `git remote get-url origin` → extract the GitHub org (e.g. `jota-batuta/bato-cajas` → `jota-batuta`), OR fall back to the parent directory name, OR fall back to `"default"`.
+   - Infer `project` from: current directory name (basename of `$(pwd)`), kebab-cased. (Always inferred this way, regardless of how `client` was resolved.)
+   - **Ask the operator ONLY if** both inference paths produce `"default"` or ambiguous results (e.g. the directory is named `src` or `tmp`). Ask in one question: *"¿Client slug y project slug para el KB hook (ej: bato-cajas bato-cajas)?"*. Accept space-separated answer. Do NOT ask Y/n — proceed regardless.
+
+   **Project folder bootstrap in vault (after client + project are resolved):**
+   - Create `<vault_root>/clients/<client>/projects/<project>/` with subfolders `sessions/`, `sprints/`, `decisions/`, `gotchas/`, `tasks/`. Idempotent: skip if folder exists.
+   - Drop a placeholder `<vault_root>/clients/<client>/projects/<project>/_status.md` if missing — a one-line stub the operator fleshes out later (or the kb-pipeline agent populates).
 
    - Create `.claude/kb-config.json` with the resolved vault path:
      ```json
