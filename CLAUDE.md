@@ -78,13 +78,18 @@ Política: multimodal habilitado por default cuando graphify está activo — pr
 
 Rationale: re-leer el repo cada vez que aparece una pregunta de arquitectura quema tokens y produce respuestas peores que un grafo persistido. Dual engine porque graphify tiene 3 issues bloqueantes en Windows ([safishamsi/graphify#378](https://github.com/safishamsi/graphify/issues/378), [#244](https://github.com/safishamsi/graphify/issues/244), [#501](https://github.com/safishamsi/graphify/issues/501)) y bus factor 1; codebase-memory-mcp es estable en Win11 pero no procesa docs/imágenes.
 
-### notion-kb-workflow
-**MUST trigger** at three session boundaries:
-- `--read` at the start of a session on an existing project
-- `--init` at the start of a new project not yet represented in Notion
-- `--append` at the end of a productive session (commits made or decisions taken)
+### kb-pipeline (per-commit dispatch)
+**Auto-invoked** by `hooks/post-commit-kb.sh` when `.claude/kb-config.json` has `kb_pipeline_enabled: true`. The hook dispatches the agent in a detached background process via `nohup timeout 120 claude --print ... & disown` so the commit returns immediately. The agent runs three internal phases — Capture / Curate / Write — against the commit diff and writes to the vault (`<vault>/decisions/`, `gotchas/`, `playbooks/`) or `<vault>/_inbox/` for items that fail curation.
 
-Rationale: the context window is not memory. Notion is.
+Rationale: per ADR-0012, a single agent with three phases eliminates the failure modes of the three-agent design (queue-file races, inter-agent token cost). Distinct from `kb-curator` (batch L1→L2 classifier, manual `/kb-curate`) and `kb-backfiller` (one-shot historical extraction). Agent definition: [`agents/kb-pipeline.md`](agents/kb-pipeline.md).
+
+### notion-kb-workflow (DEPRECATED — see ADR-0012)
+**Status**: deprecated as of 2026-04-30 per [`docs/adr/0012-obsidian-only-kb-pipeline.md`](docs/adr/0012-obsidian-only-kb-pipeline.md). Notion is no longer the source of truth for the internal KB; Obsidian is. The skill file remains in place until Sprint 4 rewrites it as `status: deprecated`.
+
+**DO NOT invoke** `--read`, `--init`, or `--append`. Replacements:
+- Session-start context loading → `hooks/session-start.sh` reads the vault automatically when `.claude/kb-config.json` is present.
+- New project bootstrap → `batuta-project-hygiene mode=project-init` scans `<vault>/clients/*` and offers a numbered menu of existing clients.
+- End-of-session capture → `hooks/post-commit-kb.sh` writes session bullets to vault on every commit; the `kb-pipeline` agent (when `kb_pipeline_enabled: true`) curates them in background.
 
 ### agent-architect (delegated)
 **MUST trigger** when a slice requires domain expertise that the base agents (`implementer`, `code-reviewer`, `test-engineer`, `security-auditor`) do not cover — a specific framework, protocol, regulation, or Batuta client domain. Discovery-first is mandatory: the meta-agent lists existing agents before creating a duplicate.
@@ -136,11 +141,12 @@ A new session on this project (or any project that adopts this convention) reads
 
 1. `docs/PRD.md` — what is this project, why does it exist
 2. `CLAUDE.md` (this file) — how we work
-3. `docs/plans/active/` — what is in flight (single file expected)
-4. `docs/sessions/` — most recent journal, especially the `Next` line
-5. `git log --oneline -10` — actual recent activity in case docs lag
+3. `<vault>/clients/<client>/projects/<project>/_status.md` — live Dataview-rendered status of the project (in-progress / blocked / backlog / done this sprint). Path resolved from `.claude/kb-config.json` + `~/.claude/kb-vault.json`.
+4. `docs/plans/active/` — what is in flight (single file expected)
+5. `docs/sessions/` — most recent journal, especially the `Next` line
+6. `git log --oneline -10` — actual recent activity in case docs lag
 
-This is how today's session should have started. The `notion-kb-workflow` skill (`--read` mode) implements steps 1-4 against a Notion mirror; this convention is the in-repo equivalent.
+Steps 3 and the vault context (client metadata + last 3 vault sessions) are loaded automatically by `hooks/session-start.sh` when `.claude/kb-config.json` is present and the vault is reachable. Manual reads are needed only when the hook reports an error to `.claude/kb-debug.log`.
 
 ---
 
