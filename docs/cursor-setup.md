@@ -1,67 +1,73 @@
 # Using agent-skills with Cursor
 
+Cursor 3.x+ (stable) supports native Agent Skills. Skills load dynamically into context only when relevant — keeping your context window clean, unlike rules which are always included.
+
 ## Setup
 
-### Option 1: Rules Directory (Recommended)
+### Personal install (recommended)
 
-Cursor supports a `.cursor/rules/` directory for project-specific rules:
-
-```bash
-# Create the rules directory
-mkdir -p .cursor/rules
-
-# Copy skills you want as rules
-cp /path/to/agent-skills/skills/test-driven-development/SKILL.md .cursor/rules/test-driven-development.md
-cp /path/to/agent-skills/skills/code-review-and-quality/SKILL.md .cursor/rules/code-review-and-quality.md
-cp /path/to/agent-skills/skills/incremental-implementation/SKILL.md .cursor/rules/incremental-implementation.md
-```
-
-Rules in this directory are automatically loaded into Cursor's context.
-
-### Option 2: .cursorrules File
-
-Create a `.cursorrules` file in your project root with the essential skills inlined:
+Install skills globally so they're available across all your projects:
 
 ```bash
-# Generate a combined rules file
-cat /path/to/agent-skills/skills/test-driven-development/SKILL.md > .cursorrules
-echo "\n---\n" >> .cursorrules
-cat /path/to/agent-skills/skills/code-review-and-quality/SKILL.md >> .cursorrules
+mkdir -p ~/.cursor/skills
+cp -r /path/to/agent-skills/skills/* ~/.cursor/skills/
 ```
 
-### Option 3: Notepads
+Or with a one-liner from the repo:
 
-Cursor's Notepads feature lets you store reusable context. Create a notepad for each skill you use frequently:
+```bash
+git clone https://github.com/addyosmani/agent-skills.git /tmp/agent-skills \
+  && mkdir -p ~/.cursor/skills \
+  && cp -r /tmp/agent-skills/skills/* ~/.cursor/skills/ \
+  && rm -rf /tmp/agent-skills
+```
 
-1. Open Cursor → Settings → Notepads
-2. Create a new notepad named "swe: Test-Driven Development"
-3. Paste the content of `skills/test-driven-development/SKILL.md`
-4. Reference it in chat with `@notepad swe: Test-Driven Development`
+### Project install
 
-## Recommended Configuration
+Install skills into your project so they're shared with your team (commit `.cursor/skills/` to version control):
 
-### Essential Skills (Always Load)
+```bash
+mkdir -p .cursor/skills
+cp -r /path/to/agent-skills/skills/* .cursor/skills/
+```
 
-Add these to `.cursor/rules/`:
+## How it works
 
-1. `test-driven-development.md` — TDD workflow and Prove-It pattern
-2. `code-review-and-quality.md` — Five-axis review
-3. `incremental-implementation.md` — Build in small verifiable slices
+Cursor reads the `name` and `description` from each `SKILL.md` frontmatter at startup. When you make a request, the agent evaluates which skills are relevant and loads the full `SKILL.md` only for those — minimizing token usage while keeping specialized workflows available on demand.
 
-### Phase-Specific Skills (Load as Notepads)
+Skills live in directories under `~/.cursor/skills/` (personal) or `.cursor/skills/` (project):
 
-Create notepads for skills you use contextually:
+```
+~/.cursor/skills/
+├── test-driven-development/
+│   └── SKILL.md
+├── code-review-and-quality/
+│   └── SKILL.md
+└── ...
+```
 
-- "swe: Spec Development" → `spec-driven-development/SKILL.md`
-- "swe: Frontend UI" → `frontend-ui-engineering/SKILL.md`
-- "swe: Security" → `security-and-hardening/SKILL.md`
-- "swe: Performance" → `performance-optimization/SKILL.md`
+## Usage tips
 
-Reference them with `@notepad` when working on relevant tasks.
+1. **Skills activate automatically** — the agent reads all descriptions and decides which skills to apply based on your request. You can also reference them explicitly: "Follow the test-driven-development process for this change."
+2. **Personal vs project scope** — use `~/.cursor/skills/` for general engineering practices you want everywhere; use `.cursor/skills/` for project-specific workflows committed to your repo.
+3. **Don't load all skills at once as rules** — if you were previously using `.cursor/rules/` or `.cursorrules`, migrate to the skills directory for dynamic loading. Use `~/.cursor/skills/` for personal workflows.
+4. **Use agents for review** — copy `agents/code-reviewer.md` content and tell Cursor to "review this diff using this code review framework."
 
-## Usage Tips
+## Migrating from rules / .cursorrules
 
-1. **Don't load all skills at once** — Cursor has context limits. Load 2-3 skills as rules and keep others as notepads.
-2. **Reference skills explicitly** — Tell Cursor "Follow the test-driven-development rules for this change" to ensure it reads the loaded rules.
-3. **Use agents for review** — Copy `agents/code-reviewer.md` content and tell Cursor to "review this diff using this code review framework."
-4. **Load references on demand** — When working on performance, reference `@notepad performance-checklist` or paste the checklist content.
+If you previously copied `SKILL.md` files into `.cursor/rules/` or inlined them into `.cursorrules`, migrate to the native skills directory:
+
+```bash
+# Move project rules to native skills
+mkdir -p .cursor/skills
+for f in .cursor/rules/*.md; do
+  name=$(basename "$f" .md)
+  mkdir -p ".cursor/skills/$name"
+  mv "$f" ".cursor/skills/$name/SKILL.md"
+done
+
+# Or just start fresh from the repo
+cp -r /path/to/agent-skills/skills/* .cursor/skills/
+```
+
+Cursor also ships a built-in `/migrate-to-skills` agent command that automates this conversion.

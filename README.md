@@ -63,7 +63,23 @@ claude --plugin-dir /path/to/agent-skills
 <details>
 <summary><b>Cursor</b></summary>
 
-Copy any `SKILL.md` into `.cursor/rules/`, or reference the full `skills/` directory. See [docs/cursor-setup.md](docs/cursor-setup.md).
+Cursor 3.x+ (stable) supports native Agent Skills — no rules workarounds needed.
+
+**Personal install** (available across all your projects):
+
+```bash
+mkdir -p ~/.cursor/skills
+cp -r /path/to/agent-skills/skills/* ~/.cursor/skills/
+```
+
+**Project install** (committed to your repo, shared with your team):
+
+```bash
+mkdir -p .cursor/skills
+cp -r /path/to/agent-skills/skills/* .cursor/skills/
+```
+
+Skills are loaded dynamically when relevant — keeping your context window clean. See [docs/cursor-setup.md](docs/cursor-setup.md) for the full setup guide.
 
 </details>
 
