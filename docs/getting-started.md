@@ -59,7 +59,7 @@ For comprehensive coverage, load skills by phase:
 Starting a project:  spec-driven-development → planning-and-task-breakdown
 During development:  incremental-implementation + test-driven-development
 Before merge:        code-review-and-quality + security-and-hardening
-Before deploy:       shipping-and-launch
+Before deploy:       shipping-and-launch-check
 ```
 
 ### Context-Aware Loading
@@ -110,7 +110,7 @@ The `.claude/commands/` directory contains slash commands for Claude Code:
 | `/build` | incremental-implementation + test-driven-development |
 | `/test` | test-driven-development |
 | `/review` | code-review-and-quality |
-| `/ship` | shipping-and-launch |
+| `/ship-check` | shipping-and-launch-check |
 
 ## Using References
 
