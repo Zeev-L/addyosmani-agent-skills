@@ -117,7 +117,7 @@ The repo ships 7 slash commands under `.gemini/commands/` that map to the develo
 | `/test` | Run TDD workflow — red, green, refactor |
 | `/review` | Five-axis code review |
 | `/code-simplify` | Reduce complexity without changing behavior |
-| `/ship` | Pre-launch checklist via parallel persona fan-out |
+| `/ship-check` | Pre-launch checklist via parallel persona fan-out |
 
 Each command invokes the corresponding skill automatically — no manual skill loading required.
 
