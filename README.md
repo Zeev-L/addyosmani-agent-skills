@@ -126,9 +126,9 @@ Skills are plain Markdown - they work with any agent that accepts system prompts
 
 ---
 
-## All 21 Skills
+## All 22 Skills
 
-The commands above are the entry points. Under the hood, they activate 20 core lifecycle skills — each one a structured workflow with steps, verification gates, and anti-rationalization tables. Plus one standalone productivity skill. You can also reference any skill directly.
+The commands above are the entry points. Under the hood, they activate 20 core lifecycle skills — each one a structured workflow with steps, verification gates, and anti-rationalization tables. Plus two standalone skills. You can also reference any skill directly.
 
 ### Define - Clarify what to build
 
@@ -248,7 +248,7 @@ Every skill follows a consistent anatomy:
 
 ```
 agent-skills/
-├── skills/                            # 21 skills (SKILL.md per directory)
+├── skills/                            # 22 skills (SKILL.md per directory)
 │   ├── idea-refine/                   #   Define
 │   ├── spec-driven-development/       #   Define
 │   ├── planning-and-task-breakdown/   #   Plan
