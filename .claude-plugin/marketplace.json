@@ -11,7 +11,7 @@
       "name": "agent-skills",
       "source": {
         "source": "github",
-        "repo": "addyosmani/agent-skills"
+        "repo": "aseren/aseren-agent-skills"
       },
       "description": "Production-grade engineering skills covering every phase of software development: spec, plan, build, verify, review, and ship."
     }
