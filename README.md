@@ -41,7 +41,7 @@ Skills also activate automatically based on what you're doing — designing an A
 **Marketplace install:**
 
 ```
-/plugin marketplace add addyosmani/agent-skills
+/plugin marketplace add aseren/aseren-agent-skills
 /plugin install agent-skills@addy-agent-skills
 ```
 
@@ -53,7 +53,7 @@ Skills also activate automatically based on what you're doing — designing an A
 **Local / development:**
 
 ```bash
-git clone https://github.com/addyosmani/agent-skills.git
+git clone https://github.com/aseren/aseren-agent-skills.git
 claude --plugin-dir /path/to/agent-skills
 ```
 
@@ -74,7 +74,7 @@ Install as native skills for auto-discovery, or add to `GEMINI.md` for persisten
 **Install from the repo:**
 
 ```bash
-gemini skills install https://github.com/addyosmani/agent-skills.git --path skills
+gemini skills install https://github.com/aseren/aseren-agent-skills.git --path skills
 ```
 
 **Install from a local clone:**
