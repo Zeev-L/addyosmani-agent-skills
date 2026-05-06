@@ -151,6 +151,7 @@ Use `decimal.js` (or your language's exact-decimal type) for every cost number. 
 | "Skip the gates for trivial diffs" | "Trivial" diffs ship the most regressions because nobody read them carefully. |
 | "I'll have the same model self-review faster" | Same model, same blind spots. Cross-family review is non-optional. |
 | "We don't need worktree isolation, the loop won't touch other files" | Until the LLM emits a file path that escapes scope. Isolation is a guarantee, not a hope. |
+| "If the file content shown is empty, a minimal replacement is safe" | Empty content in the prompt rarely means the file is empty on disk — it usually means the upstream fetch failed. A minimal replacement silently deletes real code. The executor must check on-disk state before applying, not just the prompt. |
 
 ## Red Flags
 
@@ -164,6 +165,8 @@ Use `decimal.js` (or your language's exact-decimal type) for every cost number. 
 - Task is retried in place after a failure instead of being rolled back to a clean worktree
 - Diff format requires the LLM to compute line numbers (it will hallucinate them)
 - Domain answers stored only in conversation context — must be persisted to survive across runs
+- Executor accepts an empty-content prompt and produces a minimal-replacement diff without checking on-disk content (silent code deletion failure mode)
+- Diff that net-deletes more than half of an existing file is accepted by gates outside the `dead-code` task category
 
 ## Verification
 
@@ -176,6 +179,8 @@ Before considering an autonomous loop production-ready:
 - [ ] A worktree creation failure (e.g., simulated disk full) results in the task being marked failed and the loop continuing — no main-checkout corruption
 - [ ] Cost reports correctly attribute spend to `(taskId, systemId, agentId)` triples — not a single bucket
 - [ ] PRs opened by the loop have a body that includes: the original signal, the persona notes, the adversarial result, and the task cost
+- [ ] Empty-content guard: executor refuses to apply a diff when the on-disk file has content but the prompt's file content is empty (catches upstream-fetch-failure scenarios)
+- [ ] Destructive-diff guard: diffs that net-delete more than 50% of an existing file are rejected unless task category is `dead-code`
 
 ## Reference Implementation
 
