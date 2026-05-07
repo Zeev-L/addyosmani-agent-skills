@@ -81,7 +81,7 @@ The development lifecycle is encoded implicitly:
 - BUILD → `incremental-implementation` + `test-driven-development`
 - VERIFY → `debugging-and-error-recovery`
 - REVIEW → `code-review-and-quality`
-- SHIP → `shipping-and-launch`
+- SHIP → `observability-and-monitoring` *(skip for libraries, CLIs, docs-only, config-only)*, then `shipping-and-launch`
 
 This replaces slash commands like `/spec`, `/plan`, etc.
 
