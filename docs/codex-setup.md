@@ -5,17 +5,17 @@ This repository is also a [Codex plugin](https://developers.openai.com/codex/plu
 ## Install (one command)
 
 ```bash
-codex marketplace add addyosmani/agent-skills
+codex plugin marketplace add addyosmani/agent-skills
 ```
 
-Make sure you have installed the Codex CLI (https://developers.openai.com/codex/cli)
+> Requires Codex CLI v0.122 or later. On older releases the command was `codex marketplace add`. See the [Codex CLI docs](https://developers.openai.com/codex/cli).
 
 Codex clones the repo into `~/.codex/plugins/agent-skills/`, registers the marketplace in `~/.codex/config.toml`, and makes the plugin available. Restart Codex if it's already running.
 
 Local clones work too:
 
 ```bash
-codex marketplace add /path/to/your/clone
+codex plugin marketplace add /path/to/your/clone
 ```
 
 ## Usage
@@ -40,4 +40,4 @@ rm codex/skills
 cp -R skills codex/skills
 ```
 
-This is a **local-only** change — don't commit it. The upstream repo keeps the symlink so `codex marketplace add addyosmani/agent-skills` stays a one-liner for everyone else.
+This is a **local-only** change — don't commit it. The upstream repo keeps the symlink so `codex plugin marketplace add addyosmani/agent-skills` stays a one-liner for everyone else.
