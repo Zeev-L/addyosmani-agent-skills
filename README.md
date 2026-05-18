@@ -12,7 +12,7 @@ Skills encode the workflows, quality gates, and best practices that senior engin
  │ Idea │ ───▶ │ Spec │ ───▶ │ Code │ ───▶ │ Test │ ───▶ │  QA  │ ───▶ │  Go  │
  │Refine│      │  PRD │      │ Impl │      │Debug │      │ Gate │      │ Live │
  └──────┘      └──────┘      └──────┘      └──────┘      └──────┘      └──────┘
-  /spec          /plan          /build        /test         /review       /ship
+  /spec          /plan          /build        /test       /code-review    /ship
 ```
 
 ---
@@ -27,7 +27,7 @@ Skills encode the workflows, quality gates, and best practices that senior engin
 | Plan how to build it | `/plan` | Small, atomic tasks |
 | Build incrementally | `/build` | One slice at a time |
 | Prove it works | `/test` | Tests are proof |
-| Review before merge | `/review` | Improve code health |
+| Review before merge | `/code-review` | Improve code health |
 | Simplify the code | `/code-simplify` | Clarity over cleverness |
 | Ship to production | `/ship` | Faster is safer |
 

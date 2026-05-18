@@ -115,7 +115,7 @@ The repo ships 7 slash commands under `.gemini/commands/` that map to the develo
 | `/planning` | Break work into small, verifiable tasks |
 | `/build` | Implement the next task incrementally |
 | `/test` | Run TDD workflow — red, green, refactor |
-| `/review` | Five-axis code review |
+| `/code-review` | Five-axis code review |
 | `/code-simplify` | Reduce complexity without changing behavior |
 | `/ship` | Pre-launch checklist via parallel persona fan-out |
 
