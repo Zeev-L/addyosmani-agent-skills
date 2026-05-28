@@ -1,0 +1,10 @@
+{
+  "name": "eval-buggy-app",
+  "version": "1.0.0",
+  "description": "App with known bugs for debugging evaluation scenarios",
+  "scripts": {
+    "test": "node --test",
+    "start": "node server.js"
+  },
+  "license": "MIT"
+}
