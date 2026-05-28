@@ -265,6 +265,129 @@ Part of code review is dependency review:
 
 **Rule:** Prefer standard library and existing utilities over new dependencies. Every dependency is a liability.
 
+## Confidence Scoring & LLM-As-A-Judge
+
+### Confidence Score Framework
+
+Every review includes a confidence score (0.00-1.00) that indicates how thoroughly the reviewer could verify the change:
+
+| Score Range | Confidence Level | Description |
+|-------------|------------------|-------------|
+| **0.90 - 1.00** | High | Every claim verified against codebase. Strong evidence for verdict. |
+| **0.70 - 0.89** | Moderate | Most claims verified, but some couldn't be checked locally (external APIs, runtime behavior). |
+| **0.50 - 0.69** | Low | Significant gaps in what could be verified. Plan touches areas reviewer couldn't fully inspect. |
+| **0.00 - 0.49** | Very Low | Reviewer couldn't verify most claims. Treat findings as directional, not definitive. |
+
+### Verdict Categories
+
+| Verdict | Score Range | Action Required |
+|---------|-------------|-----------------|
+| **approve** | 0.90 - 1.00 | Plan is solid. Safe to merge. |
+| **approve_with_changes** | 0.70 - 0.89 | Mostly sound, but has issues that should be fixed first. |
+| **request_major_revision** | 0.00 - 0.69 | Fundamental problems. Needs significant rework. |
+
+### LLM-As-A-Judge Process
+
+Use a separate model to independently evaluate the change:
+
+#### Step 1: Ingest Change
+- Read the diff/PR description
+- Understand the spec or task requirements
+- Identify the change scope and boundaries
+
+#### Step 2: Inspect Workspace
+- Verify file paths exist and are accessible
+- Check API endpoints and dependencies
+- Validate schemas and data structures
+- Confirm integration points are reachable
+
+#### Step 3: Evaluate Rubric
+Score across the same five axes, plus verification confidence:
+
+```
+Correctness:     0-20 points (matches spec, handles edge cases)
+Readability:     0-20 points (clear, maintainable, follows conventions)
+Architecture:    0-20 points (fits system, clean boundaries)
+Security:        0-20 points (no vulnerabilities, proper validation)
+Performance:     0-20 points (no bottlenecks, efficient)
+Verification:    0-20 points (how much could be actually verified)
+Total:          0-120 points (convert to 0.00-1.00 scale)
+```
+
+#### Step 4: Structured Verdict
+
+```json
+{
+  "verdict": "approve_with_changes",
+  "confidence": 0.78,
+  "scores": {
+    "correctness": 16,
+    "readability": 18,
+    "architecture": 15,
+    "security": 17,
+    "performance": 14,
+    "verification": 12
+  },
+  "findings": [
+    {
+      "axis": "security",
+      "severity": "blocking",
+      "description": "Missing input validation on user-provided data",
+      "line": 45,
+      "evidence": "Direct use of req.body without sanitization"
+    },
+    {
+      "axis": "performance", 
+      "severity": "non-blocking",
+      "description": "Potential N+1 query in user list endpoint",
+      "line": 112,
+      "evidence": "Loop with database query inside"
+    }
+  ],
+  "verification_gaps": [
+    "External API integration couldn't be tested locally",
+    "Runtime behavior under load not verified"
+  ],
+  "recommendations": [
+    "Add input validation middleware",
+    "Consider batch loading for user data",
+    "Add integration tests for external API"
+  ]
+}
+```
+
+### Focus Modes
+
+For specialized reviews, enable focus modes that weight certain dimensions more heavily:
+
+| Focus Mode | Emphasis | When to Use |
+|------------|----------|-------------|
+| **Implementation Realism** | Architecture, Performance | Complex system changes |
+| **Measurability** | Correctness, Verification | Critical bug fixes |
+| **Delivery Quality** | Readability, Architecture | User-facing features |
+| **Rollout Durability** | Security, Performance | Production deployments |
+| **Privacy & Security** | Security, Correctness | Data handling changes |
+
+### Multi-Model Judging Pattern
+
+```
+Model A writes the code
+    |
+    v
+Model B reviews for correctness and architecture (Judge #1)
+    |
+    v  
+Model C reviews for security and performance (Judge #2)
+    |
+    v
+Model A addresses feedback from both judges
+    |
+    v
+Human makes final call with confidence scores
+```
+
+Different models catch different issues. Use at least two independent judges for high-risk changes.
+
 ## The Review Checklist
 
 ```markdown
@@ -301,14 +424,21 @@ Part of code review is dependency review:
 - [ ] No unbounded operations
 - [ ] Pagination on list endpoints
 
-### Verification
-- [ ] Tests pass
-- [ ] Build succeeds
-- [ ] Manual verification done (if applicable)
+### Verification Confidence
+- [ ] All claims could be verified locally
+- [ ] External dependencies checked
+- [ ] Runtime behavior observable
+- [ ] Integration points accessible
+
+### Confidence Score
+- [ ] Score calculated (0.00-1.00)
+- [ ] Verification gaps documented
+- [ ] Evidence for findings provided
 
 ### Verdict
-- [ ] **Approve** — Ready to merge
-- [ ] **Request changes** — Issues must be addressed
+- [ ] **Approve** (0.90-1.00) - Ready to merge
+- [ ] **Approve with changes** (0.70-0.89) - Fix issues first
+- [ ] **Request major revision** (0.00-0.69) - Significant rework needed
 ```
 ## See Also
 
@@ -324,6 +454,8 @@ Part of code review is dependency review:
 | "We'll clean it up later" | Later never comes. The review is the quality gate — use it. Require cleanup before merge, not after. |
 | "AI-generated code is probably fine" | AI code needs more scrutiny, not less. It's confident and plausible, even when wrong. |
 | "The tests pass, so it's good" | Tests are necessary but not sufficient. They don't catch architecture problems, security issues, or readability concerns. |
+| "The confidence score is just a number" | Confidence scores quantify verification gaps. Low scores indicate uncertainty that should be addressed. |
+| "Multiple judges are overkill" | Different models have different blind spots. Independent evaluation catches issues a single reviewer misses. |
 
 ## Red Flags
 
@@ -335,6 +467,10 @@ Part of code review is dependency review:
 - No regression tests with bug fix PRs
 - Review comments without severity labels — makes it unclear what's required vs optional
 - Accepting "I'll fix it later" — it never happens
+- High confidence scores (0.90+) without documented verification evidence
+- Low confidence scores (<0.70) ignored or overridden without justification
+- Single reviewer for high-risk changes without independent validation
+- Missing verification gaps in structured verdicts
 
 ## Verification
 
@@ -345,3 +481,7 @@ After review is complete:
 - [ ] Tests pass
 - [ ] Build succeeds
 - [ ] The verification story is documented (what changed, how it was verified)
+- [ ] Confidence score calculated and documented with evidence
+- [ ] Verification gaps clearly identified and explained
+- [ ] Structured verdict includes specific findings and recommendations
+- [ ] For high-risk changes: at least two independent judges provided assessments
