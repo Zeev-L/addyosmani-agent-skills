@@ -78,6 +78,22 @@ When analyzing test coverage:
 - Low: [Tests for utility functions and formatting]
 ```
 
+## Common Rationalizations
+
+| Rationalization | Required response |
+|---|---|
+| "This code is straightforward, edge cases are unlikely" | Edge cases are where regressions hide. Cover boundaries and error paths. |
+| "The existing tests already cover this" | Verify coverage against the new behavior; add tests if it's implicit or untested. |
+
+## Verification
+
+After completing the test work, confirm:
+- [ ] Tests cover happy path, boundaries, and error paths
+- [ ] Tests run at the lowest appropriate level (unit/integration/e2e)
+- [ ] New tests fail on the buggy behavior (when applicable)
+- [ ] Tests are independent and avoid shared mutable state
+- [ ] Test names read like specifications
+
 ## Rules
 
 1. Test behavior, not implementation details
