@@ -135,6 +135,7 @@ The commands above are entry points. The pack includes 23 skills total — 22 li
 | [interview-me](skills/interview-me/SKILL.md) | One-question-at-a-time interview that extracts what the user actually wants instead of what they think they should want, until ~95% confidence | The ask is underspecified, or the user invokes "interview me" / "grill me" |
 | [idea-refine](skills/idea-refine/SKILL.md) | Structured divergent/convergent thinking to turn vague ideas into concrete proposals | You have a rough concept that needs exploration |
 | [spec-driven-development](skills/spec-driven-development/SKILL.md) | Write a PRD covering objectives, commands, structure, code style, testing, and boundaries before any code | Starting a new project, feature, or significant change |
+| [semantic-paradigm-auditor](skills/semantic-paradigm-auditor/SKILL.md) | High-fidelity reasoning reviews to detect architectural mismatches and compute pattern physics | Scaffolding initial project architectures or validating complex domain logic |
 
 ### Plan - Break it down
 
@@ -153,6 +154,7 @@ The commands above are entry points. The pack includes 23 skills total — 22 li
 | [doubt-driven-development](skills/doubt-driven-development/SKILL.md) | Adversarial fresh-context review of every non-trivial decision in-flight - CLAIM → EXTRACT → DOUBT → RECONCILE → STOP, with optional user-authorized cross-model escalation | Stakes are high (production, security, irreversible), working in unfamiliar code, or a confident output is cheaper to verify now than to debug later |
 | [frontend-ui-engineering](skills/frontend-ui-engineering/SKILL.md) | Component architecture, design systems, state management, responsive design, WCAG 2.1 AA accessibility | Building or modifying user-facing interfaces |
 | [api-and-interface-design](skills/api-and-interface-design/SKILL.md) | Contract-first design, Hyrum's Law, One-Version Rule, error semantics, boundary validation | Designing APIs, module boundaries, or public interfaces |
+| [ast-resilient-remediation](skills/ast-resilient-remediation/SKILL.md) | Robust Abstract Syntax Tree (AST) parsing and structural code remediation | Fixing bugs, injecting resiliency wrappers, or conducting structural refactors |
 
 ### Verify - Prove it works
 
@@ -160,6 +162,8 @@ The commands above are entry points. The pack includes 23 skills total — 22 li
 |-------|-------------|----------|
 | [browser-testing-with-devtools](skills/browser-testing-with-devtools/SKILL.md) | Chrome DevTools MCP for live runtime data - DOM inspection, console logs, network traces, performance profiling | Building or debugging anything that runs in a browser |
 | [debugging-and-error-recovery](skills/debugging-and-error-recovery/SKILL.md) | Five-step triage: reproduce, localize, reduce, fix, guard. Stop-the-line rule, safe fallbacks | Tests fail, builds break, or behavior is unexpected |
+| [chaos-simulation-and-mocking](skills/chaos-simulation-and-mocking/SKILL.md) | Deterministic tool mocking and chaos proxy simulation | Writing integration tests, deploying tool wrappers, or validating fallbacks |
+| [inter-agent-protocol-verification](skills/inter-agent-protocol-verification/SKILL.md) | Multi-agent communication graph auditing and strongly-typed payload contracts | Connecting multiple specialist agents or deploying multi-agent orchestrations |
 
 ### Review - Quality gates before merge
 
@@ -179,6 +183,7 @@ The commands above are entry points. The pack includes 23 skills total — 22 li
 | [deprecation-and-migration](skills/deprecation-and-migration/SKILL.md) | Code-as-liability mindset, compulsory vs advisory deprecation, migration patterns, zombie code removal | Removing old systems, migrating users, or sunsetting features |
 | [documentation-and-adrs](skills/documentation-and-adrs/SKILL.md) | Architecture Decision Records, API docs, inline documentation standards - document the *why* | Making architectural decisions, changing APIs, or shipping features |
 | [shipping-and-launch](skills/shipping-and-launch/SKILL.md) | Pre-launch checklists, feature flag lifecycle, staged rollouts, rollback procedures, monitoring setup | Preparing to deploy to production |
+| [finops-mothballing-and-optimization](skills/finops-mothballing-and-optimization/SKILL.md) | Infrastructure cost auditing and automated scale-to-zero mothballing | Modifying infrastructure definitions or orchestrating long-running fleets |
 
 ---
 
@@ -246,6 +251,7 @@ agent-skills/
 │   ├── interview-me/                  #   Define
 │   ├── idea-refine/                   #   Define
 │   ├── spec-driven-development/       #   Define
+│   ├── semantic-paradigm-auditor/     #   Define
 │   ├── planning-and-task-breakdown/   #   Plan
 │   ├── incremental-implementation/    #   Build
 │   ├── context-engineering/           #   Build
@@ -254,8 +260,11 @@ agent-skills/
 │   ├── frontend-ui-engineering/       #   Build
 │   ├── test-driven-development/       #   Build
 │   ├── api-and-interface-design/      #   Build
+│   ├── ast-resilient-remediation/     #   Build
 │   ├── browser-testing-with-devtools/ #   Verify
 │   ├── debugging-and-error-recovery/  #   Verify
+│   ├── chaos-simulation-and-mocking/  #   Verify
+│   ├── inter-agent-protocol-verification/ # Verify
 │   ├── code-review-and-quality/       #   Review
 │   ├── code-simplification/          #   Review
 │   ├── security-and-hardening/        #   Review
@@ -265,6 +274,7 @@ agent-skills/
 │   ├── deprecation-and-migration/     #   Ship
 │   ├── documentation-and-adrs/        #   Ship
 │   ├── shipping-and-launch/           #   Ship
+│   ├── finops-mothballing-and-optimization/ # Ship
 │   └── using-agent-skills/            #   Meta: how to use this pack
 ├── agents/                            # 3 specialist personas
 ├── references/                        # 4 supplementary checklists
