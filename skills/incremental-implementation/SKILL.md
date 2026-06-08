@@ -129,8 +129,9 @@ If you notice something worth improving outside your task scope, note it — don
 NOTICED BUT NOT TOUCHING:
 - src/utils/format.ts has an unused import (unrelated to this task)
 - The auth middleware could use better error messages (separate task)
-→ Want me to create tasks for these?
 ```
+
+Then use the `question` tool to ask the user what to do with these, with options: "Create tasks for all noted items", "Create tasks for specific items only", and "Ignore them for now".
 
 ### Rule 1: One Thing at a Time
 
@@ -243,3 +244,5 @@ After completing all increments for a task:
 - [ ] The build is clean
 - [ ] The feature works end-to-end as specified
 - [ ] No uncommitted changes remain
+
+**Companion skill:** Invoke `workflow-tracker` alongside this skill to maintain a live phase tracker via `TodoWrite`.
