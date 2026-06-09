@@ -21,6 +21,7 @@ OpenCode uses a **skill-driven execution model** powered by the `skill` tool and
 
 The agent should automatically map user intent to skills:
 
+- Product discovery / pre-spec validation under uncertainty → `design-sprint`
 - Feature / new functionality → `spec-driven-development`, then `incremental-implementation`, `test-driven-development`
 - Planning / breakdown → `planning-and-task-breakdown`
 - Bug / failure / unexpected behavior → `debugging-and-error-recovery`
@@ -35,6 +36,7 @@ OpenCode does not support slash commands like `/spec` or `/plan`.
 
 Instead, the agent must internally follow this lifecycle:
 
+- DISCOVER → `design-sprint` (when uncertainty is high and a target direction must be validated)
 - DEFINE → `spec-driven-development`
 - PLAN → `planning-and-task-breakdown`
 - BUILD → `incremental-implementation` + `test-driven-development`

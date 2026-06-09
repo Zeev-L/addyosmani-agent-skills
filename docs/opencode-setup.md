@@ -65,6 +65,7 @@ The agent evaluates every request and maps it to the appropriate skill.
 
 Examples:
 
+- "we need to decide what to build first" → `design-sprint`
 - "build a feature" → `incremental-implementation` + `test-driven-development`
 - "design a system" → `spec-driven-development`
 - "fix a bug" → `debugging-and-error-recovery`
@@ -76,6 +77,7 @@ The user does **not** need to explicitly request skills.
 
 The development lifecycle is encoded implicitly:
 
+- DISCOVER → `design-sprint` (when uncertainty is high and direction must be validated)
 - DEFINE → `spec-driven-development`
 - PLAN → `planning-and-task-breakdown`
 - BUILD → `incremental-implementation` + `test-driven-development`
@@ -148,6 +150,7 @@ These rules are enforced via `AGENTS.md`.
 - No native slash commands (handled via intent mapping instead)
 - No plugin system (handled via prompt + structure)
 - Skill invocation depends on model compliance
+- Claude-specific command wrappers (for example `/discover` or `/sprint`) are optional UX and not required for OpenCode
 
 Despite these, the workflow closely matches Claude Code in practice.
 
