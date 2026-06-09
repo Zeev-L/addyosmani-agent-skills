@@ -10,7 +10,7 @@ Skills encode the workflows, quality gates, and best practices that senior engin
 
 ## Commands
 
-7 slash commands that map to the development lifecycle. Each one activates the right skills automatically.
+8 slash commands that map to the development lifecycle. Each one activates the right skills automatically.
 
 | What you're doing | Command | Key principle |
 |-------------------|---------|---------------|
@@ -19,6 +19,7 @@ Skills encode the workflows, quality gates, and best practices that senior engin
 | Build incrementally | `/build` | One slice at a time |
 | Prove it works | `/test` | Tests are proof |
 | Review before merge | `/review` | Improve code health |
+| Prepare a pull request | `/pr` | Reviewable change, clean evidence |
 | Simplify the code | `/code-simplify` | Clarity over cleverness |
 | Ship to production | `/ship` | Faster is safer |
 
@@ -174,7 +175,7 @@ The commands above are entry points. The pack includes 23 skills total — 22 li
 
 | Skill | What It Does | Use When |
 |-------|-------------|----------|
-| [git-workflow-and-versioning](skills/git-workflow-and-versioning/SKILL.md) | Trunk-based development, atomic commits, change sizing (~100 lines), the commit-as-save-point pattern | Making any code change (always) |
+| [git-workflow-and-versioning](skills/git-workflow-and-versioning/SKILL.md) | Trunk-based development, atomic commits, pull request readiness, change sizing (~100 lines), the commit-as-save-point pattern | Making any code change (always) |
 | [ci-cd-and-automation](skills/ci-cd-and-automation/SKILL.md) | Shift Left, Faster is Safer, feature flags, quality gate pipelines, failure feedback loops | Setting up or modifying build and deploy pipelines |
 | [deprecation-and-migration](skills/deprecation-and-migration/SKILL.md) | Code-as-liability mindset, compulsory vs advisory deprecation, migration patterns, zombie code removal | Removing old systems, migrating users, or sunsetting features |
 | [documentation-and-adrs](skills/documentation-and-adrs/SKILL.md) | Architecture Decision Records, API docs, inline documentation standards - document the *why* | Making architectural decisions, changing APIs, or shipping features |
@@ -269,8 +270,8 @@ agent-skills/
 ├── agents/                            # 3 specialist personas
 ├── references/                        # 4 supplementary checklists
 ├── hooks/                             # Session lifecycle hooks
-├── .claude/commands/                  # 7 slash commands (Claude Code)
-├── .gemini/commands/                  # 7 slash commands (Gemini CLI)
+├── .claude/commands/                  # 8 slash commands (Claude Code)
+├── .gemini/commands/                  # 8 slash commands (Gemini CLI)
 └── docs/                              # Setup guides per tool
 ```
 

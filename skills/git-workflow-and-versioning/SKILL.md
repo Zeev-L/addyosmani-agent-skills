@@ -1,6 +1,6 @@
 ---
 name: git-workflow-and-versioning
-description: Structures git workflow practices. Use when making any code change. Use when committing, branching, resolving conflicts, or when you need to organize work across multiple parallel streams.
+description: Structures git workflow practices. Use when making any code change. Use when committing, branching, opening pull requests, resolving conflicts, or when you need to organize work across multiple parallel streams.
 ---
 
 # Git Workflow and Versioning
@@ -207,6 +207,83 @@ POTENTIAL CONCERNS:
 ```
 
 This pattern catches wrong assumptions early and gives reviewers a clear map of the change. The "DIDN'T TOUCH" section is especially important — it shows you exercised scope discipline and didn't go on an unsolicited renovation.
+
+## Pull Request Workflow
+
+Opening a pull request is a quality gate, not a mechanical upload. The PR should make review easy, show evidence, and leave no ambiguity about what is in scope.
+
+### 1. Check the Contribution Surface
+
+Before pushing:
+
+```bash
+git remote -v
+git branch --show-current
+git status --short
+git log --oneline --decorate -5
+```
+
+- Read `CONTRIBUTING.md`, PR templates, DCO/CLA notes, and required test commands.
+- Confirm the target branch (`main`, `master`, `develop`, release branch) before creating the PR.
+- Search open PRs and issues for duplicate work.
+- For open-source contributions, use an author identity that matches the contributor account and any CLA/DCO requirements.
+
+### 2. Make the Diff Reviewable
+
+Before opening the PR:
+
+- Keep one logical change per PR.
+- Split refactors, formatting, generated output, and behavior changes unless the repository explicitly wants them together.
+- Include generated files only when the repository expects them.
+- Remove local artifacts, debug logs, `.env` files, editor config, and hidden tool attribution.
+- Rebase or merge from the target branch if the repository requires an up-to-date branch.
+
+### 3. Verify and Capture Evidence
+
+Run the smallest commands that prove the change:
+
+```bash
+git diff --stat
+git diff --check
+npm test
+```
+
+Adapt the commands to the repository. Prefer focused package tests first, then broader tests when the blast radius justifies it. If a known unrelated test fails, document the exact failure and why it is unrelated instead of hiding it.
+
+### 4. Write the PR
+
+Use the repository's template when present. A good PR body answers:
+
+```markdown
+## Summary
+- What changed and why
+
+## Testing
+- `command`: result
+
+## Risk
+- Known risks, compatibility notes, or "None identified"
+
+Fixes #123
+```
+
+The title should describe the user-visible or maintainer-visible value:
+
+```
+fix(parser): preserve escaped delimiters in quoted fields
+test(api): cover nil response handling
+docs(skill): add pull request readiness workflow
+```
+
+### 5. Follow Through After Opening
+
+The work is not done when the URL exists:
+
+- Watch initial CI and bot checks long enough to catch formatting, DCO, CLA, or template failures.
+- If a bot fails, fix the branch rather than opening a replacement PR.
+- Address maintainer feedback with small follow-up commits that preserve review context.
+- Avoid force-pushing after review starts unless rebasing or history repair is clearly needed.
+- Do not leave "waiting for review" comments unless you have meaningful new evidence or a maintainer asked for a ping.
 
 ## Pre-Commit Hygiene
 

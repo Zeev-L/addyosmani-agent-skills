@@ -107,7 +107,7 @@ This is useful when you want to ensure a specific workflow is followed without w
 
 ## Slash Commands
 
-The repo ships 7 slash commands under `.gemini/commands/` that map to the development lifecycle. Gemini CLI auto-discovers them when you run from the project root.
+The repo ships 8 slash commands under `.gemini/commands/` that map to the development lifecycle. Gemini CLI auto-discovers them when you run from the project root.
 
 | Command | What it does |
 |---------|--------------|
@@ -116,6 +116,7 @@ The repo ships 7 slash commands under `.gemini/commands/` that map to the develo
 | `/build` | Implement the next task incrementally |
 | `/test` | Run TDD workflow — red, green, refactor |
 | `/review` | Five-axis code review |
+| `/pr` | Prepare a reviewable pull request |
 | `/code-simplify` | Reduce complexity without changing behavior |
 | `/ship` | Pre-launch checklist via parallel persona fan-out |
 
