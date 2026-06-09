@@ -342,6 +342,8 @@ then verifies the test passes.
 
 This separation ensures the test is written without knowledge of the fix, making it more robust.
 
+**Optional — use the `test-engineer` agent persona** for the subagent if you installed the full plugin (the persona lives in the plugin's `agents/` directory). It covers test strategy, the Prove-It pattern, test level selection, scenario coverage, and output format. If you installed only this skill, follow the Prove-It steps in the current context without a separate subagent.
+
 ## See Also
 
 For detailed testing patterns, examples, and anti-patterns across frameworks, see `references/testing-patterns.md`.

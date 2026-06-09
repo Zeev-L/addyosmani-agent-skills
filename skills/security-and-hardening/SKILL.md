@@ -419,7 +419,8 @@ container.textContent = await llm.reply(userMessage);
 ```
 ## See Also
 
-For detailed security checklists and pre-commit verification steps, see `references/security-checklist.md`.
+- For a dedicated security review agent (threat modeling, severity classification, OWASP Top 10, exploitation scenarios), use the `security-auditor` persona (available in the plugin's `agents/` directory when installed via the full plugin). Invoke it when a change touches auth, input handling, data storage, or third-party integrations.
+- For detailed security checklists and pre-commit verification steps, see `references/security-checklist.md`.
 
 ## Common Rationalizations
 

@@ -6,7 +6,10 @@ This is the agent-skills project — a collection of production-grade engineerin
 
 ```
 skills/       → Core skills (SKILL.md per directory)
-agents/       → Reusable agent personas (code-reviewer, test-engineer, security-auditor)
+agents/       → Reusable agent personas — load these when a skill calls for a specialized subagent
+                  code-reviewer.md     (invoked from code-review-and-quality)
+                  security-auditor.md  (invoked from security-and-hardening)
+                  test-engineer.md     (invoked from test-driven-development)
 hooks/        → Session lifecycle hooks
 .claude/commands/ → Slash commands (/spec, /plan, /build, /test, /review, /code-simplify, /ship)
 references/   → Supplementary checklists (testing, performance, security, accessibility)

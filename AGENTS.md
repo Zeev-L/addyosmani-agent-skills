@@ -24,10 +24,32 @@ The agent should automatically map user intent to skills:
 - Feature / new functionality → `spec-driven-development`, then `incremental-implementation`, `test-driven-development`
 - Planning / breakdown → `planning-and-task-breakdown`
 - Bug / failure / unexpected behavior → `debugging-and-error-recovery`
-- Code review → `code-review-and-quality`
+- Code review → `code-review-and-quality` (+ `agents/code-reviewer.md` persona if harness supports subagents)
+- Security review / hardening → `security-and-hardening` (+ `agents/security-auditor.md` persona if harness supports subagents)
+- Test strategy / writing tests → `test-driven-development` (+ `agents/test-engineer.md` persona if harness supports subagents)
 - Refactoring / simplification → `code-simplification`
 - API or interface design → `api-and-interface-design`
 - UI work → `frontend-ui-engineering`
+
+### Agent Personas
+
+Three reusable agent personas live in `agents/`. Load them when a skill calls for a specialized review or testing subagent — they provide structured output formats, severity classifications, and rules the base agent lacks.
+
+| Persona | File | Load when |
+|---------|------|-----------|
+| Senior Code Reviewer | `agents/code-reviewer.md` | Running code review via `code-review-and-quality` |
+| Security Auditor | `agents/security-auditor.md` | Running security review via `security-and-hardening` |
+| Test Engineer | `agents/test-engineer.md` | Writing tests or reproducing bugs via `test-driven-development` |
+
+**How to invoke a persona:**
+
+- **Claude Code** — use subagent tooling with `subagent_type` set to the persona's `name` field (e.g. `code-reviewer`, `security-auditor`, `test-engineer`). This spawns an isolated context with the persona's frontmatter, output rules, and severity classifications applied. See `agents/README.md` for the full invocation pattern.
+- **Cursor** — load persona content via rules or notepads as documented in `docs/cursor-setup.md`, then instruct Cursor to apply that persona framework for review or testing tasks.
+- **Copilot** — place persona files in `.github/agents/` and reference them with `@code-reviewer` / `@security-auditor` / `@test-engineer` in prompts. See `docs/copilot-setup.md`.
+
+**OpenCode fallback (no subagent primitive):** OpenCode's execution model is driven by the `skill` tool only. In OpenCode, skip persona loading and invoke the underlying skill directly (`code-review-and-quality`, `security-and-hardening`, `test-driven-development`). The skill workflow runs without the persona's specialized report format and severity classifications — output structure will differ from persona-backed runs.
+
+Personas are not skills — they define *who the agent is* for a task, not *what process to follow*. Skills and personas are used together when the harness supports it.
 
 ### Lifecycle Mapping (Implicit Commands)
 
@@ -39,7 +61,7 @@ Instead, the agent must internally follow this lifecycle:
 - PLAN → `planning-and-task-breakdown`
 - BUILD → `incremental-implementation` + `test-driven-development`
 - VERIFY → `debugging-and-error-recovery`
-- REVIEW → `code-review-and-quality`
+- REVIEW → `code-review-and-quality` (+ `code-reviewer` persona if subagents supported)
 - SHIP → `shipping-and-launch`
 
 ### Execution Model

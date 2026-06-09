@@ -1,5 +1,7 @@
 # Agent Skills
 
+> **Fork note:** This is [@googlarz](https://github.com/googlarz)'s fork of [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) with work-in-progress enhancements: [observability-and-monitoring skill](https://github.com/addyosmani/agent-skills/pull/61), [CI skill validator](https://github.com/addyosmani/agent-skills/pull/60), and [agent persona integration](https://github.com/addyosmani/agent-skills/pull/62).
+
 **Production-grade engineering skills for AI coding agents.**
 
 Skills encode the workflows, quality gates, and best practices that senior engineers use when building software. These ones are packaged so AI agents follow them consistently across every phase of development.
@@ -180,6 +182,12 @@ The commands above are entry points. The pack includes 23 skills total — 22 li
 | [documentation-and-adrs](skills/documentation-and-adrs/SKILL.md) | Architecture Decision Records, API docs, inline documentation standards - document the *why* | Making architectural decisions, changing APIs, or shipping features |
 | [shipping-and-launch](skills/shipping-and-launch/SKILL.md) | Pre-launch checklists, feature flag lifecycle, staged rollouts, rollback procedures, monitoring setup | Preparing to deploy to production |
 
+### Productivity & Utilities - Standalone skills
+
+| Skill | What It Does | Invoke With |
+|-------|-------------|-------------|
+| [assistant](skills/assistant/README.md) | Calendar and task management. Creates rich context-aware Google Calendar entries with conversation links, detects conflicts, respects work preferences, manages local task lists | `/assistant` (automatic or explicit invocation) |
+
 ---
 
 ## Agent Personas
@@ -265,6 +273,7 @@ agent-skills/
 │   ├── deprecation-and-migration/     #   Ship
 │   ├── documentation-and-adrs/        #   Ship
 │   ├── shipping-and-launch/           #   Ship
+│   ├── assistant/                     #   Productivity: Calendar & tasks
 │   └── using-agent-skills/            #   Meta: how to use this pack
 ├── agents/                            # 3 specialist personas
 ├── references/                        # 4 supplementary checklists
